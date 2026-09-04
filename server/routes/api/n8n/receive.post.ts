@@ -1,6 +1,6 @@
 import { defineHandler } from "nitro";
 import { readBody, createError, setResponseStatus } from "nitro/h3";
-import { prisma } from "../../utils/prisma";
+import { prisma } from "../../../utils/prisma";
 
 export default defineHandler(async (event) => {
   const body = await readBody(event);

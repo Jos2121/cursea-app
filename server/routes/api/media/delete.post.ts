@@ -1,6 +1,6 @@
 import { defineHandler } from "nitro";
 import { readBody, createError } from "nitro/h3";
-import { prisma } from "../../utils/prisma";
+import { prisma } from "../../../utils/prisma";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
