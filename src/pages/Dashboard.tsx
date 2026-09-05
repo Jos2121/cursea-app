@@ -140,14 +140,17 @@ export default function Dashboard() {
         body: JSON.stringify({ jobId: regenerateJobId, imageUrl: regenerateImageUrl })
       });
       
+      const data = await res.json().catch(() => ({}));
+      
       if (res.ok) {
         setIsRegenerateModalOpen(false);
         fetchJobs();
       } else {
-        alert('Failed to generate video');
+        alert(`Failed to generate video: ${data.statusMessage || data.message || 'Unknown error'}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(`Error: ${err.message || 'Network error occurred'}`);
     } finally {
       setIsRegenerating(false);
     }

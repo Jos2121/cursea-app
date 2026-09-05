@@ -47,7 +47,7 @@ export default defineHandler(async (event) => {
     const videoFileName = `video_${Date.now()}.mp4`;
     const videoPath = path.join(mediaDir, videoFileName);
     
-    const ffmpegCommand = `ffmpeg -y -loop 1 -i "${tempImagePath}" -i "${audioPath}" -c:v libx264 -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
+    const ffmpegCommand = `ffmpeg -y -loop 1 -framerate 1 -i "${tempImagePath}" -i "${audioPath}" -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
     
     await execPromise(ffmpegCommand);
 
