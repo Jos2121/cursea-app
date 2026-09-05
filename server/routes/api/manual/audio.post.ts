@@ -20,8 +20,7 @@ export default defineHandler(async (event) => {
   const model = process.env.OPENROUTER_MODEL || "google/lyria-3-pro-preview";
   const referer = process.env.NEXT_PUBLIC_APP_URL || "https://sings.inspiramkt.agency";
 
-  let response;
-  let responseData;
+  let response: Response | undefined;
   let attempts = 0;
   const maxAttempts = 2;
 
@@ -40,6 +39,7 @@ export default defineHandler(async (event) => {
           model: model,
           modalities: ["text", "audio"],
           audio: { voice: "alloy", format: "mp3" },
+          stream: true,
           messages: [
             {
               role: "user",
@@ -60,8 +60,8 @@ export default defineHandler(async (event) => {
           throw createError({ statusCode: response.status, statusMessage: "Failed to generate audio from OpenRouter" });
         }
       }
-
-      responseData = await response.json();
+      
+      // Si todo va bien, salimos del loop
       break;
     } catch (err: any) {
       if (attempts >= maxAttempts) {
@@ -72,12 +72,57 @@ export default defineHandler(async (event) => {
     }
   }
 
-  const audioBase64 = responseData?.choices?.[0]?.message?.audio?.data;
-  if (!audioBase64) {
-    throw createError({ statusCode: 500, statusMessage: "No audio data received from OpenRouter" });
+  if (!response || !response.body) {
+    throw createError({ statusCode: 500, statusMessage: "No response body received from OpenRouter" });
   }
 
-  const buffer = Buffer.from(audioBase64, 'base64');
+  // Procesar el stream SSE (Server-Sent Events)
+  let fullBase64Audio = "";
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let bufferStr = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      bufferStr += decoder.decode(value, { stream: true });
+      
+      // Separar por líneas (\n)
+      const lines = bufferStr.split("\n");
+      // El último elemento podría estar incompleto, lo dejamos en el buffer
+      bufferStr = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data: ")) continue;
+        if (trimmed === "data: [DONE]") continue;
+
+        try {
+          // Extraer la porción JSON después de "data: "
+          const dataStr = trimmed.slice(6);
+          const chunkJson = JSON.parse(dataStr);
+          const audioData = chunkJson.choices?.[0]?.delta?.audio?.data;
+          
+          if (audioData) {
+            fullBase64Audio += audioData;
+          }
+        } catch (e) {
+          console.error("Error parsing stream chunk:", e, trimmed);
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  if (!fullBase64Audio) {
+    throw createError({ statusCode: 500, statusMessage: "Stream ended without audio data" });
+  }
+
+  // Convertir todo el base64 acumulado a buffer binario
+  const buffer = Buffer.from(fullBase64Audio, 'base64');
   
   const mediaDir = path.resolve(process.cwd(), "public/media");
   fs.mkdirSync(mediaDir, { recursive: true });
@@ -87,8 +132,10 @@ export default defineHandler(async (event) => {
   const relativeUrl = `/media/${fileName}`;
   const filePath = path.join(mediaDir, fileName);
   
+  // Guardar archivo físico
   fs.writeFileSync(filePath, buffer);
 
+  // Guardar registro en la BD
   const result = await pool.query(
     `INSERT INTO "MediaJob" (id, prompt, status, "audioUrl", "createdAt", "updatedAt") 
      VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *`,
