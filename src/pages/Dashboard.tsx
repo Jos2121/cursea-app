@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music } from 'lucide-react';
+import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
@@ -47,6 +47,12 @@ export default function Dashboard() {
   const [regenerateJobId, setRegenerateJobId] = useState<string | null>(null);
   const [regenerateImageUrl, setRegenerateImageUrl] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // WhatsApp Modal State
+  const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
+  const [whatsappJobId, setWhatsappJobId] = useState<string | null>(null);
+  const [whatsappModalPhone, setWhatsappModalPhone] = useState('');
+  const [isSendingWhatsapp, setIsSendingWhatsapp] = useState(false);
 
   // Studio state
   const [studioStep, setStudioStep] = useState(1);
@@ -204,17 +210,51 @@ export default function Dashboard() {
     if (!phone || !studioJobId) return;
     setIsProcessing(true);
     try {
-      await fetch('/api/manual/send', {
+      const res = await fetch('/api/manual/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: studioJobId, recipient: phone })
+        body: JSON.stringify({ jobId: studioJobId, whatsappNumber: phone })
       });
-      alert('Sent successfully!');
-      handleResetStudio();
-    } catch (err) {
+      
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        alert('Sent successfully!');
+        handleResetStudio();
+      } else {
+        alert(`Failed to send WhatsApp: ${data.statusMessage || data.message || 'Unknown error'}`);
+      }
+    } catch (err: any) {
       console.error(err);
+      alert(`Error: ${err.message || 'Network error occurred'}`);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleSendWhatsappFromModal = async () => {
+    if (!whatsappModalPhone || !whatsappJobId) return;
+    setIsSendingWhatsapp(true);
+    try {
+      const res = await fetch('/api/manual/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: whatsappJobId, whatsappNumber: whatsappModalPhone })
+      });
+      
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setIsWhatsappModalOpen(false);
+        setWhatsappModalPhone('');
+        fetchJobs();
+        alert('Sent successfully!');
+      } else {
+        alert(`Failed to send WhatsApp: ${data.statusMessage || data.message || 'Unknown error'}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Error: ${err.message || 'Network error occurred'}`);
+    } finally {
+      setIsSendingWhatsapp(false);
     }
   };
 
@@ -365,7 +405,20 @@ export default function Dashboard() {
                             <Video className="w-4 h-4" />
                           </button>
                         )}
-                        <button 
+                        {job.videoUrl && (
+                          <button
+                            onClick={() => {
+                              setWhatsappJobId(job.id);
+                              setWhatsappModalPhone(job.recipient || '');
+                              setIsWhatsappModalOpen(true);
+                            }}
+                            className="p-2 text-gray-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors inline-block"
+                            title="Send via WhatsApp"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
                           onClick={() => handleDelete(job.id)}
                           className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors inline-block"
                           title="Delete physically and from DB"
@@ -538,6 +591,43 @@ export default function Dashboard() {
               >
                 {isRegenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
                 Generate
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Send WhatsApp Modal */}
+        <Dialog open={isWhatsappModalOpen} onOpenChange={setIsWhatsappModalOpen}>
+          <DialogContent className="bg-[#111827] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>Send via WhatsApp</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-gray-400">Enter the recipient's phone number including the country code.</p>
+              <input
+                type="tel"
+                value={whatsappModalPhone}
+                onChange={(e) => setWhatsappModalPhone(e.target.value)}
+                disabled={isSendingWhatsapp}
+                placeholder="e.g. +1234567890"
+                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+              />
+            </div>
+            <DialogFooter>
+              <button
+                onClick={() => setIsWhatsappModalOpen(false)}
+                disabled={isSendingWhatsapp}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendWhatsappFromModal}
+                disabled={!whatsappModalPhone || isSendingWhatsapp}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
+              >
+                {isSendingWhatsapp ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                Send
               </button>
             </DialogFooter>
           </DialogContent>
