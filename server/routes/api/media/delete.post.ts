@@ -1,9 +1,8 @@
 import { defineHandler } from "nitro";
 import { readBody, createError } from "nitro/h3";
-import { prisma } from "../../../utils/prisma";
+import { pool } from "../../../utils/db";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
 export default defineHandler(async (event) => {
   const body = await readBody(event);
@@ -13,9 +12,8 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "ID is required" });
   }
 
-  const job = await prisma.mediaJob.findUnique({
-    where: { id }
-  });
+  const result = await pool.query(`SELECT * FROM "MediaJob" WHERE id = $1`, [id]);
+  const job = result.rows[0];
 
   if (!job) {
     throw createError({ statusCode: 404, statusMessage: "Job not found" });
@@ -35,9 +33,7 @@ export default defineHandler(async (event) => {
   }
 
   // Delete from DB
-  await prisma.mediaJob.delete({
-    where: { id }
-  });
+  await pool.query(`DELETE FROM "MediaJob" WHERE id = $1`, [id]);
 
   return { ok: true, message: "Job deleted successfully" };
 });

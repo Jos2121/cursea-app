@@ -1,6 +1,7 @@
 import { defineHandler } from "nitro";
 import { readBody, createError } from "nitro/h3";
-import { prisma } from "../../../utils/prisma";
+import { pool } from "../../../utils/db";
+import { randomUUID } from "crypto";
 
 export default defineHandler(async (event) => {
   const body = await readBody(event);
@@ -9,15 +10,14 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Prompt is required" });
   }
 
-  // Create or update job
-  const job = await prisma.mediaJob.create({
-    data: {
-      source: 'manual',
-      prompt: body.prompt,
-      status: 'audio_ready',
-      audioUrl: `/media/audio_${Date.now()}.mp3` // simulated
-    }
-  });
+  const jobId = randomUUID();
+  const audioUrl = `/media/audio_${Date.now()}.mp3`; // simulated
 
-  return { ok: true, job };
+  const result = await pool.query(
+    `INSERT INTO "MediaJob" (id, prompt, status, "audioUrl", "createdAt", "updatedAt") 
+     VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *`,
+    [jobId, body.prompt, 'audio_ready', audioUrl]
+  );
+
+  return { ok: true, job: result.rows[0] };
 });

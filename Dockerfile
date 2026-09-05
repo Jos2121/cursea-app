@@ -10,7 +10,7 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
-RUN npx prisma generate && pnpm run build
+RUN pnpm run build
 
 FROM base AS production
 WORKDIR /usr/src/app

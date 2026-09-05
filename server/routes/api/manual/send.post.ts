@@ -1,6 +1,6 @@
 import { defineHandler } from "nitro";
 import { readBody, createError } from "nitro/h3";
-import { prisma } from "../../../utils/prisma";
+import { pool } from "../../../utils/db";
 
 export default defineHandler(async (event) => {
   const body = await readBody(event);
@@ -9,13 +9,12 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "jobId and recipient are required" });
   }
 
-  const job = await prisma.mediaJob.update({
-    where: { id: body.jobId },
-    data: {
-      recipient: body.recipient,
-      status: 'sent',
-    }
-  });
+  const result = await pool.query(
+    `UPDATE "MediaJob" 
+     SET "whatsappNumber" = $1, status = $2, "updatedAt" = NOW() 
+     WHERE id = $3 RETURNING *`,
+    [body.recipient, 'sent', body.jobId]
+  );
 
-  return { ok: true, job };
+  return { ok: true, job: result.rows[0] };
 });

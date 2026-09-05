@@ -1,6 +1,7 @@
 import { defineHandler } from "nitro";
 import { readBody, createError, setResponseStatus } from "nitro/h3";
-import { prisma } from "../../../utils/prisma";
+import { pool } from "../../../utils/db";
+import { randomUUID } from "crypto";
 
 export default defineHandler(async (event) => {
   const body = await readBody(event);
@@ -9,57 +10,52 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Prompt is required" });
   }
 
-  // Create job in database
-  const job = await prisma.mediaJob.create({
-    data: {
-      source: 'n8n',
-      prompt: body.prompt,
-      imageUrl: body.imageUrl,
-      recipient: body.recipient,
-      status: 'pending',
-    }
-  });
+  const jobId = randomUUID();
+  const whatsappNumber = body.recipient || body.whatsappNumber || null;
+  
+  // Insert raw job
+  await pool.query(
+    `INSERT INTO "MediaJob" (id, prompt, status, "whatsappNumber", "createdAt", "updatedAt") 
+     VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+    [jobId, body.prompt, 'pending', whatsappNumber]
+  );
 
   // Acknowledge immediately
   setResponseStatus(event, 202);
   
   // Start background process asynchronously without waiting
-  // In a real production environment you might use a proper background job queue (e.g. BullMQ)
-  // For now, we simulate background processing
-  processJob(job.id, body).catch(console.error);
+  processJob(jobId, body).catch(console.error);
 
-  return { ok: true, jobId: job.id, message: "Job accepted and processing started in background" };
+  return { ok: true, jobId: jobId, message: "Job accepted and processing started in background" };
 });
 
 async function processJob(jobId: string, data: any) {
   try {
-    // 1. Simulate audio download (Lyria API)
-    await prisma.mediaJob.update({
-      where: { id: jobId },
-      data: { status: 'audio_ready', audioUrl: `/media/audio_${jobId}.mp3` }
-    });
+    // 1. Simulate audio download
+    await pool.query(
+      `UPDATE "MediaJob" SET status = $1, "audioUrl" = $2, "updatedAt" = NOW() WHERE id = $3`, 
+      ['audio_ready', `/media/audio_${jobId}.mp3`, jobId]
+    );
     
-    // Simulate delay
     await new Promise(r => setTimeout(r, 2000));
 
-    // 2. Simulate video generation (ffmpeg)
-    await prisma.mediaJob.update({
-      where: { id: jobId },
-      data: { status: 'video_ready', videoUrl: `/media/video_${jobId}.mp4` }
-    });
+    // 2. Simulate video generation
+    await pool.query(
+      `UPDATE "MediaJob" SET status = $1, "videoUrl" = $2, "updatedAt" = NOW() WHERE id = $3`,
+      ['video_ready', `/media/video_${jobId}.mp4`, jobId]
+    );
 
-    // Simulate delay
     await new Promise(r => setTimeout(r, 2000));
 
-    // 3. Simulate WhatsApp send (YCloud API)
-    await prisma.mediaJob.update({
-      where: { id: jobId },
-      data: { status: 'sent' }
-    });
+    // 3. Simulate WhatsApp send
+    await pool.query(
+      `UPDATE "MediaJob" SET status = $1, "updatedAt" = NOW() WHERE id = $2`,
+      ['sent', jobId]
+    );
   } catch (error: any) {
-    await prisma.mediaJob.update({
-      where: { id: jobId },
-      data: { status: 'error', errorLog: error.message }
-    });
+    await pool.query(
+      `UPDATE "MediaJob" SET status = $1, "updatedAt" = NOW() WHERE id = $2`,
+      ['error', jobId]
+    );
   }
 }
