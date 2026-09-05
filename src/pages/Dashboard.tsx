@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
 
@@ -41,6 +42,12 @@ export default function Dashboard() {
   const [jobs, setJobs] = useState<MediaJob[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Regenerate Video Modal State
+  const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
+  const [regenerateJobId, setRegenerateJobId] = useState<string | null>(null);
+  const [regenerateImageUrl, setRegenerateImageUrl] = useState('');
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
   // Studio state
   const [studioStep, setStudioStep] = useState(1);
   const [studioJobId, setStudioJobId] = useState<string | null>(null);
@@ -50,6 +57,39 @@ export default function Dashboard() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [studioAudioUrl, setStudioAudioUrl] = useState<string | null>(null);
   const [studioVideoUrl, setStudioVideoUrl] = useState<string | null>(null);
+
+  // Load Studio State from LocalStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('videoFlowStudioState');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.studioStep) setStudioStep(parsed.studioStep);
+        if (parsed.studioJobId) setStudioJobId(parsed.studioJobId);
+        if (parsed.prompt) setPrompt(parsed.prompt);
+        if (parsed.imageUrl) setImageUrl(parsed.imageUrl);
+        if (parsed.phone) setPhone(parsed.phone);
+        if (parsed.studioAudioUrl) setStudioAudioUrl(parsed.studioAudioUrl);
+        if (parsed.studioVideoUrl) setStudioVideoUrl(parsed.studioVideoUrl);
+      } catch (e) {
+        console.error("Failed to parse studio state from localStorage", e);
+      }
+    }
+  }, []);
+
+  // Save Studio State to LocalStorage
+  useEffect(() => {
+    const stateToSave = {
+      studioStep,
+      studioJobId,
+      prompt,
+      imageUrl,
+      phone,
+      studioAudioUrl,
+      studioVideoUrl,
+    };
+    localStorage.setItem('videoFlowStudioState', JSON.stringify(stateToSave));
+  }, [studioStep, studioJobId, prompt, imageUrl, phone, studioAudioUrl, studioVideoUrl]);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -86,6 +126,30 @@ export default function Dashboard() {
       fetchJobs();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // History action: Regenerate Video
+  const handleRegenerateVideo = async () => {
+    if (!regenerateJobId || !regenerateImageUrl) return;
+    setIsRegenerating(true);
+    try {
+      const res = await fetch('/api/manual/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: regenerateJobId, imageUrl: regenerateImageUrl })
+      });
+      
+      if (res.ok) {
+        setIsRegenerateModalOpen(false);
+        fetchJobs();
+      } else {
+        alert('Failed to generate video');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -143,19 +207,23 @@ export default function Dashboard() {
         body: JSON.stringify({ jobId: studioJobId, recipient: phone })
       });
       alert('Sent successfully!');
-      // Reset studio
-      setStudioStep(1);
-      setStudioJobId(null);
-      setPrompt('');
-      setImageUrl('');
-      setPhone('');
-      setStudioAudioUrl(null);
-      setStudioVideoUrl(null);
+      handleResetStudio();
     } catch (err) {
       console.error(err);
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleResetStudio = () => {
+    setStudioStep(1);
+    setStudioJobId(null);
+    setPrompt('');
+    setImageUrl('');
+    setPhone('');
+    setStudioAudioUrl(null);
+    setStudioVideoUrl(null);
+    localStorage.removeItem('videoFlowStudioState');
   };
 
   return (
@@ -280,10 +348,23 @@ export default function Dashboard() {
                           {!job.audioUrl && !job.videoUrl && <span className="text-gray-600 italic">None</span>}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                        {job.audioUrl && (
+                          <button
+                            onClick={() => {
+                              setRegenerateJobId(job.id);
+                              setRegenerateImageUrl(job.imageUrl || '');
+                              setIsRegenerateModalOpen(true);
+                            }}
+                            className="p-2 text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors inline-block"
+                            title="Generate or Regenerate Video"
+                          >
+                            <Video className="w-4 h-4" />
+                          </button>
+                        )}
                         <button 
                           onClick={() => handleDelete(job.id)}
-                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors inline-block"
                           title="Delete physically and from DB"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -300,7 +381,17 @@ export default function Dashboard() {
         {activeTab === 'studio' && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-[#111827] rounded-2xl border border-gray-800 p-8 shadow-xl">
-              <h2 className="text-2xl font-bold text-white mb-6">Manual Studio</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-white">Manual Studio</h2>
+                {studioJobId && (
+                  <button 
+                    onClick={handleResetStudio}
+                    className="text-sm text-gray-400 hover:text-red-400 transition-colors"
+                  >
+                    Clear and start new job
+                  </button>
+                )}
+              </div>
               
               {/* Step 1 */}
               <div className={`relative pl-8 pb-8 ${studioStep === 1 ? 'opacity-100' : 'opacity-60'}`}>
@@ -411,6 +502,43 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Regenerate Video Modal */}
+        <Dialog open={isRegenerateModalOpen} onOpenChange={setIsRegenerateModalOpen}>
+          <DialogContent className="bg-[#111827] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>Generate/Regenerate Video</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-gray-400">Provide an image URL to combine with the existing audio track.</p>
+              <input
+                type="url"
+                value={regenerateImageUrl}
+                onChange={(e) => setRegenerateImageUrl(e.target.value)}
+                disabled={isRegenerating}
+                placeholder="Enter image URL..."
+                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              />
+            </div>
+            <DialogFooter>
+              <button
+                onClick={() => setIsRegenerateModalOpen(false)}
+                disabled={isRegenerating}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRegenerateVideo}
+                disabled={!regenerateImageUrl || isRegenerating}
+                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
+              >
+                {isRegenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
+                Generate
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
