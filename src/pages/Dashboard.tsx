@@ -23,6 +23,7 @@ export interface TemplateConfig {
   id: string;
   name: string;
   bgUrl: string;
+  type?: 'completa' | 'coordenadas';
   photo: { x: number; y: number; w: number; h: number };
   titulo: { x: number; y: number; fontSize: number; color: string; align: 'left' | 'center' };
   artista: { x: number; y: number; fontSize: number; color: string; align: 'left' | 'center' };
@@ -135,30 +136,36 @@ export default function Dashboard() {
     loadTemplates();
   }, []);
 
-  const handleSaveTemplate = async (config: TemplateConfig, bgUrl: string, dedicatoriaSz: number) => {
-    const promptedName = window.prompt('Nombre de la nueva plantilla:');
+  const handleSaveTemplate = async (config: TemplateConfig, bgUrl: string, dedicatoriaSz: number, mode: 'completa' | 'coordenadas') => {
+    const promptedName = window.prompt(`Nombre de la nueva plantilla (${mode}):`);
     if (promptedName === null) return;
     const templateName = promptedName.trim() || 'Mi Plantilla Personalizada';
     
     try {
+      const payloadConfig: any = {
+        type: mode,
+        photoX: config.photo.x, photoY: config.photo.y, photoWidth: config.photo.w, photoHeight: config.photo.h,
+        tituloX: config.titulo.x, tituloY: config.titulo.y, tituloSize: config.titulo.fontSize,
+        artistaX: config.artista.x, artistaY: config.artista.y, artistaSize: config.artista.fontSize,
+        dedicatoriaX: config.dedicatoria.x, dedicatoriaY: config.dedicatoria.y, dedicatoriaSize: dedicatoriaSz,
+        // Mantener la estructura original anidada para retrocompatibilidad de la vista previa
+        photo: config.photo,
+        titulo: config.titulo,
+        artista: config.artista,
+        dedicatoria: config.dedicatoria
+      };
+
+      if (mode === 'completa') {
+        payloadConfig.backgroundUrl = bgUrl;
+        payloadConfig.bgUrl = bgUrl;
+      }
+
       const res = await fetch('/api/templates/save', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           name: templateName,
-          config: {
-            backgroundUrl: bgUrl,
-            photoX: config.photo.x, photoY: config.photo.y, photoWidth: config.photo.w, photoHeight: config.photo.h,
-            tituloX: config.titulo.x, tituloY: config.titulo.y, tituloSize: config.titulo.fontSize,
-            artistaX: config.artista.x, artistaY: config.artista.y, artistaSize: config.artista.fontSize,
-            dedicatoriaX: config.dedicatoria.x, dedicatoriaY: config.dedicatoria.y, dedicatoriaSize: dedicatoriaSz,
-            // Mantener la estructura original anidada para retrocompatibilidad de la vista previa
-            bgUrl: bgUrl,
-            photo: config.photo,
-            titulo: config.titulo,
-            artista: config.artista,
-            dedicatoria: config.dedicatoria
-          }
+          config: payloadConfig
         })
       });
       const data = await res.json().catch(() => ({}));
@@ -740,21 +747,30 @@ export default function Dashboard() {
                           <span className="text-sm font-medium text-white text-center">{t.name}</span>
                         </div>
                       ))}
-                      {dbTemplates.map(t => (
+                      {dbTemplates.map(t => {
+                        const parsedConfig = (t as any).config || t;
+                        const isCoords = parsedConfig.type === 'coordenadas';
+                        return (
                         <div
                           key={t.id}
                           onClick={() => {
                             if (studioStep === 2 && !isProcessing) {
-                              setBackgroundUrl(t.bgUrl || 'custom');
-                              if (t.bgUrl && t.bgUrl.startsWith('http')) setCustomBackground(t.bgUrl);
-                              setStudioTemplateConfig(JSON.parse(JSON.stringify(t)));
+                              if (!isCoords) {
+                                const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+                                if (bg) {
+                                  setBackgroundUrl(bg || 'custom');
+                                  if (bg.startsWith('http')) setCustomBackground(bg);
+                                }
+                              }
+                              setStudioTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
                             }
                           }}
-                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${studioTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center ${studioTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
                         >
+                          <span className="text-[10px] opacity-70 text-gray-400 block text-center mb-0.5">{isCoords ? '[Posiciones]' : '[Completa]'}</span>
                           <span className="text-sm font-medium text-purple-200 text-center">{t.name}</span>
                         </div>
-                      ))}
+                      )})}
                     </div>
                     {backgroundUrl === 'custom' && (
                       <input
@@ -845,13 +861,23 @@ export default function Dashboard() {
 
                   {/* Live Preview Save Button */}
                   {studioStep === 2 && (
-                    <div className="flex justify-center mt-2">
-                      <button
-                        onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize)}
-                        className="text-xs text-indigo-400 hover:text-indigo-300 underline"
-                      >
-                        Guardar Diseño como Plantilla
-                      </button>
+                    <div className="flex flex-col items-center gap-2 mt-4 bg-gray-800/30 p-3 rounded-lg border border-gray-700/50">
+                      <span className="text-xs text-gray-400 font-medium">Guardar Diseño Actual:</span>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'completa')}
+                          className="text-xs text-indigo-400 hover:text-indigo-300 underline"
+                        >
+                          Fondo + Posiciones
+                        </button>
+                        <span className="text-gray-600">|</span>
+                        <button
+                          onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'coordenadas')}
+                          className="text-xs text-purple-400 hover:text-purple-300 underline"
+                        >
+                          Solo Posiciones
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -941,21 +967,30 @@ export default function Dashboard() {
                         <span className="text-xs font-medium text-white text-center">{t.name}</span>
                       </div>
                     ))}
-                    {dbTemplates.map(t => (
+                    {dbTemplates.map(t => {
+                      const parsedConfig = (t as any).config || t;
+                      const isCoords = parsedConfig.type === 'coordenadas';
+                      return (
                       <div
                         key={t.id}
                         onClick={() => {
                           if (!isRegenerating) {
-                            setRegenerateBgUrl(t.bgUrl || 'custom');
-                            if (t.bgUrl && t.bgUrl.startsWith('http')) setRegenerateCustomBg(t.bgUrl);
-                            setRegenerateTemplateConfig(JSON.parse(JSON.stringify(t)));
+                            if (!isCoords) {
+                              const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+                              if (bg) {
+                                setRegenerateBgUrl(bg || 'custom');
+                                if (bg.startsWith('http')) setRegenerateCustomBg(bg);
+                              }
+                            }
+                            setRegenerateTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
                           }
                         }}
-                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex flex-col items-center justify-center ${regenerateTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
                       >
+                        <span className="text-[10px] opacity-70 text-gray-400 block text-center mb-0.5">{isCoords ? '[Posiciones]' : '[Completa]'}</span>
                         <span className="text-xs font-medium text-purple-200 text-center">{t.name}</span>
                       </div>
-                    ))}
+                    )})}
                   </div>
                   {regenerateBgUrl === 'custom' && (
                     <input
@@ -1041,13 +1076,23 @@ export default function Dashboard() {
                     scale={0.2037}
                   />
                 </div>
-                <div className="flex justify-center mt-2">
-                  <button
-                    onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize)}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 underline"
-                  >
-                    Guardar Diseño como Plantilla
-                  </button>
+                <div className="flex flex-col items-center gap-2 mt-4 bg-gray-800/30 p-3 rounded-lg border border-gray-700/50">
+                  <span className="text-xs text-gray-400 font-medium">Guardar Diseño Actual:</span>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'completa')}
+                      className="text-xs text-indigo-400 hover:text-indigo-300 underline"
+                    >
+                      Fondo + Posiciones
+                    </button>
+                    <span className="text-gray-600">|</span>
+                    <button
+                      onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'coordenadas')}
+                      className="text-xs text-purple-400 hover:text-purple-300 underline"
+                    >
+                      Solo Posiciones
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
