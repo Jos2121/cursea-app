@@ -131,21 +131,26 @@ export default function Dashboard() {
     try {
       let payloadConfig: any = {
         type: mode,
-        photoX: config.photo.x, photoY: config.photo.y, photoWidth: config.photo.w, photoHeight: config.photo.h,
-        tituloX: config.titulo.x, tituloY: config.titulo.y, tituloSize: config.titulo.fontSize,
-        artistaX: config.artista.x, artistaY: config.artista.y, artistaSize: config.artista.fontSize,
-        dedicatoriaX: config.dedicatoria.x, dedicatoriaY: config.dedicatoria.y, dedicatoriaSize: dedicatoriaSz,
+        photoX: Number(config.photo.x),
+        photoY: Number(config.photo.y),
+        photoWidth: Number(config.photo.w),
+        photoHeight: Number(config.photo.h),
+        tituloX: Number(config.titulo.x),
+        tituloY: Number(config.titulo.y),
+        tituloSize: Number(config.titulo.fontSize),
+        artistaX: Number(config.artista.x),
+        artistaY: Number(config.artista.y),
+        artistaSize: Number(config.artista.fontSize),
+        dedicatoriaX: Number(config.dedicatoria.x),
+        dedicatoriaY: Number(config.dedicatoria.y),
+        dedicatoriaSize: Number(dedicatoriaSz),
+        ...(mode === 'completa' ? { backgroundUrl: bgUrl, bgUrl: bgUrl } : {}),
         // Anidados requeridos por el componente visual
-        photo: config.photo,
-        titulo: config.titulo,
-        artista: config.artista,
-        dedicatoria: config.dedicatoria
+        photo: { ...config.photo, x: Number(config.photo.x), y: Number(config.photo.y), w: Number(config.photo.w), h: Number(config.photo.h) },
+        titulo: { ...config.titulo, x: Number(config.titulo.x), y: Number(config.titulo.y), fontSize: Number(config.titulo.fontSize) },
+        artista: { ...config.artista, x: Number(config.artista.x), y: Number(config.artista.y), fontSize: Number(config.artista.fontSize) },
+        dedicatoria: { ...config.dedicatoria, x: Number(config.dedicatoria.x), y: Number(config.dedicatoria.y), fontSize: Number(dedicatoriaSz) }
       };
-
-      if (mode === 'completa') {
-        payloadConfig.backgroundUrl = bgUrl;
-        payloadConfig.bgUrl = bgUrl;
-      }
 
       const res = await fetch('/api/templates/save', {
         method: 'POST',
@@ -467,7 +472,8 @@ export default function Dashboard() {
     setBg: (bg: string) => void,
     setCustomBg: (bg: string) => void,
     isProcessing: boolean,
-    onAddBgClick: () => void
+    onAddBgClick: () => void,
+    setDedicatoriaSizeState?: (size: number) => void
   ) => (
     <div className="flex gap-2 mb-3">
       <DropdownMenu>
@@ -497,7 +503,30 @@ export default function Dashboard() {
                         if (bg.startsWith('http')) setCustomBg(bg);
                       }
                     }
-                    setConfig({ ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id });
+                    
+                    const nextConfig = { ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id };
+                    
+                    if (!nextConfig.dedicatoria) {
+                      nextConfig.dedicatoria = { ...DEFAULT_TEMPLATE.dedicatoria };
+                    }
+                    
+                    if (parsedConfig.dedicatoriaX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoriaX);
+                    else if (parsedConfig.dedicatoryX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoryX);
+
+                    if (parsedConfig.dedicatoriaY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoriaY);
+                    else if (parsedConfig.dedicatoryY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoryY);
+
+                    let dedicatoriaSz = nextConfig.dedicatoria.fontSize;
+                    if (parsedConfig.dedicatoriaSize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatoriaSize);
+                    else if (parsedConfig.dedicatorySize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatorySize);
+                    
+                    nextConfig.dedicatoria.fontSize = dedicatoriaSz;
+                    
+                    if (setDedicatoriaSizeState) {
+                      setDedicatoriaSizeState(dedicatoriaSz);
+                    }
+
+                    setConfig(nextConfig);
                   }}
                   className="flex items-center justify-between cursor-pointer py-2 px-3 text-white hover:bg-[#374151] focus:bg-[#374151] focus:text-white"
                 >
@@ -840,7 +869,8 @@ export default function Dashboard() {
                       setBackgroundUrl,
                       setCustomBackground,
                       isProcessing,
-                      () => setIsStudioAddBgModalOpen(true)
+                      () => setIsStudioAddBgModalOpen(true),
+                      setDedicatoriaSize
                     )}
                   </div>
 
@@ -1018,7 +1048,8 @@ export default function Dashboard() {
                     setRegenerateBgUrl,
                     setRegenerateCustomBg,
                     isRegenerating,
-                    () => setIsRegenAddBgModalOpen(true)
+                    () => setIsRegenAddBgModalOpen(true),
+                    setRegenerateDedicatoriaSize
                   )}
                 </div>
 
