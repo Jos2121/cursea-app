@@ -45,7 +45,12 @@ export default function Dashboard() {
   // Regenerate Video Modal State
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
   const [regenerateJobId, setRegenerateJobId] = useState<string | null>(null);
-  const [regenerateImageUrl, setRegenerateImageUrl] = useState('');
+  const [regenerateBgUrl, setRegenerateBgUrl] = useState('image_f840ac.jpg');
+  const [regenerateCustomBg, setRegenerateCustomBg] = useState('');
+  const [regenerateUserPhotoUrl, setRegenerateUserPhotoUrl] = useState('');
+  const [regenerateTitulo, setRegenerateTitulo] = useState('');
+  const [regenerateArtista, setRegenerateArtista] = useState('');
+  const [regenerateDedicatoria, setRegenerateDedicatoria] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
 
   // WhatsApp Modal State
@@ -159,13 +164,21 @@ export default function Dashboard() {
 
   // History action: Regenerate Video
   const handleRegenerateVideo = async () => {
-    if (!regenerateJobId || !regenerateImageUrl) return;
+    const finalBg = regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl;
+    if (!regenerateJobId || !regenerateUserPhotoUrl || !regenerateTitulo || !regenerateArtista || (regenerateBgUrl === 'custom' && !regenerateCustomBg)) return;
     setIsRegenerating(true);
     try {
       const res = await fetch('/api/manual/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: regenerateJobId, imageUrl: regenerateImageUrl })
+        body: JSON.stringify({
+          jobId: regenerateJobId,
+          backgroundUrl: finalBg,
+          userPhotoUrl: regenerateUserPhotoUrl,
+          titulo: regenerateTitulo,
+          artista: regenerateArtista,
+          dedicatoria: regenerateDedicatoria
+        })
       });
       
       const data = await res.json().catch(() => ({}));
@@ -414,7 +427,12 @@ export default function Dashboard() {
                           <button
                             onClick={() => {
                               setRegenerateJobId(job.id);
-                              setRegenerateImageUrl(job.imageUrl || '');
+                              setRegenerateBgUrl('image_f840ac.jpg');
+                              setRegenerateCustomBg('');
+                              setRegenerateUserPhotoUrl(job.imageUrl || '');
+                              setRegenerateTitulo('');
+                              setRegenerateArtista('');
+                              setRegenerateDedicatoria('');
                               setIsRegenerateModalOpen(true);
                             }}
                             className="p-2 text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors inline-block"
@@ -661,20 +679,97 @@ export default function Dashboard() {
 
         {/* Regenerate Video Modal */}
         <Dialog open={isRegenerateModalOpen} onOpenChange={setIsRegenerateModalOpen}>
-          <DialogContent className="bg-[#111827] border-gray-800 text-white">
+          <DialogContent className="bg-[#111827] border-gray-800 text-white max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Generate/Regenerate Video</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <p className="text-sm text-gray-400">Provide an image URL to combine with the existing audio track.</p>
-              <input
-                type="url"
-                value={regenerateImageUrl}
-                onChange={(e) => setRegenerateImageUrl(e.target.value)}
-                disabled={isRegenerating}
-                placeholder="Enter image URL..."
-                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              />
+              <p className="text-sm text-gray-400">Provide the 9:16 player metadata to combine with the existing audio track.</p>
+              
+              {/* Selector de Fondo */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor</label>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div
+                    onClick={() => !isRegenerating && setRegenerateBgUrl('image_f840ac.jpg')}
+                    className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_f840ac.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                  >
+                    <span className="text-xs font-medium text-white text-center">Spotify</span>
+                  </div>
+                  <div
+                    onClick={() => !isRegenerating && setRegenerateBgUrl('image_apple.jpg')}
+                    className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_apple.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                  >
+                    <span className="text-xs font-medium text-white text-center">Apple</span>
+                  </div>
+                  <div
+                    onClick={() => !isRegenerating && setRegenerateBgUrl('custom')}
+                    className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'custom' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                  >
+                    <span className="text-xs font-medium text-white text-center">Propio</span>
+                  </div>
+                </div>
+                {regenerateBgUrl === 'custom' && (
+                  <input
+                    type="url"
+                    value={regenerateCustomBg}
+                    onChange={(e) => setRegenerateCustomBg(e.target.value)}
+                    disabled={isRegenerating}
+                    placeholder="URL de fondo personalizado..."
+                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  />
+                )}
+              </div>
+
+              {/* URL de Foto de Usuario */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Foto de Portada (URL)</label>
+                <input
+                  type="url"
+                  value={regenerateUserPhotoUrl}
+                  onChange={(e) => setRegenerateUserPhotoUrl(e.target.value)}
+                  disabled={isRegenerating}
+                  placeholder="https://..."
+                  className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Título</label>
+                  <input
+                    type="text"
+                    value={regenerateTitulo}
+                    onChange={(e) => setRegenerateTitulo(e.target.value)}
+                    disabled={isRegenerating}
+                    placeholder="Ej. Nuestra Historia"
+                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Artista</label>
+                  <input
+                    type="text"
+                    value={regenerateArtista}
+                    onChange={(e) => setRegenerateArtista(e.target.value)}
+                    disabled={isRegenerating}
+                    placeholder="Ej. Juan & María"
+                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Dedicatoria (opcional)</label>
+                <textarea
+                  value={regenerateDedicatoria}
+                  onChange={(e) => setRegenerateDedicatoria(e.target.value)}
+                  disabled={isRegenerating}
+                  placeholder="Un pequeño mensaje..."
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
+                />
+              </div>
             </div>
             <DialogFooter>
               <button
@@ -686,7 +781,7 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={handleRegenerateVideo}
-                disabled={!regenerateImageUrl || isRegenerating}
+                disabled={(!regenerateUserPhotoUrl || !regenerateTitulo || !regenerateArtista || (regenerateBgUrl === 'custom' && !regenerateCustomBg)) || isRegenerating}
                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
               >
                 {isRegenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
