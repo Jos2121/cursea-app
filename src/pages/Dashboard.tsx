@@ -790,7 +790,7 @@ export default function Dashboard() {
                               setRegenerateJobId(job.id);
                               setRegenerateBgUrl('');
                               setRegenerateCustomBg('');
-                              setRegenerateUserPhotoUrl(job.imageUrl || '');
+                              setRegenerateUserPhotoUrl('');
                               setRegenerateTitulo('');
                               setRegenerateArtista('');
                               setRegenerateDedicatoria('');
@@ -920,7 +920,7 @@ export default function Dashboard() {
                         setCustomBackground(e.target.value);
                       }}
                       disabled={studioStep !== 2 || isProcessing}
-                      placeholder="https://..."
+                      placeholder="https://ejemplo.com/fondo.jpg"
                       className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                     />
                   </div>
@@ -1114,7 +1114,7 @@ export default function Dashboard() {
                       setRegenerateCustomBg(e.target.value);
                     }}
                     disabled={isRegenerating}
-                    placeholder="https://..."
+                    placeholder="https://ejemplo.com/fondo.jpg"
                     className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                   />
                 </div>
