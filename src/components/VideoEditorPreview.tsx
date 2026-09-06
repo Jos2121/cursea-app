@@ -64,7 +64,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
 
       {/* Cover Photo */}
       <div
-        className="absolute"
+        className="absolute overflow-hidden"
         style={{
           left: `${(config.photo.x / 1080) * 100}%`,
           top: `${(config.photo.y / 1920) * 100}%`,

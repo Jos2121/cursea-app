@@ -440,6 +440,47 @@ export default function Dashboard() {
     </div>
   );
 
+  const renderPhotoControls = (config: TemplateConfig, setConfig: any) => (
+    <div className="flex gap-2 mt-2">
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-500">X:</span>
+        <input
+          type="number"
+          value={config.photo.x}
+          onChange={(e) => setConfig({...config, photo: {...config.photo, x: Number(e.target.value)}})}
+          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-500">Y:</span>
+        <input
+          type="number"
+          value={config.photo.y}
+          onChange={(e) => setConfig({...config, photo: {...config.photo, y: Number(e.target.value)}})}
+          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-500">W:</span>
+        <input
+          type="number"
+          value={config.photo.w}
+          onChange={(e) => setConfig({...config, photo: {...config.photo, w: Number(e.target.value)}})}
+          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-500">H:</span>
+        <input
+          type="number"
+          value={config.photo.h}
+          onChange={(e) => setConfig({...config, photo: {...config.photo, h: Number(e.target.value)}})}
+          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-[#0B0F19] text-gray-200 p-8">
       {/* Content */}
@@ -710,6 +751,7 @@ export default function Dashboard() {
                       placeholder="https://..."
                       className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                     />
+                    {renderPhotoControls(studioTemplateConfig, setStudioTemplateConfig)}
                   </div>
 
                   {/* Datos de la canción */}
@@ -909,6 +951,7 @@ export default function Dashboard() {
                     placeholder="https://..."
                     className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                   />
+                  {renderPhotoControls(regenerateTemplateConfig, setRegenerateTemplateConfig)}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
