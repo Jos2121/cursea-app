@@ -89,7 +89,13 @@ export default defineHandler(async (event) => {
 
     // Si tenemos campos de plantilla o userPhotoUrl, aplicamos la composición 9:16
     if (titulo || artista || dedicatoria || backgroundUrl || userPhotoUrl) {
-      const sanitize = (str: string) => (str || "").replace(/['":\\]/g, "");
+      // Función para escapar caracteres de forma segura para el drawtext de FFmpeg
+      const sanitize = (str: string) => {
+        if (!str) return "";
+        // Reemplazamos comillas simples por tipográficas, escapamos dos puntos, y eliminamos saltos/retornos.
+        return str.replace(/:/g, "\\:").replace(/'/g, "\u2019").replace(/"/g, "\u201D").replace(/[\n\r]/g, " ");
+      };
+      
       const safeTitulo = sanitize(titulo);
       const safeArtista = sanitize(artista);
       const safeDedicatoria = sanitize(dedicatoria);
@@ -98,24 +104,24 @@ export default defineHandler(async (event) => {
       let bgInput = tempBgPath ? `-loop 1 -framerate 1 -i "${tempBgPath}"` : `-f lavfi -i color=c=black:s=1080x1920:r=1`;
 
       let filter = `[1:v]scale=1080:1920[bg];`;
-      filter += `[0:v]scale=800:800:force_original_aspect_ratio=increase,crop=800:800[cover];`;
-      filter += `[bg][cover]overlay=(W-w)/2:300[v1]`;
+      filter += `[0:v]scale=w=820:h=820:force_original_aspect_ratio=increase,crop=820:820:(in_w-820)/2:(in_h-820)/2[photo];`;
+      filter += `[bg][photo]overlay=x=(W-w)/2:y=180[v1]`;
 
       let lastV = 'v1';
       let vIndex = 2;
       
       if (safeTitulo) {
-        filter += `;[${lastV}]drawtext=text='${safeTitulo}':fontcolor=white:fontsize=64:x=(w-text_w)/2:y=1200[v${vIndex}]`;
+        filter += `;[${lastV}]drawtext=text='${safeTitulo}':fontcolor=white:fontsize=42:x=130:y=1040[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }
       if (safeArtista) {
-        filter += `;[${lastV}]drawtext=text='${safeArtista}':fontcolor=gray:fontsize=48:x=(w-text_w)/2:y=1300[v${vIndex}]`;
+        filter += `;[${lastV}]drawtext=text='${safeArtista}':fontcolor=#B3B3B3:fontsize=30:x=130:y=1095[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }
       if (safeDedicatoria) {
-        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=white:fontsize=36:x=(w-text_w)/2:y=1400[v${vIndex}]`;
+        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=#E5E5E5:fontsize=28:x=(w-text_w)/2:y=1620[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }
