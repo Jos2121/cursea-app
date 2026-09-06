@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send, ImagePlus, Check, ChevronsUpDown } from 'lucide-react';
+import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VideoEditorPreview } from '../components/VideoEditorPreview';
 
 type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
@@ -32,14 +31,34 @@ export interface TemplateConfig {
   dedicatoria: { x: number; y: number; fontSize: number; color: string; align: 'left' | 'center' };
 }
 
-export const DEFAULT_TEMPLATE: TemplateConfig = {
-  id: 'default',
-  name: 'Default',
-  bgUrl: '',
-  photo: { x: 130, y: 180, w: 820, h: 820 },
-  titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
-  artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
-  dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
+export const TEMPLATES_CONFIG: Record<string, TemplateConfig> = {
+  spotify: {
+    id: 'spotify',
+    name: 'Plantilla Spotify',
+    bgUrl: 'image_f840ac.jpg',
+    photo: { x: 130, y: 180, w: 820, h: 820 },
+    titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
+    artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
+    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
+  },
+  apple: {
+    id: 'apple',
+    name: 'Plantilla Apple',
+    bgUrl: 'image_apple.jpg',
+    photo: { x: 130, y: 180, w: 820, h: 820 },
+    titulo: { x: 540, y: 1040, fontSize: 42, color: 'white', align: 'center' },
+    artista: { x: 540, y: 1095, fontSize: 30, color: '#CCCCCC', align: 'center' },
+    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: 'white', align: 'center' },
+  },
+  custom: {
+    id: 'custom',
+    name: 'Fondo Propio',
+    bgUrl: 'custom',
+    photo: { x: 130, y: 180, w: 820, h: 820 },
+    titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
+    artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
+    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
+  }
 };
 
 const statusColors: Record<JobStatus, string> = {
@@ -76,9 +95,8 @@ export default function Dashboard() {
   const [regenerateArtista, setRegenerateArtista] = useState('');
   const [regenerateDedicatoria, setRegenerateDedicatoria] = useState('');
   const [regenerateDedicatoriaSize, setRegenerateDedicatoriaSize] = useState(28); // New stat
-  const [regenerateTemplateConfig, setRegenerateTemplateConfig] = useState<TemplateConfig>(DEFAULT_TEMPLATE);
+  const [regenerateTemplateConfig, setRegenerateTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [isRegeneratePopoverOpen, setIsRegeneratePopoverOpen] = useState(false);
 
   // WhatsApp Modal State
   const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
@@ -86,24 +104,20 @@ export default function Dashboard() {
   const [whatsappModalPhone, setWhatsappModalPhone] = useState('');
   const [isSendingWhatsapp, setIsSendingWhatsapp] = useState(false);
 
-  // Custom Background Modal
-  const [isCustomBgModalOpen, setIsCustomBgModalOpen] = useState(false);
-  const [tempCustomBgUrl, setTempCustomBgUrl] = useState('');
-
   // Studio state
   const [studioStep, setStudioStep] = useState(1);
   const [studioJobId, setStudioJobId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   
   // Studio Step 2 (Video Player 9:16 fields)
-  const [backgroundUrl, setBackgroundUrl] = useState('');
+  const [backgroundUrl, setBackgroundUrl] = useState('image_f840ac.jpg');
+  const [customBackground, setCustomBackground] = useState('');
   const [userPhotoUrl, setUserPhotoUrl] = useState('');
   const [titulo, setTitulo] = useState('');
   const [artista, setArtista] = useState('');
   const [dedicatoria, setDedicatoria] = useState('');
   const [dedicatoriaSize, setDedicatoriaSize] = useState(28); // New stat
-  const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>(DEFAULT_TEMPLATE);
-  const [isStudioPopoverOpen, setIsStudioPopoverOpen] = useState(false);
+  const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
   
   // Custom Templates from DB
   const [dbTemplates, setDbTemplates] = useState<TemplateConfig[]>([]);
