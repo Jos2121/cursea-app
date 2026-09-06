@@ -270,30 +270,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-gray-200">
-      {/* Header */}
-      <header className="border-b border-gray-800 bg-[#111827] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-blue-500/20 border border-indigo-500/30">
-                <Settings className="w-5 h-5 text-blue-400 absolute opacity-50" />
-                <Play className="w-4 h-4 text-indigo-400 fill-indigo-400 z-10 ml-0.5" />
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">VideoFlow</span>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center text-gray-400 hover:text-white transition-colors"
-            >
-              <LogOut className="w-5 h-5 mr-2" />
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="bg-[#0B0F19] text-gray-200 p-8">
+      {/* Content */}
+      <div className="max-w-7xl mx-auto">
         {/* Tabs */}
         <div className="flex space-x-1 bg-[#1F2937] p-1 rounded-xl w-fit mb-8 border border-gray-800">
           <button
@@ -632,7 +611,7 @@ export default function Dashboard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </main>
+      </div>
     </div>
   );
 }
