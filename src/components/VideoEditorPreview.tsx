@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Image as ImageIcon } from 'lucide-react';
 import { TemplateConfig } from '../pages/Dashboard';
@@ -26,6 +26,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
   dedicatoria,
   scale
 }) => {
+  // Callback ref state instead of useRef, forces re-render so framer-motion constraints work inside Portals/Modals.
   const [constraintsRef, setConstraintsRef] = useState<HTMLDivElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
 
@@ -46,7 +47,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
       <motion.div
         drag={isCenter ? "y" : true}
         dragMomentum={false}
-        dragConstraints={constraintsRef || false}
+        dragConstraints={constraintsRef || undefined}
         onDragStart={() => setSelectedElement(key)}
         onDragEnd={(e, info) => {
           const newX = isCenter ? t.x : Number(t.x) + (info.offset.x / scale);
@@ -58,7 +59,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
         }}
         animate={{ x: isCenter ? 0 : t.x, y: t.y }}
         onClick={(e: any) => { e.stopPropagation(); setSelectedElement(key); }}
-        className={`absolute whitespace-nowrap cursor-move touch-none ${isSelected ? 'ring-4 ring-indigo-500/50 rounded-lg' : ''}`}
+        className={`absolute whitespace-nowrap cursor-move touch-none select-none ${isSelected ? 'ring-4 ring-indigo-500/50 rounded-lg' : ''}`}
         style={{
           fontSize: `${t.fontSize}px`,
           color: t.color,
@@ -111,13 +112,13 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
               }}
               animate={{ x: config.photo.x, y: config.photo.y }}
               onClick={(e: any) => { e.stopPropagation(); setSelectedElement('photo'); }}
-              className={`absolute group touch-none ${selectedElement === 'photo' ? 'ring-4 ring-indigo-500 ring-offset-4 ring-offset-transparent' : ''}`}
+              className={`absolute group touch-none select-none ${selectedElement === 'photo' ? 'ring-4 ring-indigo-500 ring-offset-4 ring-offset-transparent' : ''}`}
               style={{ width: config.photo.w, height: config.photo.h, zIndex: 20 }}
             >
               {userPhotoUrl ? (
-                <img src={userPhotoUrl} className="w-full h-full object-cover rounded-md shadow-2xl" />
+                <img src={userPhotoUrl} className="w-full h-full object-cover rounded-md shadow-2xl pointer-events-none" />
               ) : (
-                <div className="w-full h-full bg-gray-800/80 backdrop-blur flex flex-col items-center justify-center text-gray-400 rounded-md border-2 border-dashed border-gray-600">
+                <div className="w-full h-full bg-gray-800/80 backdrop-blur flex flex-col items-center justify-center text-gray-400 rounded-md border-2 border-dashed border-gray-600 pointer-events-none">
                   <ImageIcon className="w-32 h-32 mb-4" />
                   <span className="text-3xl font-medium">Cover Photo</span>
                 </div>
@@ -133,9 +134,9 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
                     const newH = Math.max(200, config.photo.h + info.delta.y / scale);
                     setConfig((prev: any) => ({ ...prev, photo: { ...prev.photo, w: Math.round(newW), h: Math.round(newH) } }));
                   }}
-                  className="absolute -bottom-8 -right-8 w-16 h-16 bg-indigo-600 rounded-full cursor-nwse-resize shadow-[0_0_30px_rgba(0,0,0,0.5)] border-[6px] border-white z-50 flex items-center justify-center hover:scale-110 transition-transform touch-none"
+                  className="absolute -bottom-8 -right-8 w-16 h-16 bg-indigo-600 rounded-full cursor-nwse-resize shadow-[0_0_30px_rgba(0,0,0,0.5)] border-[6px] border-white z-50 flex items-center justify-center hover:scale-110 transition-transform touch-none select-none"
                 >
-                  <div className="w-6 h-6 border-b-4 border-r-4 border-white translate-x-[-4px] translate-y-[-4px]" />
+                  <div className="w-6 h-6 border-b-4 border-r-4 border-white translate-x-[-4px] translate-y-[-4px] pointer-events-none" />
                 </motion.div>
               )}
             </motion.div>
