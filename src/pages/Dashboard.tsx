@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VideoEditorPreview } from '../components/VideoEditorPreview';
 
 type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
@@ -142,13 +143,13 @@ export default function Dashboard() {
     const templateName = promptedName.trim() || 'Mi Plantilla Personalizada';
     
     try {
-      const payloadConfig: any = {
+      let payloadConfig: any = {
         type: mode,
         photoX: config.photo.x, photoY: config.photo.y, photoWidth: config.photo.w, photoHeight: config.photo.h,
         tituloX: config.titulo.x, tituloY: config.titulo.y, tituloSize: config.titulo.fontSize,
         artistaX: config.artista.x, artistaY: config.artista.y, artistaSize: config.artista.fontSize,
         dedicatoriaX: config.dedicatoria.x, dedicatoriaY: config.dedicatoria.y, dedicatoriaSize: dedicatoriaSz,
-        // Mantener la estructura original anidada para retrocompatibilidad de la vista previa
+        // Anidados requeridos por el componente visual
         photo: config.photo,
         titulo: config.titulo,
         artista: config.artista,
@@ -178,6 +179,26 @@ export default function Dashboard() {
     } catch (e: any) {
       console.error(e);
       alert(`Error al guardar: ${e.message || 'Error de red'}`);
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    if (!confirm('¿Seguro que deseas eliminar esta plantilla?')) return;
+    try {
+      const res = await fetch('/api/templates/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        setDbTemplates(prev => prev.filter(t => t.id !== id));
+        alert('Plantilla eliminada con éxito');
+      } else {
+        alert('Error al eliminar la plantilla');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error de red al intentar eliminar');
     }
   };
   
@@ -732,45 +753,62 @@ export default function Dashboard() {
                   {/* Selector de Fondo */}
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
-                      {Object.values(TEMPLATES_CONFIG).map(t => (
-                        <div
-                          key={t.id}
-                          onClick={() => {
-                            if (studioStep === 2 && !isProcessing) {
-                              setBackgroundUrl(t.bgUrl);
-                              setStudioTemplateConfig(JSON.parse(JSON.stringify(t)));
-                            }
-                          }}
-                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === t.bgUrl ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                        >
-                          <span className="text-sm font-medium text-white text-center">{t.name}</span>
-                        </div>
-                      ))}
-                      {dbTemplates.map(t => {
-                        const parsedConfig = (t as any).config || t;
-                        const isCoords = parsedConfig.type === 'coordenadas';
-                        return (
-                        <div
-                          key={t.id}
-                          onClick={() => {
-                            if (studioStep === 2 && !isProcessing) {
-                              if (!isCoords) {
-                                const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
-                                if (bg) {
-                                  setBackgroundUrl(bg || 'custom');
-                                  if (bg.startsWith('http')) setCustomBackground(bg);
-                                }
+                    <div className="flex gap-2 mb-3">
+                      <Select
+                        value={studioTemplateConfig.id}
+                        onValueChange={(val) => {
+                          const t = Object.values(TEMPLATES_CONFIG).find(x => x.id === val) || dbTemplates.find(x => x.id === val);
+                          if (t && studioStep === 2 && !isProcessing) {
+                            const parsedConfig = (t as any).config || t;
+                            const isCoords = parsedConfig.type === 'coordenadas';
+                            if (!isCoords) {
+                              const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+                              if (bg) {
+                                setBackgroundUrl(bg || 'custom');
+                                if (bg.startsWith('http')) setCustomBackground(bg);
                               }
-                              setStudioTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
                             }
-                          }}
-                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center ${studioTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                        >
-                          <span className="text-[10px] opacity-70 text-gray-400 block text-center mb-0.5">{isCoords ? '[Posiciones]' : '[Completa]'}</span>
-                          <span className="text-sm font-medium text-purple-200 text-center">{t.name}</span>
-                        </div>
-                      )})}
+                            setStudioTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
+                            // Mantén el ID para el select (incluso si parsedConfig pierde su id principal)
+                            setStudioTemplateConfig(prev => ({ ...prev, id: t.id }));
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full bg-[#1F2937] border-gray-700 text-white focus:ring-indigo-500 rounded-xl h-12">
+                          <SelectValue placeholder="Selecciona una plantilla" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1F2937] border-gray-700 text-white">
+                          <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Por Defecto</div>
+                          {Object.values(TEMPLATES_CONFIG).map(t => (
+                            <SelectItem key={t.id} value={t.id}>
+                              [Fondo] {t.name}
+                            </SelectItem>
+                          ))}
+                          {dbTemplates.length > 0 && (
+                            <>
+                              <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 border-t border-gray-800 pt-2">Personalizadas</div>
+                              {dbTemplates.map(t => {
+                                const isCoords = ((t as any).config || t).type === 'coordenadas';
+                                return (
+                                  <SelectItem key={t.id} value={t.id} className={isCoords ? "text-purple-300" : "text-indigo-300"}>
+                                    {isCoords ? '[Posiciones]' : '[Completa]'} {t.name}
+                                  </SelectItem>
+                                );
+                              })}
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+
+                      <button
+                        type="button"
+                        disabled={Object.values(TEMPLATES_CONFIG).some(t => t.id === studioTemplateConfig.id) || !studioTemplateConfig.id || isProcessing}
+                        onClick={() => handleDeleteTemplate(studioTemplateConfig.id)}
+                        className="flex items-center justify-center w-12 h-12 shrink-0 bg-[#1F2937] hover:bg-red-500/20 text-gray-400 hover:text-red-500 border border-gray-700 rounded-xl transition-colors disabled:opacity-50 disabled:hover:bg-[#1F2937] disabled:hover:text-gray-400 cursor-pointer"
+                        title="Eliminar plantilla seleccionada"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                     {backgroundUrl === 'custom' && (
                       <input
@@ -952,45 +990,61 @@ export default function Dashboard() {
                 {/* Selector de Fondo */}
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    {Object.values(TEMPLATES_CONFIG).map(t => (
-                      <div
-                        key={t.id}
-                        onClick={() => {
-                          if (!isRegenerating) {
-                            setRegenerateBgUrl(t.bgUrl);
-                            setRegenerateTemplateConfig(JSON.parse(JSON.stringify(t)));
-                          }
-                        }}
-                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === t.bgUrl ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                      >
-                        <span className="text-xs font-medium text-white text-center">{t.name}</span>
-                      </div>
-                    ))}
-                    {dbTemplates.map(t => {
-                      const parsedConfig = (t as any).config || t;
-                      const isCoords = parsedConfig.type === 'coordenadas';
-                      return (
-                      <div
-                        key={t.id}
-                        onClick={() => {
-                          if (!isRegenerating) {
-                            if (!isCoords) {
-                              const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
-                              if (bg) {
-                                setRegenerateBgUrl(bg || 'custom');
-                                if (bg.startsWith('http')) setRegenerateCustomBg(bg);
-                              }
+                  <div className="flex gap-2 mb-2">
+                    <Select
+                      value={regenerateTemplateConfig.id}
+                      onValueChange={(val) => {
+                        const t = Object.values(TEMPLATES_CONFIG).find(x => x.id === val) || dbTemplates.find(x => x.id === val);
+                        if (t && !isRegenerating) {
+                          const parsedConfig = (t as any).config || t;
+                          const isCoords = parsedConfig.type === 'coordenadas';
+                          if (!isCoords) {
+                            const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+                            if (bg) {
+                              setRegenerateBgUrl(bg || 'custom');
+                              if (bg.startsWith('http')) setRegenerateCustomBg(bg);
                             }
-                            setRegenerateTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
                           }
-                        }}
-                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex flex-col items-center justify-center ${regenerateTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                      >
-                        <span className="text-[10px] opacity-70 text-gray-400 block text-center mb-0.5">{isCoords ? '[Posiciones]' : '[Completa]'}</span>
-                        <span className="text-xs font-medium text-purple-200 text-center">{t.name}</span>
-                      </div>
-                    )})}
+                          setRegenerateTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
+                          setRegenerateTemplateConfig(prev => ({ ...prev, id: t.id }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full bg-[#1F2937] border-gray-700 text-white focus:ring-indigo-500 rounded-lg">
+                        <SelectValue placeholder="Selecciona una plantilla" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1F2937] border-gray-700 text-white">
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Por Defecto</div>
+                        {Object.values(TEMPLATES_CONFIG).map(t => (
+                          <SelectItem key={t.id} value={t.id}>
+                            [Fondo] {t.name}
+                          </SelectItem>
+                        ))}
+                        {dbTemplates.length > 0 && (
+                          <>
+                            <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 border-t border-gray-800 pt-2">Personalizadas</div>
+                            {dbTemplates.map(t => {
+                              const isCoords = ((t as any).config || t).type === 'coordenadas';
+                              return (
+                                <SelectItem key={t.id} value={t.id} className={isCoords ? "text-purple-300" : "text-indigo-300"}>
+                                  {isCoords ? '[Posiciones]' : '[Completa]'} {t.name}
+                                </SelectItem>
+                              );
+                            })}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    <button
+                      type="button"
+                      disabled={Object.values(TEMPLATES_CONFIG).some(t => t.id === regenerateTemplateConfig.id) || !regenerateTemplateConfig.id || isRegenerating}
+                      onClick={() => handleDeleteTemplate(regenerateTemplateConfig.id)}
+                      className="flex items-center justify-center w-10 h-10 shrink-0 bg-[#1F2937] hover:bg-red-500/20 text-gray-400 hover:text-red-500 border border-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:hover:bg-[#1F2937] disabled:hover:text-gray-400 cursor-pointer"
+                      title="Eliminar plantilla seleccionada"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                   {regenerateBgUrl === 'custom' && (
                     <input
