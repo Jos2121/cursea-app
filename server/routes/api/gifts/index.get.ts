@@ -1,5 +1,5 @@
 import { defineHandler } from "nitro";
-import { pool } from "../../../../utils/db";
+import { pool } from "../../../utils/db";
 
 export default defineHandler(async (event) => {
   // Aseguramos la existencia de la tabla si no existe

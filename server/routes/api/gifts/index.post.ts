@@ -1,6 +1,6 @@
 import { defineHandler } from "nitro";
 import { readBody, createError } from "nitro/h3";
-import { pool } from "../../../../utils/db";
+import { pool } from "../../../utils/db";
 import { randomUUID } from "crypto";
 
 export default defineHandler(async (event) => {

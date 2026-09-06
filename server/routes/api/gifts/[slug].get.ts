@@ -1,6 +1,6 @@
 import { defineHandler } from "nitro";
 import { getRouterParam, createError } from "nitro/h3";
-import { pool } from "../../../../utils/db";
+import { pool } from "../../../utils/db";
 
 export default defineHandler(async (event) => {
   const slug = getRouterParam(event, 'slug');
