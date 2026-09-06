@@ -40,7 +40,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
             top: `${(t.y / 1920) * 100}%`,
             transform: 'translateX(-50%)',
             width: 'max-content',
-            fontSize: `${(26 * scale)}px`, // Match backend fixed 26px
+            fontSize: `${(dedicatoriaSize * scale)}px`, // Dynamic size based on slider
             color: t.color,
           }}
         >

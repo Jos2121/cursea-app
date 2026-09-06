@@ -11,7 +11,7 @@ const execPromise = promisify(exec);
 export default defineHandler(async (event) => {
   const body = await readBody(event);
   
-  const { jobId, backgroundUrl, userPhotoUrl, imageUrl, titulo, artista, dedicatoria, templateConfig } = body;
+  const { jobId, backgroundUrl, userPhotoUrl, imageUrl, titulo, artista, dedicatoria, dedicatoriaSize, templateConfig } = body;
 
   if (!jobId || (!userPhotoUrl && !imageUrl)) {
     throw createError({ statusCode: 400, statusMessage: "jobId and either userPhotoUrl or imageUrl are required" });
@@ -148,8 +148,9 @@ export default defineHandler(async (event) => {
         vIndex++;
       }
       if (safeDedicatoria) {
+        const dSize = Number(dedicatoriaSize) || 28;
         const xPos = t.dedicatoria.align === 'center' ? '(w-text_w)/2' : t.dedicatoria.x;
-        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=${t.dedicatoria.color}:fontsize=26:line_spacing=12:x=${xPos}:y=${t.dedicatoria.y}[v${vIndex}]`;
+        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=${t.dedicatoria.color}:fontsize=${dSize}:line_spacing=${Math.round(dSize * 0.4)}:x=${xPos}:y=${t.dedicatoria.y}[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }
