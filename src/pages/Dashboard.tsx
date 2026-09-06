@@ -174,7 +174,7 @@ export default function Dashboard() {
       const res = await fetch('/api/templates/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: templateId })
+        body: JSON.stringify({ id: String(templateId) })
       });
       if (res.ok) {
         setDbTemplates(prev => prev.filter(t => String(t.id) !== String(templateId)));
