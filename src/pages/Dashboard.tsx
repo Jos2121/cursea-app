@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send, ChevronsUpDown, Check, ImagePlus } from 'lucide-react';
+import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send, ChevronsUpDown, Check, ImagePlus, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VideoEditorPreview } from '../components/VideoEditorPreview';
 
 type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
@@ -80,10 +79,8 @@ export default function Dashboard() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   
   // Combobox and Modals State
-  const [openRegenCombobox, setOpenRegenCombobox] = useState(false);
   const [isRegenAddBgModalOpen, setIsRegenAddBgModalOpen] = useState(false);
   const [regenNewBgUrl, setRegenNewBgUrl] = useState('');
-  const [openStudioCombobox, setOpenStudioCombobox] = useState(false);
   const [isStudioAddBgModalOpen, setIsStudioAddBgModalOpen] = useState(false);
   const [studioNewBgUrl, setStudioNewBgUrl] = useState('');
 
@@ -453,82 +450,67 @@ export default function Dashboard() {
     setConfig: (config: TemplateConfig) => void,
     setBg: (bg: string) => void,
     setCustomBg: (bg: string) => void,
-    openComboboxState: boolean,
-    setOpenComboboxState: (open: boolean) => void,
     isProcessing: boolean,
     onAddBgClick: () => void
   ) => (
     <div className="flex gap-2 mb-3">
-      <Popover open={openComboboxState} onOpenChange={setOpenComboboxState}>
-        <PopoverTrigger asChild>
-          <button
-            role="combobox"
-            aria-expanded={openComboboxState}
-            disabled={isProcessing}
-            className="flex items-center justify-between w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 text-left h-12"
-          >
-            <span className="truncate">
-              {currentConfigId
-                ? dbTemplates.find(x => x.id === currentConfigId)?.name || 'Plantilla seleccionada'
-                : "Selecciona una plantilla"}
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[320px] p-0 bg-[#1F2937] border-gray-700">
-          <Command className="bg-[#1F2937] text-white">
-            <CommandInput placeholder="Buscar plantilla..." className="text-white" />
-            <CommandList>
-              <CommandEmpty>No hay plantillas.</CommandEmpty>
-              <CommandGroup>
-                {dbTemplates.map(t => {
-                  const parsedConfig = (t as any).config || t;
-                  const isCoords = parsedConfig.type === 'coordenadas';
-                  return (
-                    <CommandItem
-                      key={t.id}
-                      value={`${t.name} ${t.id}`}
-                      onSelect={() => {
-                        if (!isCoords) {
-                          const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
-                          if (bg) {
-                            setBg(bg || 'custom');
-                            if (bg.startsWith('http')) setCustomBg(bg);
-                          }
-                        }
-                        setConfig({ ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id });
-                        setOpenComboboxState(false);
-                      }}
-                      className="flex items-center justify-between text-white hover:bg-[#374151] cursor-pointer"
-                    >
-                      <div className="flex items-center truncate mr-2 w-full">
-                        <Check
-                          className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`}
-                        />
-                        <span className={`truncate ${isCoords ? "text-purple-300" : "text-indigo-300"}`}>
-                          {isCoords ? '[Posiciones]' : '[Completa]'} {t.name}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteTemplate(t.id);
-                        }}
-                        className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
-                        title="Eliminar plantilla"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      <DropdownMenu>
+        <DropdownMenuTrigger disabled={isProcessing} className="flex items-center justify-between w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 text-left h-12">
+          <span className="truncate">
+            {currentConfigId
+              ? dbTemplates.find(x => x.id === currentConfigId)?.name || 'Plantilla seleccionada'
+              : "Seleccionar plantilla..."}
+          </span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-[320px] bg-[#1F2937] border-gray-700 max-h-64 overflow-y-auto">
+          {dbTemplates.length === 0 ? (
+            <div className="p-4 text-sm text-gray-400 text-center">No hay plantillas.</div>
+          ) : (
+            dbTemplates.map(t => {
+              const parsedConfig = (t as any).config || t;
+              const isCoords = parsedConfig.type === 'coordenadas';
+              return (
+                <DropdownMenuItem
+                  key={t.id}
+                  onClick={() => {
+                    if (!isCoords) {
+                      const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+                      if (bg) {
+                        setBg(bg || 'custom');
+                        if (bg.startsWith('http')) setCustomBg(bg);
+                      }
+                    }
+                    setConfig({ ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id });
+                  }}
+                  className="flex items-center justify-between cursor-pointer py-2 px-3 text-white hover:bg-[#374151] focus:bg-[#374151] focus:text-white"
+                >
+                  <div className="flex items-center truncate mr-2 w-full">
+                    <Check
+                      className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`}
+                    />
+                    <span className={`truncate ${isCoords ? "text-purple-300" : "text-indigo-300"}`}>
+                      {isCoords ? '[Posiciones]' : '[Fondo]'} {t.name}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteTemplate(t.id);
+                    }}
+                    className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
+                    title="Eliminar plantilla"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </DropdownMenuItem>
+              );
+            })
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <button
         type="button"
@@ -841,8 +823,6 @@ export default function Dashboard() {
                       setStudioTemplateConfig,
                       setBackgroundUrl,
                       setCustomBackground,
-                      openStudioCombobox,
-                      setOpenStudioCombobox,
                       isProcessing,
                       () => setIsStudioAddBgModalOpen(true)
                     )}
@@ -1021,8 +1001,6 @@ export default function Dashboard() {
                     setRegenerateTemplateConfig,
                     setRegenerateBgUrl,
                     setRegenerateCustomBg,
-                    openRegenCombobox,
-                    setOpenRegenCombobox,
                     isRegenerating,
                     () => setIsRegenAddBgModalOpen(true)
                   )}
