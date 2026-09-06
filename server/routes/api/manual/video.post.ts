@@ -11,7 +11,7 @@ const execPromise = promisify(exec);
 export default defineHandler(async (event) => {
   const body = await readBody(event);
   
-  const { jobId, backgroundUrl, userPhotoUrl, imageUrl, titulo, artista, dedicatoria } = body;
+  const { jobId, backgroundUrl, userPhotoUrl, imageUrl, titulo, artista, dedicatoria, templateConfig } = body;
 
   if (!jobId || (!userPhotoUrl && !imageUrl)) {
     throw createError({ statusCode: 400, statusMessage: "jobId and either userPhotoUrl or imageUrl are required" });
@@ -87,12 +87,10 @@ export default defineHandler(async (event) => {
     
     let ffmpegCommand = "";
 
-    // Si tenemos campos de plantilla o userPhotoUrl, aplicamos la composición 9:16
-    if (titulo || artista || dedicatoria || backgroundUrl || userPhotoUrl) {
-      // Función para escapar caracteres de forma segura para el drawtext de FFmpeg
+    // Si tenemos templateConfig, construimos dinámicamente el complexFilter
+    if (templateConfig || titulo || artista || dedicatoria || backgroundUrl || userPhotoUrl) {
       const sanitize = (str: string) => {
         if (!str) return "";
-        // Reemplazamos comillas simples por tipográficas, escapamos dos puntos, y eliminamos saltos/retornos.
         return str.replace(/:/g, "\\:").replace(/'/g, "\u2019").replace(/"/g, "\u201D").replace(/[\n\r]/g, " ");
       };
       
@@ -100,28 +98,40 @@ export default defineHandler(async (event) => {
       const safeArtista = sanitize(artista);
       const safeDedicatoria = sanitize(dedicatoria);
 
+      const t = templateConfig || {
+        photo: { x: 130, y: 180, w: 820, h: 820 },
+        titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
+        artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
+        dedicatoria: { x: 'center', y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' }
+      };
+
       const isExternalOrTempBg = tempBgPath.includes('temp_bg_');
       let bgInput = tempBgPath ? `-loop 1 -framerate 1 -i "${tempBgPath}"` : `-f lavfi -i color=c=black:s=1080x1920:r=1`;
 
       let filter = `[1:v]scale=1080:1920[bg];`;
-      filter += `[0:v]scale=w=820:h=820:force_original_aspect_ratio=increase,crop=820:820:(in_w-820)/2:(in_h-820)/2[photo];`;
-      filter += `[bg][photo]overlay=x=(W-w)/2:y=180[v1]`;
+      // Recorte dinámico basado en las dimensiones de la foto en la plantilla
+      filter += `[0:v]scale=w=${t.photo.w}:h=${t.photo.h}:force_original_aspect_ratio=increase,crop=${t.photo.w}:${t.photo.h}:(in_w-${t.photo.w})/2:(in_h-${t.photo.h})/2[photo];`;
+      // Overlay dinámico
+      filter += `[bg][photo]overlay=x=${t.photo.x}:y=${t.photo.y}[v1]`;
 
       let lastV = 'v1';
       let vIndex = 2;
       
       if (safeTitulo) {
-        filter += `;[${lastV}]drawtext=text='${safeTitulo}':fontcolor=white:fontsize=42:x=130:y=1040[v${vIndex}]`;
+        const xPos = t.titulo.align === 'center' ? '(w-text_w)/2' : t.titulo.x;
+        filter += `;[${lastV}]drawtext=text='${safeTitulo}':fontcolor=${t.titulo.color}:fontsize=${t.titulo.fontSize}:x=${xPos}:y=${t.titulo.y}[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }
       if (safeArtista) {
-        filter += `;[${lastV}]drawtext=text='${safeArtista}':fontcolor=#B3B3B3:fontsize=30:x=130:y=1095[v${vIndex}]`;
+        const xPos = t.artista.align === 'center' ? '(w-text_w)/2' : t.artista.x;
+        filter += `;[${lastV}]drawtext=text='${safeArtista}':fontcolor=${t.artista.color}:fontsize=${t.artista.fontSize}:x=${xPos}:y=${t.artista.y}[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }
       if (safeDedicatoria) {
-        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=#E5E5E5:fontsize=28:x=(w-text_w)/2:y=1620[v${vIndex}]`;
+        const xPos = t.dedicatoria.align === 'center' ? '(w-text_w)/2' : t.dedicatoria.x;
+        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=${t.dedicatoria.color}:fontsize=${t.dedicatoria.fontSize}:x=${xPos}:y=${t.dedicatoria.y}[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }

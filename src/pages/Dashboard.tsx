@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send } from 'lucide-react';
+import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
@@ -17,6 +17,46 @@ interface MediaJob {
   errorLog: string | null;
   createdAt: string;
 }
+
+export interface TemplateConfig {
+  id: string;
+  name: string;
+  bgUrl: string;
+  photo: { x: number; y: number; w: number; h: number };
+  titulo: { x: number | 'center'; y: number; fontSize: number; color: string; align: 'left' | 'center' };
+  artista: { x: number | 'center'; y: number; fontSize: number; color: string; align: 'left' | 'center' };
+  dedicatoria: { x: number | 'center'; y: number; fontSize: number; color: string; align: 'left' | 'center' };
+}
+
+export const TEMPLATES_CONFIG: Record<string, TemplateConfig> = {
+  spotify: {
+    id: 'spotify',
+    name: 'Plantilla Spotify',
+    bgUrl: 'image_f840ac.jpg',
+    photo: { x: 130, y: 180, w: 820, h: 820 },
+    titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
+    artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
+    dedicatoria: { x: 'center', y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
+  },
+  apple: {
+    id: 'apple',
+    name: 'Plantilla Apple',
+    bgUrl: 'image_apple.jpg',
+    photo: { x: 130, y: 180, w: 820, h: 820 },
+    titulo: { x: 'center', y: 1040, fontSize: 42, color: 'white', align: 'center' },
+    artista: { x: 'center', y: 1095, fontSize: 30, color: '#CCCCCC', align: 'center' },
+    dedicatoria: { x: 'center', y: 1620, fontSize: 28, color: 'white', align: 'center' },
+  },
+  custom: {
+    id: 'custom',
+    name: 'Fondo Propio',
+    bgUrl: 'custom',
+    photo: { x: 130, y: 180, w: 820, h: 820 },
+    titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
+    artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
+    dedicatoria: { x: 'center', y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
+  }
+};
 
 const statusColors: Record<JobStatus, string> = {
   pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
@@ -167,6 +207,13 @@ export default function Dashboard() {
     const finalBg = regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl;
     if (!regenerateJobId || !regenerateUserPhotoUrl || !regenerateTitulo || !regenerateArtista || (regenerateBgUrl === 'custom' && !regenerateCustomBg)) return;
     setIsRegenerating(true);
+    
+    // Determine template config
+    let templateKey = 'custom';
+    if (regenerateBgUrl === 'image_f840ac.jpg') templateKey = 'spotify';
+    else if (regenerateBgUrl === 'image_apple.jpg') templateKey = 'apple';
+    const templateConfig = TEMPLATES_CONFIG[templateKey];
+
     try {
       const res = await fetch('/api/manual/video', {
         method: 'POST',
@@ -177,7 +224,8 @@ export default function Dashboard() {
           userPhotoUrl: regenerateUserPhotoUrl,
           titulo: regenerateTitulo,
           artista: regenerateArtista,
-          dedicatoria: regenerateDedicatoria
+          dedicatoria: regenerateDedicatoria,
+          templateConfig
         })
       });
       
@@ -225,17 +273,25 @@ export default function Dashboard() {
     if (!finalBg || !userPhotoUrl || !titulo || !artista || !studioJobId) return;
     
     setIsProcessing(true);
+
+    // Determine template config
+    let templateKey = 'custom';
+    if (backgroundUrl === 'image_f840ac.jpg') templateKey = 'spotify';
+    else if (backgroundUrl === 'image_apple.jpg') templateKey = 'apple';
+    const templateConfig = TEMPLATES_CONFIG[templateKey];
+
     try {
       const res = await fetch('/api/manual/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          jobId: studioJobId, 
+        body: JSON.stringify({
+          jobId: studioJobId,
           backgroundUrl: finalBg,
           userPhotoUrl,
           titulo,
           artista,
-          dedicatoria
+          dedicatoria,
+          templateConfig
         })
       });
       const data = await res.json();
@@ -619,6 +675,100 @@ export default function Dashboard() {
                       rows={2}
                       className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                     />
+                  </div>
+
+                  {/* Live Preview */}
+                  <div className="mt-6 flex flex-col items-center">
+                    <p className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">Live Preview</p>
+                    <div className="relative w-[280px] h-[497.77px] bg-black rounded-xl overflow-hidden border border-gray-800 shrink-0 shadow-2xl">
+                      <div
+                        className="absolute top-0 left-0 w-[1080px] h-[1920px] origin-top-left"
+                        style={{ transform: 'scale(0.259259)' }} // 280 / 1080
+                      >
+                        {/* Background */}
+                        {backgroundUrl !== 'custom' ? (
+                          <img src={`/media/${backgroundUrl}`} className="w-full h-full object-cover" />
+                        ) : customBackground ? (
+                          <img src={customBackground} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-900" />
+                        )}
+                        
+                        {/* Photo Cover */}
+                        {(() => {
+                          const tKey = backgroundUrl === 'image_f840ac.jpg' ? 'spotify' : backgroundUrl === 'image_apple.jpg' ? 'apple' : 'custom';
+                          const t = TEMPLATES_CONFIG[tKey];
+                          return (
+                            <>
+                              {userPhotoUrl ? (
+                                <img
+                                  src={userPhotoUrl}
+                                  className="absolute object-cover"
+                                  style={{
+                                    left: `${t.photo.x}px`,
+                                    top: `${t.photo.y}px`,
+                                    width: `${t.photo.w}px`,
+                                    height: `${t.photo.h}px`,
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  className="absolute bg-gray-800 flex items-center justify-center text-gray-500"
+                                  style={{
+                                    left: `${t.photo.x}px`,
+                                    top: `${t.photo.y}px`,
+                                    width: `${t.photo.w}px`,
+                                    height: `${t.photo.h}px`,
+                                  }}
+                                >
+                                  <ImageIcon className="w-48 h-48" />
+                                </div>
+                              )}
+
+                              {/* Textos */}
+                              <div
+                                className="absolute truncate"
+                                style={{
+                                  top: `${t.titulo.y}px`,
+                                  fontSize: `${t.titulo.fontSize}px`,
+                                  color: t.titulo.color,
+                                  textAlign: t.titulo.align,
+                                  ...(t.titulo.align === 'left' ? { left: `${t.titulo.x}px`, width: `calc(1080px - ${Number(t.titulo.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
+                                }}
+                              >
+                                {titulo || 'Título de Canción'}
+                              </div>
+
+                              <div
+                                className="absolute truncate"
+                                style={{
+                                  top: `${t.artista.y}px`,
+                                  fontSize: `${t.artista.fontSize}px`,
+                                  color: t.artista.color,
+                                  textAlign: t.artista.align,
+                                  ...(t.artista.align === 'left' ? { left: `${t.artista.x}px`, width: `calc(1080px - ${Number(t.artista.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
+                                }}
+                              >
+                                {artista || 'Nombre del Artista'}
+                              </div>
+
+                              <div
+                                className="absolute line-clamp-3"
+                                style={{
+                                  top: `${t.dedicatoria.y}px`,
+                                  fontSize: `${t.dedicatoria.fontSize}px`,
+                                  color: t.dedicatoria.color,
+                                  textAlign: t.dedicatoria.align,
+                                  ...(t.dedicatoria.align === 'left' ? { left: `${t.dedicatoria.x}px`, width: `calc(1080px - ${Number(t.dedicatoria.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
+                                }}
+                              >
+                                {dedicatoria || 'Mensaje de dedicatoria...'}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </div>
 
                   {studioStep === 2 && (
