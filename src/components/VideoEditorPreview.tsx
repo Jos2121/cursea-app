@@ -26,16 +26,8 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
   dedicatoria,
   scale
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [boundsReady, setBoundsReady] = useState(false);
+  const [constraintsRef, setConstraintsRef] = useState<HTMLDivElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-
-  // We wait for the container ref to be populated (critical for rendering in portals/dialogs)
-  useEffect(() => {
-    if (containerRef.current) {
-      setBoundsReady(true);
-    }
-  }, [containerRef.current]);
 
   const setConfig = (updater: any) => {
     if (typeof updater === 'function') {
@@ -54,7 +46,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
       <motion.div
         drag={isCenter ? "y" : true}
         dragMomentum={false}
-        dragConstraints={containerRef}
+        dragConstraints={constraintsRef || false}
         onDragStart={() => setSelectedElement(key)}
         onDragEnd={(e, info) => {
           const newX = isCenter ? t.x : Number(t.x) + (info.offset.x / scale);
@@ -66,7 +58,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
         }}
         animate={{ x: isCenter ? 0 : t.x, y: t.y }}
         onClick={(e: any) => { e.stopPropagation(); setSelectedElement(key); }}
-        className={`absolute whitespace-nowrap cursor-move ${isSelected ? 'ring-4 ring-indigo-500/50 rounded-lg' : ''}`}
+        className={`absolute whitespace-nowrap cursor-move touch-none ${isSelected ? 'ring-4 ring-indigo-500/50 rounded-lg' : ''}`}
         style={{
           fontSize: `${t.fontSize}px`,
           color: t.color,
@@ -95,7 +87,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
   return (
     <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0" onClick={() => setSelectedElement(null)}>
       <div
-        ref={containerRef}
+        ref={setConstraintsRef}
         className="absolute top-0 left-0 w-[1080px] h-[1920px] origin-top-left"
         style={{ transform: `scale(${scale})` }}
       >
@@ -107,19 +99,19 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
           <div className="w-full h-full bg-gray-900" />
         )}
 
-        {boundsReady && (
+        {constraintsRef && (
           <>
             <motion.div
               drag
               dragMomentum={false}
-              dragConstraints={containerRef}
+              dragConstraints={constraintsRef}
               onDragStart={() => setSelectedElement('photo')}
               onDragEnd={(e, info) => {
                 setConfig((prev: any) => ({ ...prev, photo: { ...prev.photo, x: Math.round(prev.photo.x + info.offset.x / scale), y: Math.round(prev.photo.y + info.offset.y / scale) } }));
               }}
               animate={{ x: config.photo.x, y: config.photo.y }}
               onClick={(e: any) => { e.stopPropagation(); setSelectedElement('photo'); }}
-              className={`absolute group ${selectedElement === 'photo' ? 'ring-4 ring-indigo-500 ring-offset-4 ring-offset-transparent' : ''}`}
+              className={`absolute group touch-none ${selectedElement === 'photo' ? 'ring-4 ring-indigo-500 ring-offset-4 ring-offset-transparent' : ''}`}
               style={{ width: config.photo.w, height: config.photo.h, zIndex: 20 }}
             >
               {userPhotoUrl ? (
@@ -141,7 +133,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
                     const newH = Math.max(200, config.photo.h + info.delta.y / scale);
                     setConfig((prev: any) => ({ ...prev, photo: { ...prev.photo, w: Math.round(newW), h: Math.round(newH) } }));
                   }}
-                  className="absolute -bottom-8 -right-8 w-16 h-16 bg-indigo-600 rounded-full cursor-nwse-resize shadow-[0_0_30px_rgba(0,0,0,0.5)] border-[6px] border-white z-50 flex items-center justify-center hover:scale-110 transition-transform"
+                  className="absolute -bottom-8 -right-8 w-16 h-16 bg-indigo-600 rounded-full cursor-nwse-resize shadow-[0_0_30px_rgba(0,0,0,0.5)] border-[6px] border-white z-50 flex items-center justify-center hover:scale-110 transition-transform touch-none"
                 >
                   <div className="w-6 h-6 border-b-4 border-r-4 border-white translate-x-[-4px] translate-y-[-4px]" />
                 </motion.div>
