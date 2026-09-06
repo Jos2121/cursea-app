@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send } from 'lucide-react';
+import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send, ChevronsUpDown, Check, ImagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { VideoEditorPreview } from '../components/VideoEditorPreview';
 
 type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
@@ -31,34 +32,14 @@ export interface TemplateConfig {
   dedicatoria: { x: number; y: number; fontSize: number; color: string; align: 'left' | 'center' };
 }
 
-export const TEMPLATES_CONFIG: Record<string, TemplateConfig> = {
-  spotify: {
-    id: 'spotify',
-    name: 'Plantilla Spotify',
-    bgUrl: 'image_f840ac.jpg',
-    photo: { x: 130, y: 180, w: 820, h: 820 },
-    titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
-    artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
-    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
-  },
-  apple: {
-    id: 'apple',
-    name: 'Plantilla Apple',
-    bgUrl: 'image_apple.jpg',
-    photo: { x: 130, y: 180, w: 820, h: 820 },
-    titulo: { x: 540, y: 1040, fontSize: 42, color: 'white', align: 'center' },
-    artista: { x: 540, y: 1095, fontSize: 30, color: '#CCCCCC', align: 'center' },
-    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: 'white', align: 'center' },
-  },
-  custom: {
-    id: 'custom',
-    name: 'Fondo Propio',
-    bgUrl: 'custom',
-    photo: { x: 130, y: 180, w: 820, h: 820 },
-    titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
-    artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
-    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
-  }
+export const DEFAULT_TEMPLATE: TemplateConfig = {
+  id: '',
+  name: 'Plantilla por Defecto',
+  bgUrl: 'image_f840ac.jpg',
+  photo: { x: 130, y: 180, w: 820, h: 820 },
+  titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
+  artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
+  dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
 };
 
 const statusColors: Record<JobStatus, string> = {
@@ -95,8 +76,16 @@ export default function Dashboard() {
   const [regenerateArtista, setRegenerateArtista] = useState('');
   const [regenerateDedicatoria, setRegenerateDedicatoria] = useState('');
   const [regenerateDedicatoriaSize, setRegenerateDedicatoriaSize] = useState(28); // New stat
-  const [regenerateTemplateConfig, setRegenerateTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
+  const [regenerateTemplateConfig, setRegenerateTemplateConfig] = useState<TemplateConfig>(DEFAULT_TEMPLATE);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  
+  // Combobox and Modals State
+  const [openRegenCombobox, setOpenRegenCombobox] = useState(false);
+  const [isRegenAddBgModalOpen, setIsRegenAddBgModalOpen] = useState(false);
+  const [regenNewBgUrl, setRegenNewBgUrl] = useState('');
+  const [openStudioCombobox, setOpenStudioCombobox] = useState(false);
+  const [isStudioAddBgModalOpen, setIsStudioAddBgModalOpen] = useState(false);
+  const [studioNewBgUrl, setStudioNewBgUrl] = useState('');
 
   // WhatsApp Modal State
   const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
@@ -117,7 +106,7 @@ export default function Dashboard() {
   const [artista, setArtista] = useState('');
   const [dedicatoria, setDedicatoria] = useState('');
   const [dedicatoriaSize, setDedicatoriaSize] = useState(28); // New stat
-  const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
+  const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>(DEFAULT_TEMPLATE);
   
   // Custom Templates from DB
   const [dbTemplates, setDbTemplates] = useState<TemplateConfig[]>([]);
@@ -455,9 +444,103 @@ export default function Dashboard() {
     setPhone('');
     setStudioAudioUrl(null);
     setStudioVideoUrl(null);
-    setStudioTemplateConfig(TEMPLATES_CONFIG.spotify);
+    setStudioTemplateConfig(DEFAULT_TEMPLATE);
     localStorage.removeItem('videoFlowStudioState');
   };
+
+  const renderTemplateSelector = (
+    currentConfigId: string,
+    setConfig: (config: TemplateConfig) => void,
+    setBg: (bg: string) => void,
+    setCustomBg: (bg: string) => void,
+    openComboboxState: boolean,
+    setOpenComboboxState: (open: boolean) => void,
+    isProcessing: boolean,
+    onAddBgClick: () => void
+  ) => (
+    <div className="flex gap-2 mb-3">
+      <Popover open={openComboboxState} onOpenChange={setOpenComboboxState}>
+        <PopoverTrigger asChild>
+          <button
+            role="combobox"
+            aria-expanded={openComboboxState}
+            disabled={isProcessing}
+            className="flex items-center justify-between w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 text-left h-12"
+          >
+            <span className="truncate">
+              {currentConfigId
+                ? dbTemplates.find(x => x.id === currentConfigId)?.name || 'Plantilla seleccionada'
+                : "Selecciona una plantilla"}
+            </span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[320px] p-0 bg-[#1F2937] border-gray-700">
+          <Command className="bg-[#1F2937] text-white">
+            <CommandInput placeholder="Buscar plantilla..." className="text-white" />
+            <CommandList>
+              <CommandEmpty>No hay plantillas.</CommandEmpty>
+              <CommandGroup>
+                {dbTemplates.map(t => {
+                  const parsedConfig = (t as any).config || t;
+                  const isCoords = parsedConfig.type === 'coordenadas';
+                  return (
+                    <CommandItem
+                      key={t.id}
+                      value={`${t.name} ${t.id}`}
+                      onSelect={() => {
+                        if (!isCoords) {
+                          const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+                          if (bg) {
+                            setBg(bg || 'custom');
+                            if (bg.startsWith('http')) setCustomBg(bg);
+                          }
+                        }
+                        setConfig({ ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id });
+                        setOpenComboboxState(false);
+                      }}
+                      className="flex items-center justify-between text-white hover:bg-[#374151] cursor-pointer"
+                    >
+                      <div className="flex items-center truncate mr-2 w-full">
+                        <Check
+                          className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`}
+                        />
+                        <span className={`truncate ${isCoords ? "text-purple-300" : "text-indigo-300"}`}>
+                          {isCoords ? '[Posiciones]' : '[Completa]'} {t.name}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteTemplate(t.id);
+                        }}
+                        className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
+                        title="Eliminar plantilla"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      <button
+        type="button"
+        disabled={isProcessing}
+        onClick={onAddBgClick}
+        className="flex items-center justify-center w-12 h-12 shrink-0 bg-[#1F2937] hover:bg-indigo-500/20 text-gray-400 hover:text-indigo-400 border border-gray-700 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+        title="Añadir Fondo de Reproductor"
+      >
+        <ImagePlus className="w-5 h-5" />
+      </button>
+    </div>
+  );
 
   const renderConfigControls = (config: TemplateConfig, setConfig: any, key: 'titulo'|'artista'|'dedicatoria', extSizeState?: number, setExtSizeState?: any) => (
     <div className="flex gap-2 mt-2">
@@ -753,72 +836,15 @@ export default function Dashboard() {
                   {/* Selector de Fondo */}
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
-                    <div className="flex gap-2 mb-3">
-                      <Select
-                        value={studioTemplateConfig.id}
-                        onValueChange={(val) => {
-                          const t = Object.values(TEMPLATES_CONFIG).find(x => x.id === val) || dbTemplates.find(x => x.id === val);
-                          if (t && studioStep === 2 && !isProcessing) {
-                            const parsedConfig = (t as any).config || t;
-                            const isCoords = parsedConfig.type === 'coordenadas';
-                            if (!isCoords) {
-                              const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
-                              if (bg) {
-                                setBackgroundUrl(bg || 'custom');
-                                if (bg.startsWith('http')) setCustomBackground(bg);
-                              }
-                            }
-                            setStudioTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
-                            // Mantén el ID para el select (incluso si parsedConfig pierde su id principal)
-                            setStudioTemplateConfig(prev => ({ ...prev, id: t.id }));
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-full bg-[#1F2937] border-gray-700 text-white focus:ring-indigo-500 rounded-xl h-12">
-                          <SelectValue placeholder="Selecciona una plantilla" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#1F2937] border-gray-700 text-white">
-                          <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Por Defecto</div>
-                          {Object.values(TEMPLATES_CONFIG).map(t => (
-                            <SelectItem key={t.id} value={t.id}>
-                              [Fondo] {t.name}
-                            </SelectItem>
-                          ))}
-                          {dbTemplates.length > 0 && (
-                            <>
-                              <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 border-t border-gray-800 pt-2">Personalizadas</div>
-                              {dbTemplates.map(t => {
-                                const isCoords = ((t as any).config || t).type === 'coordenadas';
-                                return (
-                                  <SelectItem key={t.id} value={t.id} className={isCoords ? "text-purple-300" : "text-indigo-300"}>
-                                    {isCoords ? '[Posiciones]' : '[Completa]'} {t.name}
-                                  </SelectItem>
-                                );
-                              })}
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
-
-                      <button
-                        type="button"
-                        disabled={Object.values(TEMPLATES_CONFIG).some(t => t.id === studioTemplateConfig.id) || !studioTemplateConfig.id || isProcessing}
-                        onClick={() => handleDeleteTemplate(studioTemplateConfig.id)}
-                        className="flex items-center justify-center w-12 h-12 shrink-0 bg-[#1F2937] hover:bg-red-500/20 text-gray-400 hover:text-red-500 border border-gray-700 rounded-xl transition-colors disabled:opacity-50 disabled:hover:bg-[#1F2937] disabled:hover:text-gray-400 cursor-pointer"
-                        title="Eliminar plantilla seleccionada"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    {backgroundUrl === 'custom' && (
-                      <input
-                        type="url"
-                        value={customBackground}
-                        onChange={(e) => setCustomBackground(e.target.value)}
-                        disabled={studioStep !== 2 || isProcessing}
-                        placeholder="URL de fondo personalizado (ej. https://...)"
-                        className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                      />
+                    {renderTemplateSelector(
+                      studioTemplateConfig.id,
+                      setStudioTemplateConfig,
+                      setBackgroundUrl,
+                      setCustomBackground,
+                      openStudioCombobox,
+                      setOpenStudioCombobox,
+                      isProcessing,
+                      () => setIsStudioAddBgModalOpen(true)
                     )}
                   </div>
 
@@ -990,71 +1016,15 @@ export default function Dashboard() {
                 {/* Selector de Fondo */}
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
-                  <div className="flex gap-2 mb-2">
-                    <Select
-                      value={regenerateTemplateConfig.id}
-                      onValueChange={(val) => {
-                        const t = Object.values(TEMPLATES_CONFIG).find(x => x.id === val) || dbTemplates.find(x => x.id === val);
-                        if (t && !isRegenerating) {
-                          const parsedConfig = (t as any).config || t;
-                          const isCoords = parsedConfig.type === 'coordenadas';
-                          if (!isCoords) {
-                            const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
-                            if (bg) {
-                              setRegenerateBgUrl(bg || 'custom');
-                              if (bg.startsWith('http')) setRegenerateCustomBg(bg);
-                            }
-                          }
-                          setRegenerateTemplateConfig(JSON.parse(JSON.stringify(parsedConfig)));
-                          setRegenerateTemplateConfig(prev => ({ ...prev, id: t.id }));
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-full bg-[#1F2937] border-gray-700 text-white focus:ring-indigo-500 rounded-lg">
-                        <SelectValue placeholder="Selecciona una plantilla" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1F2937] border-gray-700 text-white">
-                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Por Defecto</div>
-                        {Object.values(TEMPLATES_CONFIG).map(t => (
-                          <SelectItem key={t.id} value={t.id}>
-                            [Fondo] {t.name}
-                          </SelectItem>
-                        ))}
-                        {dbTemplates.length > 0 && (
-                          <>
-                            <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 border-t border-gray-800 pt-2">Personalizadas</div>
-                            {dbTemplates.map(t => {
-                              const isCoords = ((t as any).config || t).type === 'coordenadas';
-                              return (
-                                <SelectItem key={t.id} value={t.id} className={isCoords ? "text-purple-300" : "text-indigo-300"}>
-                                  {isCoords ? '[Posiciones]' : '[Completa]'} {t.name}
-                                </SelectItem>
-                              );
-                            })}
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-
-                    <button
-                      type="button"
-                      disabled={Object.values(TEMPLATES_CONFIG).some(t => t.id === regenerateTemplateConfig.id) || !regenerateTemplateConfig.id || isRegenerating}
-                      onClick={() => handleDeleteTemplate(regenerateTemplateConfig.id)}
-                      className="flex items-center justify-center w-10 h-10 shrink-0 bg-[#1F2937] hover:bg-red-500/20 text-gray-400 hover:text-red-500 border border-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:hover:bg-[#1F2937] disabled:hover:text-gray-400 cursor-pointer"
-                      title="Eliminar plantilla seleccionada"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {regenerateBgUrl === 'custom' && (
-                    <input
-                      type="url"
-                      value={regenerateCustomBg}
-                      onChange={(e) => setRegenerateCustomBg(e.target.value)}
-                      disabled={isRegenerating}
-                      placeholder="URL de fondo personalizado..."
-                      className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                    />
+                  {renderTemplateSelector(
+                    regenerateTemplateConfig.id,
+                    setRegenerateTemplateConfig,
+                    setRegenerateBgUrl,
+                    setRegenerateCustomBg,
+                    openRegenCombobox,
+                    setOpenRegenCombobox,
+                    isRegenerating,
+                    () => setIsRegenAddBgModalOpen(true)
                   )}
                 </div>
 
@@ -1207,6 +1177,84 @@ export default function Dashboard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        {/* Add Studio Custom Bg Modal */}
+        <Dialog open={isStudioAddBgModalOpen} onOpenChange={setIsStudioAddBgModalOpen}>
+          <DialogContent className="bg-[#111827] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>Añadir Fondo de Reproductor</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <label className="block text-sm text-gray-400 mb-2">URL del fondo</label>
+              <input
+                type="url"
+                value={studioNewBgUrl}
+                onChange={(e) => setStudioNewBgUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <DialogFooter>
+              <button
+                onClick={() => setIsStudioAddBgModalOpen(false)}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setBackgroundUrl('custom');
+                  setCustomBackground(studioNewBgUrl);
+                  setIsStudioAddBgModalOpen(false);
+                  setStudioNewBgUrl('');
+                }}
+                disabled={!studioNewBgUrl}
+                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                Confirmar
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Regen Custom Bg Modal */}
+        <Dialog open={isRegenAddBgModalOpen} onOpenChange={setIsRegenAddBgModalOpen}>
+          <DialogContent className="bg-[#111827] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>Añadir Fondo de Reproductor</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <label className="block text-sm text-gray-400 mb-2">URL del fondo</label>
+              <input
+                type="url"
+                value={regenNewBgUrl}
+                onChange={(e) => setRegenNewBgUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <DialogFooter>
+              <button
+                onClick={() => setIsRegenAddBgModalOpen(false)}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setRegenerateBgUrl('custom');
+                  setRegenerateCustomBg(regenNewBgUrl);
+                  setIsRegenAddBgModalOpen(false);
+                  setRegenNewBgUrl('');
+                }}
+                disabled={!regenNewBgUrl}
+                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                Confirmar
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </div>
     </div>
   );
