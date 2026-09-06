@@ -11,6 +11,10 @@ type FormValues = {
   youtubeLink: string;
   mainMessage: string;
   qualitiesText: string;
+  thingsToDoText: string;
+  mapPinsText: string;
+  loveVouchersText: string;
+  rouletteQuestionsText: string;
   theme: string;
   finalQuestionEnabled: boolean;
 };
@@ -27,6 +31,10 @@ export default function GiftBuilder() {
       youtubeLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       mainMessage: 'Feliz Aniversario mi amor. Gracias por todos los momentos hermosos que hemos compartido...',
       qualitiesText: 'Tu sonrisa, Tu forma de apoyarme, Lo inteligente que eres',
+      thingsToDoText: 'Ir de viaje a la playa, Cenar en ese restaurante italiano, Ver maratón de Harry Potter',
+      mapPinsText: 'Donde nos conocimos, Nuestro primer beso, Nuestra cafetería favorita',
+      loveVouchersText: 'Vale por un masaje, Vale por cena pagada, Vale por tener la razón',
+      rouletteQuestionsText: 'Te ganaste un beso, ¿Cuál es mi película favorita?, Tienes que invitarme un helado',
       theme: 'rose',
       finalQuestionEnabled: true
     }
@@ -45,6 +53,10 @@ export default function GiftBuilder() {
         youtubeLink: data.youtubeLink,
         mainMessage: data.mainMessage,
         qualities: data.qualitiesText.split(',').map(q => q.trim()).filter(Boolean),
+        thingsToDo: data.thingsToDoText.split(',').map(q => q.trim()).filter(Boolean),
+        mapPins: data.mapPinsText.split(',').map(q => q.trim()).filter(Boolean),
+        loveVouchers: data.loveVouchersText.split(',').map(q => q.trim()).filter(Boolean),
+        rouletteQuestions: data.rouletteQuestionsText.split(',').map(q => q.trim()).filter(Boolean),
         theme: data.theme,
         finalQuestionEnabled: data.finalQuestionEnabled
       };
@@ -148,14 +160,40 @@ export default function GiftBuilder() {
                   <label className="block text-sm text-gray-400 mb-1">Cualidades que amas (Separadas por comas)</label>
                   <input {...register("qualitiesText")} className="w-full px-4 py-2 bg-[#1F2937] border border-gray-700 rounded-lg text-white" />
                 </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Cosas por hacer juntos (Separadas por comas)</label>
+                  <input {...register("thingsToDoText")} className="w-full px-4 py-2 bg-[#1F2937] border border-gray-700 rounded-lg text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Lugares Especiales / Pines (Separadas por comas)</label>
+                  <input {...register("mapPinsText")} className="w-full px-4 py-2 bg-[#1F2937] border border-gray-700 rounded-lg text-white" />
+                </div>
               </div>
             </div>
 
-            {/* Sec 4 */}
+            {/* Sec 4 (Interactive) */}
+            <div className="bg-[#171F2E] p-6 rounded-2xl border border-gray-800">
+              <h3 className="text-white font-semibold flex items-center mb-4">
+                <Star className="w-4 h-4 mr-2 text-rose-400" />
+                4. Juegos y Sorpresas
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Vales de Amor (Separadas por comas)</label>
+                  <input {...register("loveVouchersText")} className="w-full px-4 py-2 bg-[#1F2937] border border-gray-700 rounded-lg text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Ruleta de Preguntas/Premios (Separadas por comas)</label>
+                  <input {...register("rouletteQuestionsText")} className="w-full px-4 py-2 bg-[#1F2937] border border-gray-700 rounded-lg text-white" />
+                </div>
+              </div>
+            </div>
+
+            {/* Sec 5 */}
             <div className="bg-[#171F2E] p-6 rounded-2xl border border-gray-800">
               <h3 className="text-white font-semibold flex items-center mb-4">
                 <Settings className="w-4 h-4 mr-2 text-rose-400" />
-                4. Configuración
+                5. Configuración
               </h3>
               <div className="space-y-4">
                 <div>
