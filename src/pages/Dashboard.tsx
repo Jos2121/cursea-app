@@ -135,23 +135,42 @@ export default function Dashboard() {
     loadTemplates();
   }, []);
 
-  const handleSaveTemplate = async (config: TemplateConfig, bgUrl: string) => {
-    const name = window.prompt('Nombre de la nueva plantilla:');
-    if (!name) return;
+  const handleSaveTemplate = async (config: TemplateConfig, bgUrl: string, dedicatoriaSz: number) => {
+    const promptedName = window.prompt('Nombre de la nueva plantilla:');
+    if (promptedName === null) return;
+    const templateName = promptedName.trim() || 'Mi Plantilla Personalizada';
+    
     try {
       const res = await fetch('/api/templates/save', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ name, bgUrl, config })
+        body: JSON.stringify({
+          name: templateName,
+          config: {
+            backgroundUrl: bgUrl,
+            photoX: config.photo.x, photoY: config.photo.y, photoWidth: config.photo.w, photoHeight: config.photo.h,
+            tituloX: config.titulo.x, tituloY: config.titulo.y, tituloSize: config.titulo.fontSize,
+            artistaX: config.artista.x, artistaY: config.artista.y, artistaSize: config.artista.fontSize,
+            dedicatoriaX: config.dedicatoria.x, dedicatoriaY: config.dedicatoria.y, dedicatoriaSize: dedicatoriaSz,
+            // Mantener la estructura original anidada para retrocompatibilidad de la vista previa
+            bgUrl: bgUrl,
+            photo: config.photo,
+            titulo: config.titulo,
+            artista: config.artista,
+            dedicatoria: config.dedicatoria
+          }
+        })
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         alert('Plantilla guardada!');
         loadTemplates();
       } else {
-        alert('Error al guardar plantilla.');
+        alert(`Error al guardar plantilla: ${data.statusMessage || data.message || 'Error desconocido'}`);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert(`Error al guardar: ${e.message || 'Error de red'}`);
     }
   };
   
@@ -828,7 +847,7 @@ export default function Dashboard() {
                   {studioStep === 2 && (
                     <div className="flex justify-center mt-2">
                       <button
-                        onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl)}
+                        onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize)}
                         className="text-xs text-indigo-400 hover:text-indigo-300 underline"
                       >
                         Guardar Diseño como Plantilla
@@ -1024,7 +1043,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex justify-center mt-2">
                   <button
-                    onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl)}
+                    onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize)}
                     className="text-xs text-indigo-400 hover:text-indigo-300 underline"
                   >
                     Guardar Diseño como Plantilla
