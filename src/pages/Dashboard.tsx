@@ -58,7 +58,16 @@ export default function Dashboard() {
   const [studioStep, setStudioStep] = useState(1);
   const [studioJobId, setStudioJobId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  
+  // Studio Step 2 (Video Player 9:16 fields)
+  const [backgroundUrl, setBackgroundUrl] = useState('image_f840ac.jpg');
+  const [customBackground, setCustomBackground] = useState('');
+  const [userPhotoUrl, setUserPhotoUrl] = useState('');
+  const [titulo, setTitulo] = useState('');
+  const [artista, setArtista] = useState('');
+  const [dedicatoria, setDedicatoria] = useState('');
+  
+  // Studio Step 3
   const [phone, setPhone] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [studioAudioUrl, setStudioAudioUrl] = useState<string | null>(null);
@@ -73,7 +82,12 @@ export default function Dashboard() {
         if (parsed.studioStep) setStudioStep(parsed.studioStep);
         if (parsed.studioJobId) setStudioJobId(parsed.studioJobId);
         if (parsed.prompt) setPrompt(parsed.prompt);
-        if (parsed.imageUrl) setImageUrl(parsed.imageUrl);
+        if (parsed.backgroundUrl) setBackgroundUrl(parsed.backgroundUrl);
+        if (parsed.customBackground) setCustomBackground(parsed.customBackground);
+        if (parsed.userPhotoUrl) setUserPhotoUrl(parsed.userPhotoUrl);
+        if (parsed.titulo) setTitulo(parsed.titulo);
+        if (parsed.artista) setArtista(parsed.artista);
+        if (parsed.dedicatoria) setDedicatoria(parsed.dedicatoria);
         if (parsed.phone) setPhone(parsed.phone);
         if (parsed.studioAudioUrl) setStudioAudioUrl(parsed.studioAudioUrl);
         if (parsed.studioVideoUrl) setStudioVideoUrl(parsed.studioVideoUrl);
@@ -89,13 +103,21 @@ export default function Dashboard() {
       studioStep,
       studioJobId,
       prompt,
-      imageUrl,
+      backgroundUrl,
+      customBackground,
+      userPhotoUrl,
+      titulo,
+      artista,
+      dedicatoria,
       phone,
       studioAudioUrl,
       studioVideoUrl,
     };
     localStorage.setItem('videoFlowStudioState', JSON.stringify(stateToSave));
-  }, [studioStep, studioJobId, prompt, imageUrl, phone, studioAudioUrl, studioVideoUrl]);
+  }, [
+    studioStep, studioJobId, prompt, backgroundUrl, customBackground, 
+    userPhotoUrl, titulo, artista, dedicatoria, phone, studioAudioUrl, studioVideoUrl
+  ]);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -186,21 +208,33 @@ export default function Dashboard() {
   };
 
   const handleGenerateVideo = async () => {
-    if (!imageUrl || !studioJobId) return;
+    const finalBg = backgroundUrl === 'custom' ? customBackground : backgroundUrl;
+    if (!finalBg || !userPhotoUrl || !titulo || !artista || !studioJobId) return;
+    
     setIsProcessing(true);
     try {
       const res = await fetch('/api/manual/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: studioJobId, imageUrl })
+        body: JSON.stringify({ 
+          jobId: studioJobId, 
+          backgroundUrl: finalBg,
+          userPhotoUrl,
+          titulo,
+          artista,
+          dedicatoria
+        })
       });
       const data = await res.json();
-      if (data.job) {
+      if (res.ok && data.job) {
         setStudioVideoUrl(data.job.videoUrl);
         setStudioStep(3);
+      } else {
+        alert(`Error generating video: ${data.statusMessage || data.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error(err);
+      alert('Error: Network error occurred');
     } finally {
       setIsProcessing(false);
     }
@@ -262,7 +296,12 @@ export default function Dashboard() {
     setStudioStep(1);
     setStudioJobId(null);
     setPrompt('');
-    setImageUrl('');
+    setBackgroundUrl('image_f840ac.jpg');
+    setCustomBackground('');
+    setUserPhotoUrl('');
+    setTitulo('');
+    setArtista('');
+    setDedicatoria('');
     setPhone('');
     setStudioAudioUrl(null);
     setStudioVideoUrl(null);
@@ -474,20 +513,100 @@ export default function Dashboard() {
                 </div>
                 {studioStep > 2 && <div className="absolute left-3 top-6 bottom-0 w-px bg-indigo-600/50"></div>}
                 
-                <h3 className="text-lg font-medium text-white mb-4">Generate Video (FFmpeg)</h3>
-                <div className="space-y-4">
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    disabled={studioStep !== 2 || isProcessing}
-                    placeholder="Enter image URL (e.g. https://example.com/image.jpg)"
-                    className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  />
+                <h3 className="text-lg font-medium text-white mb-4">Generate Video (9:16 Player)</h3>
+                <div className="space-y-5">
+                  
+                  {/* Selector de Fondo */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+                      <div 
+                        onClick={() => studioStep === 2 && !isProcessing && setBackgroundUrl('image_f840ac.jpg')}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === 'image_f840ac.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                      >
+                        <span className="text-sm font-medium text-white text-center">Plantilla Spotify</span>
+                      </div>
+                      <div 
+                        onClick={() => studioStep === 2 && !isProcessing && setBackgroundUrl('image_apple.jpg')}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === 'image_apple.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                      >
+                        <span className="text-sm font-medium text-white text-center">Plantilla Apple</span>
+                      </div>
+                      <div 
+                        onClick={() => studioStep === 2 && !isProcessing && setBackgroundUrl('custom')}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === 'custom' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                      >
+                        <span className="text-sm font-medium text-white text-center">Fondo Propio</span>
+                      </div>
+                    </div>
+                    {backgroundUrl === 'custom' && (
+                      <input
+                        type="url"
+                        value={customBackground}
+                        onChange={(e) => setCustomBackground(e.target.value)}
+                        disabled={studioStep !== 2 || isProcessing}
+                        placeholder="URL de fondo personalizado (ej. https://...)"
+                        className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                      />
+                    )}
+                  </div>
+
+                  {/* URL de Foto de Usuario */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Foto de Portada (URL)</label>
+                    <input
+                      type="url"
+                      value={userPhotoUrl}
+                      onChange={(e) => setUserPhotoUrl(e.target.value)}
+                      disabled={studioStep !== 2 || isProcessing}
+                      placeholder="https://..."
+                      className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    />
+                  </div>
+
+                  {/* Datos de la canción */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Título de la Canción</label>
+                      <input
+                        type="text"
+                        value={titulo}
+                        onChange={(e) => setTitulo(e.target.value)}
+                        disabled={studioStep !== 2 || isProcessing}
+                        placeholder="Ej. Nuestra Historia"
+                        className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Artista</label>
+                      <input
+                        type="text"
+                        value={artista}
+                        onChange={(e) => setArtista(e.target.value)}
+                        disabled={studioStep !== 2 || isProcessing}
+                        placeholder="Ej. Juan & María"
+                        className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dedicatoria */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Dedicatoria (opcional)</label>
+                    <textarea
+                      value={dedicatoria}
+                      onChange={(e) => setDedicatoria(e.target.value)}
+                      disabled={studioStep !== 2 || isProcessing}
+                      placeholder="Un pequeño mensaje que aparecerá en el video..."
+                      rows={2}
+                      className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
+                    />
+                  </div>
+
                   {studioStep === 2 && (
                     <button
                       onClick={handleGenerateVideo}
-                      disabled={!imageUrl || isProcessing}
+                      disabled={(!userPhotoUrl || !titulo || !artista || (backgroundUrl === 'custom' && !customBackground)) || isProcessing}
                       className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
                     >
                       {isProcessing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
@@ -495,9 +614,11 @@ export default function Dashboard() {
                     </button>
                   )}
                   {studioVideoUrl && (
-                    <div className="mt-4 p-4 bg-[#171F2E] rounded-xl border border-gray-800">
-                      <p className="text-sm text-gray-400 mb-2">Generated Video:</p>
-                      <video controls className="w-full max-h-64 bg-black rounded-lg" src={studioVideoUrl}></video>
+                    <div className="mt-4 p-4 bg-[#171F2E] rounded-xl border border-gray-800 flex justify-center">
+                      <div className="w-full max-w-[280px]">
+                        <p className="text-sm text-gray-400 mb-2">Generated Video:</p>
+                        <video controls className="w-full bg-black rounded-lg aspect-[9/16]" src={studioVideoUrl}></video>
+                      </div>
                     </div>
                   )}
                 </div>
