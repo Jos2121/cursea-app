@@ -11,6 +11,7 @@ export interface VideoEditorPreviewProps {
   titulo: string;
   artista: string;
   dedicatoria: string;
+  dedicatoriaSize?: number;
   scale: number;
 }
 
@@ -22,6 +23,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
   titulo,
   artista,
   dedicatoria,
+  dedicatoriaSize = 28,
   scale
 }) => {
 

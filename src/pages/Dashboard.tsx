@@ -92,6 +92,7 @@ export default function Dashboard() {
   const [regenerateTitulo, setRegenerateTitulo] = useState('');
   const [regenerateArtista, setRegenerateArtista] = useState('');
   const [regenerateDedicatoria, setRegenerateDedicatoria] = useState('');
+  const [regenerateDedicatoriaSize, setRegenerateDedicatoriaSize] = useState(28); // New stat
   const [regenerateTemplateConfig, setRegenerateTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
@@ -113,6 +114,7 @@ export default function Dashboard() {
   const [titulo, setTitulo] = useState('');
   const [artista, setArtista] = useState('');
   const [dedicatoria, setDedicatoria] = useState('');
+  const [dedicatoriaSize, setDedicatoriaSize] = useState(28); // New stat
   const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
   
   // Custom Templates from DB
@@ -174,6 +176,7 @@ export default function Dashboard() {
         if (parsed.titulo) setTitulo(parsed.titulo);
         if (parsed.artista) setArtista(parsed.artista);
         if (parsed.dedicatoria) setDedicatoria(parsed.dedicatoria);
+        if (parsed.dedicatoriaSize) setDedicatoriaSize(parsed.dedicatoriaSize);
         if (parsed.phone) setPhone(parsed.phone);
         if (parsed.studioAudioUrl) setStudioAudioUrl(parsed.studioAudioUrl);
         if (parsed.studioVideoUrl) setStudioVideoUrl(parsed.studioVideoUrl);
@@ -195,14 +198,15 @@ export default function Dashboard() {
       titulo,
       artista,
       dedicatoria,
+      dedicatoriaSize,
       phone,
       studioAudioUrl,
       studioVideoUrl,
     };
     localStorage.setItem('videoFlowStudioState', JSON.stringify(stateToSave));
   }, [
-    studioStep, studioJobId, prompt, backgroundUrl, customBackground, 
-    userPhotoUrl, titulo, artista, dedicatoria, phone, studioAudioUrl, studioVideoUrl
+    studioStep, studioJobId, prompt, backgroundUrl, customBackground,
+    userPhotoUrl, titulo, artista, dedicatoria, dedicatoriaSize, phone, studioAudioUrl, studioVideoUrl
   ]);
 
   const fetchJobs = async () => {
@@ -260,6 +264,7 @@ export default function Dashboard() {
           titulo: regenerateTitulo,
           artista: regenerateArtista,
           dedicatoria: regenerateDedicatoria,
+          dedicatoriaSize: regenerateDedicatoriaSize,
           templateConfig: regenerateTemplateConfig
         })
       });
@@ -407,7 +412,7 @@ export default function Dashboard() {
     localStorage.removeItem('videoFlowStudioState');
   };
 
-  const renderConfigControls = (config: TemplateConfig, setConfig: any, key: 'titulo'|'artista'|'dedicatoria') => (
+  const renderConfigControls = (config: TemplateConfig, setConfig: any, key: 'titulo'|'artista'|'dedicatoria', extSizeState?: number, setExtSizeState?: any) => (
     <div className="flex gap-2 mt-2">
       <div className="flex items-center gap-1">
         <span className="text-xs text-gray-500">X:</span>
@@ -432,8 +437,12 @@ export default function Dashboard() {
         <span className="text-xs text-gray-500">Size:</span>
         <input
           type="number"
-          value={config[key].fontSize}
-          onChange={(e) => setConfig({...config, [key]: {...config[key], fontSize: Number(e.target.value)}})}
+          value={extSizeState !== undefined ? extSizeState : config[key].fontSize}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            setConfig({...config, [key]: {...config[key], fontSize: val}});
+            if (setExtSizeState) setExtSizeState(val);
+          }}
           className="w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
       </div>
@@ -793,7 +802,7 @@ export default function Dashboard() {
                       rows={2}
                       className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                     />
-                    {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'dedicatoria')}
+                    {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'dedicatoria', dedicatoriaSize, setDedicatoriaSize)}
                   </div>
 
                   {/* Live Preview */}
@@ -809,6 +818,7 @@ export default function Dashboard() {
                         titulo={titulo}
                         artista={artista}
                         dedicatoria={dedicatoria}
+                        dedicatoriaSize={dedicatoriaSize}
                         scale={0.259259}
                       />
                     </div>
@@ -991,7 +1001,7 @@ export default function Dashboard() {
                     rows={2}
                     className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   />
-                  {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'dedicatoria')}
+                  {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'dedicatoria', regenerateDedicatoriaSize, setRegenerateDedicatoriaSize)}
                 </div>
               </div>
 
@@ -1008,6 +1018,7 @@ export default function Dashboard() {
                     titulo={regenerateTitulo}
                     artista={regenerateArtista}
                     dedicatoria={regenerateDedicatoria}
+                    dedicatoriaSize={regenerateDedicatoriaSize}
                     scale={0.2037}
                   />
                 </div>
