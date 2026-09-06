@@ -34,7 +34,7 @@ export interface TemplateConfig {
 export const DEFAULT_TEMPLATE: TemplateConfig = {
   id: '',
   name: 'Plantilla por Defecto',
-  bgUrl: 'image_f840ac.jpg',
+  bgUrl: '',
   photo: { x: 130, y: 180, w: 820, h: 820 },
   titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
   artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
@@ -191,14 +191,14 @@ export default function Dashboard() {
       setDbTemplates(prev => prev.filter(t => t.id !== templateId));
       
       if (studioTemplateConfig.id === templateId) {
-        setStudioTemplateConfig(DEFAULT_TEMPLATE);
-        setBackgroundUrl('image_f840ac.jpg');
+        setStudioTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
+        setBackgroundUrl('');
         setCustomBackground('');
       }
       
       if (regenerateTemplateConfig.id === templateId) {
-        setRegenerateTemplateConfig(DEFAULT_TEMPLATE);
-        setRegenerateBgUrl('image_f840ac.jpg');
+        setRegenerateTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
+        setRegenerateBgUrl('');
         setRegenerateCustomBg('');
       }
       
@@ -453,7 +453,7 @@ export default function Dashboard() {
     setStudioStep(1);
     setStudioJobId(null);
     setPrompt('');
-    setBackgroundUrl('image_f840ac.jpg');
+    setBackgroundUrl('');
     setCustomBackground('');
     setUserPhotoUrl('');
     setTitulo('');
@@ -462,7 +462,7 @@ export default function Dashboard() {
     setPhone('');
     setStudioAudioUrl(null);
     setStudioVideoUrl(null);
-    setStudioTemplateConfig(DEFAULT_TEMPLATE);
+    setStudioTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
     localStorage.removeItem('videoFlowStudioState');
   };
 
@@ -788,12 +788,13 @@ export default function Dashboard() {
                           <button
                             onClick={() => {
                               setRegenerateJobId(job.id);
-                              setRegenerateBgUrl('image_f840ac.jpg');
+                              setRegenerateBgUrl('');
                               setRegenerateCustomBg('');
                               setRegenerateUserPhotoUrl(job.imageUrl || '');
                               setRegenerateTitulo('');
                               setRegenerateArtista('');
                               setRegenerateDedicatoria('');
+                              setRegenerateTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
                               setIsRegenerateModalOpen(true);
                             }}
                             className="p-2 text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors inline-block"
