@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Heart, Music, MessageCircle, Star } from 'lucide-react';
+import { Save, ArrowLeft, Heart, Music, MessageCircle, Star, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 type FormValues = {
