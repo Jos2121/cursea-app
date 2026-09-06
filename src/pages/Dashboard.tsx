@@ -34,7 +34,7 @@ export interface TemplateConfig {
 export const DEFAULT_TEMPLATE: TemplateConfig = {
   id: '',
   name: 'Plantilla por Defecto',
-  bgUrl: '',
+  bgUrl: 'image_f840ac.jpg',
   photo: { x: 130, y: 180, w: 820, h: 820 },
   titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
   artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
@@ -68,7 +68,7 @@ export default function Dashboard() {
   // Regenerate Video Modal State
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
   const [regenerateJobId, setRegenerateJobId] = useState<string | null>(null);
-  const [regenerateBgUrl, setRegenerateBgUrl] = useState('');
+  const [regenerateBgUrl, setRegenerateBgUrl] = useState('image_f840ac.jpg');
   const [regenerateCustomBg, setRegenerateCustomBg] = useState('');
   const [regenerateUserPhotoUrl, setRegenerateUserPhotoUrl] = useState('');
   const [regenerateTitulo, setRegenerateTitulo] = useState('');
@@ -96,7 +96,7 @@ export default function Dashboard() {
   const [prompt, setPrompt] = useState('');
   
   // Studio Step 2 (Video Player 9:16 fields)
-  const [backgroundUrl, setBackgroundUrl] = useState('');
+  const [backgroundUrl, setBackgroundUrl] = useState('image_f840ac.jpg');
   const [customBackground, setCustomBackground] = useState('');
   const [userPhotoUrl, setUserPhotoUrl] = useState('');
   const [titulo, setTitulo] = useState('');
@@ -192,13 +192,13 @@ export default function Dashboard() {
       
       if (studioTemplateConfig.id === templateId) {
         setStudioTemplateConfig(DEFAULT_TEMPLATE);
-        setBackgroundUrl('');
+        setBackgroundUrl('image_f840ac.jpg');
         setCustomBackground('');
       }
       
       if (regenerateTemplateConfig.id === templateId) {
         setRegenerateTemplateConfig(DEFAULT_TEMPLATE);
-        setRegenerateBgUrl('');
+        setRegenerateBgUrl('image_f840ac.jpg');
         setRegenerateCustomBg('');
       }
       
@@ -453,7 +453,7 @@ export default function Dashboard() {
     setStudioStep(1);
     setStudioJobId(null);
     setPrompt('');
-    setBackgroundUrl('');
+    setBackgroundUrl('image_f840ac.jpg');
     setCustomBackground('');
     setUserPhotoUrl('');
     setTitulo('');
@@ -788,7 +788,7 @@ export default function Dashboard() {
                           <button
                             onClick={() => {
                               setRegenerateJobId(job.id);
-                              setRegenerateBgUrl('');
+                              setRegenerateBgUrl('image_f840ac.jpg');
                               setRegenerateCustomBg('');
                               setRegenerateUserPhotoUrl(job.imageUrl || '');
                               setRegenerateTitulo('');
@@ -932,7 +932,7 @@ export default function Dashboard() {
                       value={userPhotoUrl}
                       onChange={(e) => setUserPhotoUrl(e.target.value)}
                       disabled={studioStep !== 2 || isProcessing}
-                      placeholder="https://ejemplo.com/foto.jpg"
+                      placeholder="https://..."
                       className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                     />
                     {renderPhotoControls(studioTemplateConfig, setStudioTemplateConfig)}
@@ -947,7 +947,7 @@ export default function Dashboard() {
                         value={titulo}
                         onChange={(e) => setTitulo(e.target.value)}
                         disabled={studioStep !== 2 || isProcessing}
-                        placeholder="Nombre de la canción"
+                        placeholder="Ej. Nuestra Historia"
                         className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                       />
                       {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'titulo')}
@@ -959,7 +959,7 @@ export default function Dashboard() {
                         value={artista}
                         onChange={(e) => setArtista(e.target.value)}
                         disabled={studioStep !== 2 || isProcessing}
-                        placeholder="Nombre del artista"
+                        placeholder="Ej. Juan & María"
                         className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                       />
                       {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'artista')}
@@ -973,7 +973,7 @@ export default function Dashboard() {
                       value={dedicatoria}
                       onChange={(e) => setDedicatoria(e.target.value)}
                       disabled={studioStep !== 2 || isProcessing}
-                      placeholder="Escribe un mensaje corto..."
+                      placeholder="Un pequeño mensaje que aparecerá en el video..."
                       rows={2}
                       className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                     />
@@ -1126,7 +1126,7 @@ export default function Dashboard() {
                     value={regenerateUserPhotoUrl}
                     onChange={(e) => setRegenerateUserPhotoUrl(e.target.value)}
                     disabled={isRegenerating}
-                    placeholder="https://ejemplo.com/foto.jpg"
+                    placeholder="https://..."
                     className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                   />
                   {renderPhotoControls(regenerateTemplateConfig, setRegenerateTemplateConfig)}
@@ -1140,7 +1140,7 @@ export default function Dashboard() {
                       value={regenerateTitulo}
                       onChange={(e) => setRegenerateTitulo(e.target.value)}
                       disabled={isRegenerating}
-                      placeholder="Nombre de la canción"
+                      placeholder="Ej. Nuestra Historia"
                       className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                     />
                     {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'titulo')}
@@ -1152,7 +1152,7 @@ export default function Dashboard() {
                       value={regenerateArtista}
                       onChange={(e) => setRegenerateArtista(e.target.value)}
                       disabled={isRegenerating}
-                      placeholder="Nombre del artista"
+                      placeholder="Ej. Juan & María"
                       className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                     />
                     {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'artista')}
@@ -1165,7 +1165,7 @@ export default function Dashboard() {
                     value={regenerateDedicatoria}
                     onChange={(e) => setRegenerateDedicatoria(e.target.value)}
                     disabled={isRegenerating}
-                    placeholder="Escribe un mensaje corto..."
+                    placeholder="Un pequeño mensaje..."
                     rows={2}
                     className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   />
