@@ -74,10 +74,10 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
   return (
     <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0 aspect-[9/16]">
       {/* Background */}
-      {backgroundUrl !== 'custom' ? (
-        <img src={`/media/${backgroundUrl}`} className="absolute inset-0 w-full h-full object-cover object-center" />
-      ) : customBackground ? (
-        <img src={customBackground} className="absolute inset-0 w-full h-full object-cover object-center" />
+      {backgroundUrl === 'custom' && customBackground ? (
+        <img src={customBackground.trim()} className="absolute inset-0 w-full h-full object-cover object-center" />
+      ) : backgroundUrl ? (
+        <img src={backgroundUrl.startsWith('http') || backgroundUrl.startsWith('blob:') || backgroundUrl.startsWith('data:') ? backgroundUrl.trim() : `/media/${backgroundUrl.trim()}`} className="absolute inset-0 w-full h-full object-cover object-center" />
       ) : (
         <div className="absolute inset-0 w-full h-full bg-gray-900" />
       )}
@@ -93,7 +93,7 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
         }}
       >
         {userPhotoUrl ? (
-          <img src={userPhotoUrl} className="w-full h-full object-cover rounded-md shadow-2xl" />
+          <img src={userPhotoUrl.trim()} className="w-full h-full object-cover rounded-md shadow-2xl" />
         ) : (
           <div className="w-full h-full bg-gray-800/80 backdrop-blur flex flex-col items-center justify-center text-gray-400 rounded-md border-2 border-dashed border-gray-600">
             <ImageIcon className="w-8 h-8 md:w-12 md:h-12 mb-2" />

@@ -471,6 +471,7 @@ export default function Dashboard() {
     setConfig: (config: TemplateConfig) => void,
     setBg: (bg: string) => void,
     setCustomBg: (bg: string) => void,
+    setPhotoUrl: (url: string) => void,
     isProcessing: boolean,
     setDedicatoriaSizeState?: (size: number) => void
   ) => {
@@ -490,13 +491,28 @@ export default function Dashboard() {
       
       if (!isCoords) {
         const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
-        if (bg) {
-          setBg(bg);
-          setCustomBg(bg);
+        if (bg !== undefined) {
+          const trimmedBg = String(bg).trim();
+          setBg(trimmedBg);
+          setCustomBg(trimmedBg);
         }
       }
       
+      if (parsedConfig.photoUrl !== undefined) {
+        setPhotoUrl(String(parsedConfig.photoUrl).trim());
+      }
+      
       const nextConfig = { ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id };
+      
+      if (nextConfig.photoUrl !== undefined) {
+        nextConfig.photoUrl = String(nextConfig.photoUrl).trim();
+      }
+      if (nextConfig.backgroundUrl !== undefined) {
+        nextConfig.backgroundUrl = String(nextConfig.backgroundUrl).trim();
+      }
+      if (nextConfig.bgUrl !== undefined) {
+        nextConfig.bgUrl = String(nextConfig.bgUrl).trim();
+      }
       
       if (!nextConfig.dedicatoria) {
         nextConfig.dedicatoria = { ...DEFAULT_TEMPLATE.dedicatoria };
@@ -904,6 +920,7 @@ export default function Dashboard() {
                       setStudioTemplateConfig,
                       setBackgroundUrl,
                       setCustomBackground,
+                      setUserPhotoUrl,
                       isProcessing,
                       setDedicatoriaSize
                     )}
@@ -1098,6 +1115,7 @@ export default function Dashboard() {
                     setRegenerateTemplateConfig,
                     setRegenerateBgUrl,
                     setRegenerateCustomBg,
+                    setRegenerateUserPhotoUrl,
                     isRegenerating,
                     setRegenerateDedicatoriaSize
                   )}
