@@ -3,19 +3,25 @@ import { readBody, createError } from "nitro/h3";
 import { pool } from "../../../utils/db";
 
 export default defineHandler(async (event) => {
-  const body = await readBody(event);
-  
-  const id = String(body?.id || body?.templateId || "").trim();
-  
-  if (!id) {
-    throw createError({ statusCode: 400, statusMessage: "ID is required" });
-  }
-
   try {
-    await pool.query('DELETE FROM "CustomTemplate" WHERE id = $1 RETURNING id', [id]);
+    const body = await readBody(event);
+    const id = body?.id || body?.templateId;
+
+    if (!id) {
+      console.error("Delete failed: No ID provided in body");
+      throw createError({ statusCode: 400, statusMessage: "El ID de la plantilla es obligatorio" });
+    }
+
+    const result = await pool.query('DELETE FROM "CustomTemplate" WHERE id = $1 RETURNING id', [String(id)]);
+
+    if ((result.rowCount ?? 0) === 0) {
+      console.warn(`Delete failed: ID ${id} not found in DB.`);
+      throw createError({ statusCode: 404, statusMessage: "La plantilla no existe en la base de datos" });
+    }
+
     return { ok: true, deletedId: id };
-  } catch (error: any) {
-    console.error("Error deleting template:", error);
-    throw createError({ statusCode: 500, statusMessage: error.message || "Error al eliminar plantilla" });
+  } catch (err: any) {
+    console.error("Database deletion error:", err);
+    throw createError({ statusCode: 500, statusMessage: err.statusMessage || "Error interno del servidor" });
   }
 });

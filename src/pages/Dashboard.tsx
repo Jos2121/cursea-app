@@ -169,35 +169,38 @@ export default function Dashboard() {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm('¿Seguro que deseas eliminar esta plantilla?')) return;
+    if (!templateId) return alert("Error: ID inválido");
+    
     try {
       const res = await fetch('/api/templates/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: String(templateId) })
+        body: JSON.stringify({ id: templateId })
       });
-      if (res.ok) {
-        setDbTemplates(prev => prev.filter(t => String(t.id) !== String(templateId)));
-        
-        // Si la plantilla eliminada estaba activa, resetearla
-        if (String(studioTemplateConfig.id) === String(templateId)) {
-          setStudioTemplateConfig(DEFAULT_TEMPLATE);
-          setBackgroundUrl('image_f840ac.jpg');
-          setCustomBackground('');
-        }
-        if (String(regenerateTemplateConfig.id) === String(templateId)) {
-          setRegenerateTemplateConfig(DEFAULT_TEMPLATE);
-          setRegenerateBgUrl('image_f840ac.jpg');
-          setRegenerateCustomBg('');
-        }
-        
-        alert('Plantilla eliminada con éxito');
-      } else {
-        alert('Error al eliminar la plantilla');
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.statusMessage || "Error desconocido al eliminar");
       }
-    } catch (e) {
-      console.error(e);
-      alert('Error de red al intentar eliminar');
+
+      setDbTemplates(prev => prev.filter(t => t.id !== templateId));
+      
+      if (studioTemplateConfig.id === templateId) {
+        setStudioTemplateConfig(DEFAULT_TEMPLATE);
+        setBackgroundUrl('image_f840ac.jpg');
+        setCustomBackground('');
+      }
+      
+      if (regenerateTemplateConfig.id === templateId) {
+        setRegenerateTemplateConfig(DEFAULT_TEMPLATE);
+        setRegenerateBgUrl('image_f840ac.jpg');
+        setRegenerateCustomBg('');
+      }
+      
+      alert("Éxito: Plantilla eliminada permanentemente.");
+    } catch (error: any) {
+      console.error("Error UI:", error);
+      alert(`Error al eliminar: ${error.message}`);
     }
   };
   
