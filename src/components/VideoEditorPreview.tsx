@@ -52,12 +52,12 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0">
+    <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0 aspect-[9/16]">
       {/* Background */}
       {backgroundUrl !== 'custom' ? (
-        <img src={`/media/${backgroundUrl}`} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={`/media/${backgroundUrl}`} className="absolute inset-0 w-full h-full object-cover object-center" />
       ) : customBackground ? (
-        <img src={customBackground} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={customBackground} className="absolute inset-0 w-full h-full object-cover object-center" />
       ) : (
         <div className="absolute inset-0 w-full h-full bg-gray-900" />
       )}

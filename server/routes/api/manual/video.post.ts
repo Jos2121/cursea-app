@@ -108,11 +108,12 @@ export default defineHandler(async (event) => {
       const isExternalOrTempBg = tempBgPath.includes('temp_bg_');
       let bgInput = tempBgPath ? `-loop 1 -framerate 1 -i "${tempBgPath}"` : `-f lavfi -i color=c=black:s=1080x1920:r=1`;
 
-      let filter = `[1:v]scale=1080:1920[bg];`;
+      // Escala del fondo sin deformarlo (crop centrado al formato vertical 1080x1920)
+      let filter = `[1:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[bg_base];`;
       // Recorte dinámico basado en las dimensiones de la foto en la plantilla
       filter += `[0:v]scale=w=${t.photo.w}:h=${t.photo.h}:force_original_aspect_ratio=increase,crop=${t.photo.w}:${t.photo.h}:(in_w-${t.photo.w})/2:(in_h-${t.photo.h})/2[photo];`;
       // Overlay dinámico
-      filter += `[bg][photo]overlay=x=${t.photo.x}:y=${t.photo.y}[v1]`;
+      filter += `[bg_base][photo]overlay=x=${t.photo.x}:y=${t.photo.y}[v1]`;
 
       let lastV = 'v1';
       let vIndex = 2;
