@@ -94,9 +94,26 @@ export default defineHandler(async (event) => {
         return str.replace(/:/g, "\\:").replace(/'/g, "\u2019").replace(/"/g, "\u201D").replace(/[\n\r]/g, " ");
       };
       
+      const wrapText = (str: string, maxCharsPerLine = 36) => {
+        if (!str) return "";
+        const words = str.trim().split(/\s+/);
+        let lines: string[] = [];
+        let currentLine = "";
+        for (const word of words) {
+          if ((currentLine + " " + word).trim().length <= maxCharsPerLine) {
+            currentLine = (currentLine + " " + word).trim();
+          } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = word;
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+        return lines.join("\n");
+      };
+
       const safeTitulo = sanitize(titulo);
       const safeArtista = sanitize(artista);
-      const safeDedicatoria = sanitize(dedicatoria);
+      const safeDedicatoria = wrapText(sanitize(dedicatoria));
 
       const t = templateConfig || {
         photo: { x: 130, y: 180, w: 820, h: 820 },
@@ -132,7 +149,7 @@ export default defineHandler(async (event) => {
       }
       if (safeDedicatoria) {
         const xPos = t.dedicatoria.align === 'center' ? '(w-text_w)/2' : t.dedicatoria.x;
-        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=${t.dedicatoria.color}:fontsize=${t.dedicatoria.fontSize}:x=${xPos}:y=${t.dedicatoria.y}[v${vIndex}]`;
+        filter += `;[${lastV}]drawtext=text='${safeDedicatoria}':fontcolor=${t.dedicatoria.color}:fontsize=26:line_spacing=12:x=${xPos}:y=${t.dedicatoria.y}[v${vIndex}]`;
         lastV = `v${vIndex}`;
         vIndex++;
       }

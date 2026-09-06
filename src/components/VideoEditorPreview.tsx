@@ -29,6 +29,24 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
     const t = config[key];
     const isCenter = t.align === 'center';
 
+    if (key === 'dedicatoria') {
+      return (
+        <div
+          className="absolute text-center break-words max-w-[75%] leading-relaxed drop-shadow-md"
+          style={{
+            left: '50%',
+            top: `${(t.y / 1920) * 100}%`,
+            transform: 'translateX(-50%)',
+            width: 'max-content',
+            fontSize: `${(26 * scale)}px`, // Match backend fixed 26px
+            color: t.color,
+          }}
+        >
+          {text || placeholder}
+        </div>
+      );
+    }
+
     // Calculamos la posición porcentual asumiendo un lienzo base de 1080x1920.
     const leftPos = isCenter ? '10%' : `${(Number(t.x) / 1080) * 100}%`;
     const widthVal = isCenter ? '80%' : `calc(90% - ${(Number(t.x) / 1080) * 100}%)`;
