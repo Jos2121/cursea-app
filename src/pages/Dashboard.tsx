@@ -472,102 +472,137 @@ export default function Dashboard() {
     setBg: (bg: string) => void,
     setCustomBg: (bg: string) => void,
     isProcessing: boolean,
-    onAddBgClick: () => void,
     setDedicatoriaSizeState?: (size: number) => void
-  ) => (
-    <div className="flex gap-2 mb-3">
-      <DropdownMenu>
-        <DropdownMenuTrigger disabled={isProcessing} className="flex items-center justify-between w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 text-left h-12">
-          <span className="truncate">
-            {currentConfigId
-              ? dbTemplates.find(x => x.id === currentConfigId)?.name || 'Plantilla seleccionada'
-              : "Seleccionar plantilla..."}
-          </span>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[320px] bg-[#1F2937] border-gray-700 max-h-64 overflow-y-auto">
-          {dbTemplates.length === 0 ? (
-            <div className="p-4 text-sm text-gray-400 text-center">No hay plantillas.</div>
-          ) : (
-            dbTemplates.map(t => {
-              const parsedConfig = (t as any).config || t;
-              const isCoords = parsedConfig.type === 'coordenadas';
-              return (
-                <DropdownMenuItem
-                  key={t.id}
-                  onClick={() => {
-                    if (!isCoords) {
-                      const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
-                      if (bg) {
-                        setBg(bg || 'custom');
-                        if (bg.startsWith('http')) setCustomBg(bg);
-                      }
-                    }
-                    
-                    const nextConfig = { ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id };
-                    
-                    if (!nextConfig.dedicatoria) {
-                      nextConfig.dedicatoria = { ...DEFAULT_TEMPLATE.dedicatoria };
-                    }
-                    
-                    if (parsedConfig.dedicatoriaX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoriaX);
-                    else if (parsedConfig.dedicatoryX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoryX);
+  ) => {
+    const templatesWithBg = dbTemplates.filter(t => {
+      const parsedConfig = (t as any).config || t;
+      return parsedConfig.type !== 'coordenadas' && (parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl);
+    });
 
-                    if (parsedConfig.dedicatoriaY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoriaY);
-                    else if (parsedConfig.dedicatoryY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoryY);
+    const templatesWithoutBg = dbTemplates.filter(t => {
+      const parsedConfig = (t as any).config || t;
+      return parsedConfig.type === 'coordenadas' || (!parsedConfig.backgroundUrl && !parsedConfig.bgUrl && !t.bgUrl);
+    });
 
-                    let dedicatoriaSz = nextConfig.dedicatoria.fontSize;
-                    if (parsedConfig.dedicatoriaSize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatoriaSize);
-                    else if (parsedConfig.dedicatorySize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatorySize);
-                    
-                    nextConfig.dedicatoria.fontSize = dedicatoriaSz;
-                    
-                    if (setDedicatoriaSizeState) {
-                      setDedicatoriaSizeState(dedicatoriaSz);
-                    }
+    const handleSelect = (t: any) => {
+      const parsedConfig = (t as any).config || t;
+      const isCoords = parsedConfig.type === 'coordenadas';
+      
+      if (!isCoords) {
+        const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+        if (bg) {
+          setBg(bg);
+          setCustomBg(bg);
+        }
+      }
+      
+      const nextConfig = { ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id };
+      
+      if (!nextConfig.dedicatoria) {
+        nextConfig.dedicatoria = { ...DEFAULT_TEMPLATE.dedicatoria };
+      }
+      
+      if (parsedConfig.dedicatoriaX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoriaX);
+      else if (parsedConfig.dedicatoryX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoryX);
 
-                    setConfig(nextConfig);
-                  }}
-                  className="flex items-center justify-between cursor-pointer py-2 px-3 text-white hover:bg-[#374151] focus:bg-[#374151] focus:text-white"
-                >
-                  <div className="flex items-center truncate mr-2 w-full">
-                    <Check
-                      className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`}
-                    />
-                    <span className={`truncate ${isCoords ? "text-purple-300" : "text-indigo-300"}`}>
-                      {isCoords ? '[Posiciones]' : '[Fondo]'} {t.name}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleDeleteTemplate(t.id);
-                    }}
-                    className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
-                    title="Eliminar plantilla"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </DropdownMenuItem>
-              );
-            })
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      if (parsedConfig.dedicatoriaY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoriaY);
+      else if (parsedConfig.dedicatoryY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoryY);
 
-      <button
-        type="button"
-        disabled={isProcessing}
-        onClick={onAddBgClick}
-        className="flex items-center justify-center w-12 h-12 shrink-0 bg-[#1F2937] hover:bg-indigo-500/20 text-gray-400 hover:text-indigo-400 border border-gray-700 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
-        title="Añadir Fondo de Reproductor"
-      >
-        <ImagePlus className="w-5 h-5" />
-      </button>
-    </div>
-  );
+      let dedicatoriaSz = nextConfig.dedicatoria.fontSize;
+      if (parsedConfig.dedicatoriaSize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatoriaSize);
+      else if (parsedConfig.dedicatorySize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatorySize);
+      
+      nextConfig.dedicatoria.fontSize = dedicatoriaSz;
+      
+      if (setDedicatoriaSizeState) {
+        setDedicatoriaSizeState(dedicatoriaSz);
+      }
+
+      setConfig(nextConfig);
+    };
+
+    return (
+      <div className="flex gap-2 mb-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger disabled={isProcessing} className="flex items-center justify-between w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 text-left h-12">
+            <span className="truncate">
+              {currentConfigId
+                ? dbTemplates.find(x => x.id === currentConfigId)?.name || 'Plantilla seleccionada'
+                : "Seleccionar plantilla..."}
+            </span>
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-[320px] bg-[#1F2937] border-gray-700 max-h-64 overflow-y-auto">
+            {dbTemplates.length === 0 ? (
+              <div className="p-4 text-sm text-gray-400 text-center">No hay plantillas.</div>
+            ) : (
+              <>
+                {templatesWithBg.length > 0 && (
+                  <>
+                    <DropdownMenuLabel className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                      Plantillas de Fondo de reproductor (Fondo + Posiciones)
+                    </DropdownMenuLabel>
+                    {templatesWithBg.map(t => (
+                      <DropdownMenuItem
+                        key={t.id}
+                        onClick={() => handleSelect(t)}
+                        className="flex items-center justify-between cursor-pointer py-2 px-3 text-white hover:bg-[#374151] focus:bg-[#374151] focus:text-white"
+                      >
+                        <div className="flex items-center truncate mr-2 w-full">
+                          <Check className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
+                          <span className="truncate text-indigo-300">{t.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTemplate(t.id); }}
+                          className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
+                          title="Eliminar plantilla"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+                
+                {templatesWithBg.length > 0 && templatesWithoutBg.length > 0 && (
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                )}
+
+                {templatesWithoutBg.length > 0 && (
+                  <>
+                    <DropdownMenuLabel className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                      Plantillas de posición (Solo Posiciones)
+                    </DropdownMenuLabel>
+                    {templatesWithoutBg.map(t => (
+                      <DropdownMenuItem
+                        key={t.id}
+                        onClick={() => handleSelect(t)}
+                        className="flex items-center justify-between cursor-pointer py-2 px-3 text-white hover:bg-[#374151] focus:bg-[#374151] focus:text-white"
+                      >
+                        <div className="flex items-center truncate mr-2 w-full">
+                          <Check className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
+                          <span className="truncate text-purple-300">{t.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTemplate(t.id); }}
+                          className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
+                          title="Eliminar plantilla"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
 
   const renderConfigControls = (config: TemplateConfig, setConfig: any, key: 'titulo'|'artista'|'dedicatoria', extSizeState?: number, setExtSizeState?: any) => (
     <div className="flex gap-2 mt-2">
@@ -862,16 +897,31 @@ export default function Dashboard() {
                   
                   {/* Selector de Fondo */}
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
+                    <label className="block text-sm text-gray-400 mb-2">Plantilla (Selecciona un diseño o posiciones)</label>
                     {renderTemplateSelector(
                       studioTemplateConfig.id,
                       setStudioTemplateConfig,
                       setBackgroundUrl,
                       setCustomBackground,
                       isProcessing,
-                      () => setIsStudioAddBgModalOpen(true),
                       setDedicatoriaSize
                     )}
+                  </div>
+
+                  {/* URL de Fondo Manual */}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Link de fondo de reproductor (URL)</label>
+                    <input
+                      type="url"
+                      value={backgroundUrl === 'custom' ? customBackground : backgroundUrl}
+                      onChange={(e) => {
+                        setBackgroundUrl('custom');
+                        setCustomBackground(e.target.value);
+                      }}
+                      disabled={studioStep !== 2 || isProcessing}
+                      placeholder="https://..."
+                      className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    />
                   </div>
 
                   {/* URL de Foto de Usuario */}
@@ -1041,16 +1091,31 @@ export default function Dashboard() {
                 
                 {/* Selector de Fondo */}
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
+                  <label className="block text-sm text-gray-400 mb-2">Plantilla (Selecciona un diseño o posiciones)</label>
                   {renderTemplateSelector(
                     regenerateTemplateConfig.id,
                     setRegenerateTemplateConfig,
                     setRegenerateBgUrl,
                     setRegenerateCustomBg,
                     isRegenerating,
-                    () => setIsRegenAddBgModalOpen(true),
                     setRegenerateDedicatoriaSize
                   )}
+                </div>
+
+                {/* URL de Fondo Manual */}
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Link de fondo de reproductor (URL)</label>
+                  <input
+                    type="url"
+                    value={regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl}
+                    onChange={(e) => {
+                      setRegenerateBgUrl('custom');
+                      setRegenerateCustomBg(e.target.value);
+                    }}
+                    disabled={isRegenerating}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  />
                 </div>
 
                 {/* URL de Foto de Usuario */}
