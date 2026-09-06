@@ -829,98 +829,196 @@ export default function Dashboard() {
 
         {/* Regenerate Video Modal */}
         <Dialog open={isRegenerateModalOpen} onOpenChange={setIsRegenerateModalOpen}>
-          <DialogContent className="bg-[#111827] border-gray-800 text-white max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-[#111827] border-gray-800 text-white max-w-3xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Generate/Regenerate Video</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <p className="text-sm text-gray-400">Provide the 9:16 player metadata to combine with the existing audio track.</p>
+            <div className="flex flex-col md:flex-row gap-8 py-4">
               
-              {/* Selector de Fondo */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor</label>
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  <div
-                    onClick={() => !isRegenerating && setRegenerateBgUrl('image_f840ac.jpg')}
-                    className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_f840ac.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                  >
-                    <span className="text-xs font-medium text-white text-center">Spotify</span>
+              {/* Form Col */}
+              <div className="flex-1 space-y-4">
+                <p className="text-sm text-gray-400">Provide the 9:16 player metadata to combine with the existing audio track.</p>
+                
+                {/* Selector de Fondo */}
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor</label>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    <div
+                      onClick={() => !isRegenerating && setRegenerateBgUrl('image_f840ac.jpg')}
+                      className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_f840ac.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                    >
+                      <span className="text-xs font-medium text-white text-center">Spotify</span>
+                    </div>
+                    <div
+                      onClick={() => !isRegenerating && setRegenerateBgUrl('image_apple.jpg')}
+                      className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_apple.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                    >
+                      <span className="text-xs font-medium text-white text-center">Apple</span>
+                    </div>
+                    <div
+                      onClick={() => !isRegenerating && setRegenerateBgUrl('custom')}
+                      className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'custom' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                    >
+                      <span className="text-xs font-medium text-white text-center">Propio</span>
+                    </div>
                   </div>
-                  <div
-                    onClick={() => !isRegenerating && setRegenerateBgUrl('image_apple.jpg')}
-                    className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_apple.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                  >
-                    <span className="text-xs font-medium text-white text-center">Apple</span>
-                  </div>
-                  <div
-                    onClick={() => !isRegenerating && setRegenerateBgUrl('custom')}
-                    className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'custom' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                  >
-                    <span className="text-xs font-medium text-white text-center">Propio</span>
-                  </div>
+                  {regenerateBgUrl === 'custom' && (
+                    <input
+                      type="url"
+                      value={regenerateCustomBg}
+                      onChange={(e) => setRegenerateCustomBg(e.target.value)}
+                      disabled={isRegenerating}
+                      placeholder="URL de fondo personalizado..."
+                      className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    />
+                  )}
                 </div>
-                {regenerateBgUrl === 'custom' && (
+
+                {/* URL de Foto de Usuario */}
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Foto de Portada (URL)</label>
                   <input
                     type="url"
-                    value={regenerateCustomBg}
-                    onChange={(e) => setRegenerateCustomBg(e.target.value)}
+                    value={regenerateUserPhotoUrl}
+                    onChange={(e) => setRegenerateUserPhotoUrl(e.target.value)}
                     disabled={isRegenerating}
-                    placeholder="URL de fondo personalizado..."
-                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  />
-                )}
-              </div>
-
-              {/* URL de Foto de Usuario */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Foto de Portada (URL)</label>
-                <input
-                  type="url"
-                  value={regenerateUserPhotoUrl}
-                  onChange={(e) => setRegenerateUserPhotoUrl(e.target.value)}
-                  disabled={isRegenerating}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Título</label>
-                  <input
-                    type="text"
-                    value={regenerateTitulo}
-                    onChange={(e) => setRegenerateTitulo(e.target.value)}
-                    disabled={isRegenerating}
-                    placeholder="Ej. Nuestra Historia"
+                    placeholder="https://..."
                     className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Título</label>
+                    <input
+                      type="text"
+                      value={regenerateTitulo}
+                      onChange={(e) => setRegenerateTitulo(e.target.value)}
+                      disabled={isRegenerating}
+                      placeholder="Ej. Nuestra Historia"
+                      className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Artista</label>
+                    <input
+                      type="text"
+                      value={regenerateArtista}
+                      onChange={(e) => setRegenerateArtista(e.target.value)}
+                      disabled={isRegenerating}
+                      placeholder="Ej. Juan & María"
+                      className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Artista</label>
-                  <input
-                    type="text"
-                    value={regenerateArtista}
-                    onChange={(e) => setRegenerateArtista(e.target.value)}
+                  <label className="block text-sm text-gray-400 mb-1">Dedicatoria (opcional)</label>
+                  <textarea
+                    value={regenerateDedicatoria}
+                    onChange={(e) => setRegenerateDedicatoria(e.target.value)}
                     disabled={isRegenerating}
-                    placeholder="Ej. Juan & María"
-                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    placeholder="Un pequeño mensaje..."
+                    rows={2}
+                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Dedicatoria (opcional)</label>
-                <textarea
-                  value={regenerateDedicatoria}
-                  onChange={(e) => setRegenerateDedicatoria(e.target.value)}
-                  disabled={isRegenerating}
-                  placeholder="Un pequeño mensaje..."
-                  rows={2}
-                  className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
-                />
+              {/* Live Preview Col */}
+              <div className="shrink-0 flex flex-col items-center justify-center">
+                <p className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wider">Preview</p>
+                <div className="relative w-[220px] h-[391.11px] bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl">
+                  <div
+                    className="absolute top-0 left-0 w-[1080px] h-[1920px] origin-top-left"
+                    style={{ transform: 'scale(0.2037)' }} // 220 / 1080
+                  >
+                    {/* Background */}
+                    {regenerateBgUrl !== 'custom' ? (
+                      <img src={`/media/${regenerateBgUrl}`} className="w-full h-full object-cover" />
+                    ) : regenerateCustomBg ? (
+                      <img src={regenerateCustomBg} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-900" />
+                    )}
+                    
+                    {/* Photo Cover & Text */}
+                    {(() => {
+                      const tKey = regenerateBgUrl === 'image_f840ac.jpg' ? 'spotify' : regenerateBgUrl === 'image_apple.jpg' ? 'apple' : 'custom';
+                      const t = TEMPLATES_CONFIG[tKey];
+                      return (
+                        <>
+                          {regenerateUserPhotoUrl ? (
+                            <img
+                              src={regenerateUserPhotoUrl}
+                              className="absolute object-cover"
+                              style={{
+                                left: `${t.photo.x}px`,
+                                top: `${t.photo.y}px`,
+                                width: `${t.photo.w}px`,
+                                height: `${t.photo.h}px`,
+                              }}
+                            />
+                          ) : (
+                            <div
+                              className="absolute bg-gray-800 flex items-center justify-center text-gray-500"
+                              style={{
+                                left: `${t.photo.x}px`,
+                                top: `${t.photo.y}px`,
+                                width: `${t.photo.w}px`,
+                                height: `${t.photo.h}px`,
+                              }}
+                            >
+                              <ImageIcon className="w-48 h-48" />
+                            </div>
+                          )}
+
+                          <div
+                            className="absolute truncate"
+                            style={{
+                              top: `${t.titulo.y}px`,
+                              fontSize: `${t.titulo.fontSize}px`,
+                              color: t.titulo.color,
+                              textAlign: t.titulo.align,
+                              ...(t.titulo.align === 'left' ? { left: `${t.titulo.x}px`, width: `calc(1080px - ${Number(t.titulo.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
+                            }}
+                          >
+                            {regenerateTitulo || 'Título de Canción'}
+                          </div>
+
+                          <div
+                            className="absolute truncate"
+                            style={{
+                              top: `${t.artista.y}px`,
+                              fontSize: `${t.artista.fontSize}px`,
+                              color: t.artista.color,
+                              textAlign: t.artista.align,
+                              ...(t.artista.align === 'left' ? { left: `${t.artista.x}px`, width: `calc(1080px - ${Number(t.artista.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
+                            }}
+                          >
+                            {regenerateArtista || 'Nombre del Artista'}
+                          </div>
+
+                          <div
+                            className="absolute line-clamp-3"
+                            style={{
+                              top: `${t.dedicatoria.y}px`,
+                              fontSize: `${t.dedicatoria.fontSize}px`,
+                              color: t.dedicatoria.color,
+                              textAlign: t.dedicatoria.align,
+                              ...(t.dedicatoria.align === 'left' ? { left: `${t.dedicatoria.x}px`, width: `calc(1080px - ${Number(t.dedicatoria.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
+                            }}
+                          >
+                            {regenerateDedicatoria || 'Mensaje de dedicatoria...'}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
+            
             <DialogFooter>
               <button
                 onClick={() => setIsRegenerateModalOpen(false)}
