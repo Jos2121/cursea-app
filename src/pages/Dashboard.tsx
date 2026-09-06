@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
@@ -23,9 +24,9 @@ export interface TemplateConfig {
   name: string;
   bgUrl: string;
   photo: { x: number; y: number; w: number; h: number };
-  titulo: { x: number | 'center'; y: number; fontSize: number; color: string; align: 'left' | 'center' };
-  artista: { x: number | 'center'; y: number; fontSize: number; color: string; align: 'left' | 'center' };
-  dedicatoria: { x: number | 'center'; y: number; fontSize: number; color: string; align: 'left' | 'center' };
+  titulo: { x: number; y: number; fontSize: number; color: string; align: 'left' | 'center' };
+  artista: { x: number; y: number; fontSize: number; color: string; align: 'left' | 'center' };
+  dedicatoria: { x: number; y: number; fontSize: number; color: string; align: 'left' | 'center' };
 }
 
 export const TEMPLATES_CONFIG: Record<string, TemplateConfig> = {
@@ -36,16 +37,16 @@ export const TEMPLATES_CONFIG: Record<string, TemplateConfig> = {
     photo: { x: 130, y: 180, w: 820, h: 820 },
     titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
     artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
-    dedicatoria: { x: 'center', y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
+    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
   },
   apple: {
     id: 'apple',
     name: 'Plantilla Apple',
     bgUrl: 'image_apple.jpg',
     photo: { x: 130, y: 180, w: 820, h: 820 },
-    titulo: { x: 'center', y: 1040, fontSize: 42, color: 'white', align: 'center' },
-    artista: { x: 'center', y: 1095, fontSize: 30, color: '#CCCCCC', align: 'center' },
-    dedicatoria: { x: 'center', y: 1620, fontSize: 28, color: 'white', align: 'center' },
+    titulo: { x: 540, y: 1040, fontSize: 42, color: 'white', align: 'center' },
+    artista: { x: 540, y: 1095, fontSize: 30, color: '#CCCCCC', align: 'center' },
+    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: 'white', align: 'center' },
   },
   custom: {
     id: 'custom',
@@ -54,8 +55,121 @@ export const TEMPLATES_CONFIG: Record<string, TemplateConfig> = {
     photo: { x: 130, y: 180, w: 820, h: 820 },
     titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
     artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
-    dedicatoria: { x: 'center', y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
+    dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' },
   }
+};
+
+const LivePreviewEditor = ({ config, setConfig, backgroundUrl, customBackground, userPhotoUrl, titulo, artista, dedicatoria, scale }: any) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [selectedElement, setSelectedElement] = React.useState<string | null>(null);
+
+  const renderTextNode = (key: 'titulo'|'artista'|'dedicatoria', text: string, placeholder: string) => {
+    const t = config[key];
+    const isSelected = selectedElement === key;
+    const isCenter = t.align === 'center';
+
+    return (
+      <motion.div
+        drag={isCenter ? "y" : true}
+        dragMomentum={false}
+        dragConstraints={containerRef}
+        onDragStart={() => setSelectedElement(key)}
+        onDragEnd={(e, info) => {
+          const newX = isCenter ? t.x : t.x + (info.offset.x / scale);
+          const newY = t.y + (info.offset.y / scale);
+          setConfig((prev: any) => ({
+            ...prev,
+            [key]: { ...t, x: Math.round(newX), y: Math.round(newY) }
+          }));
+        }}
+        animate={{ x: isCenter ? 0 : t.x, y: t.y }}
+        onClick={(e: any) => { e.stopPropagation(); setSelectedElement(key); }}
+        className={`absolute whitespace-nowrap cursor-move ${isSelected ? 'ring-4 ring-indigo-500/50 rounded-lg' : ''}`}
+        style={{
+          fontSize: `${t.fontSize}px`,
+          color: t.color,
+          textAlign: t.align,
+          width: isCenter ? '1080px' : 'auto',
+          zIndex: isSelected ? 50 : 10
+        }}
+      >
+        {isSelected && (
+          <div className="absolute -top-[130px] left-1/2 -translate-x-1/2 bg-gray-900 border border-gray-700 p-4 rounded-2xl flex items-center gap-6 shadow-2xl cursor-default" onClick={(e: any) => e.stopPropagation()}>
+            <div className="flex flex-col gap-2">
+              <label className="text-[24px] text-gray-400 font-medium">Size</label>
+              <input type="number" value={t.fontSize} onChange={e => setConfig((prev: any) => ({...prev, [key]: {...t, fontSize: Number(e.target.value)}}))} className="w-32 text-[32px] bg-gray-800 text-white rounded-lg px-3 py-1 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[24px] text-gray-400 font-medium">Color</label>
+              <input type="color" value={t.color} onChange={e => setConfig((prev: any) => ({...prev, [key]: {...t, color: e.target.value}}))} className="w-24 h-[52px] rounded-lg cursor-pointer bg-transparent" />
+            </div>
+          </div>
+        )}
+        {text || placeholder}
+      </motion.div>
+    );
+  };
+
+  return (
+    <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0" onClick={() => setSelectedElement(null)}>
+      <div
+        ref={containerRef}
+        className="absolute top-0 left-0 w-[1080px] h-[1920px] origin-top-left"
+        style={{ transform: `scale(${scale})` }}
+      >
+        {backgroundUrl !== 'custom' ? (
+          <img src={`/media/${backgroundUrl}`} className="w-full h-full object-cover" />
+        ) : customBackground ? (
+          <img src={customBackground} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gray-900" />
+        )}
+
+        <motion.div
+          drag
+          dragMomentum={false}
+          dragConstraints={containerRef}
+          onDragStart={() => setSelectedElement('photo')}
+          onDragEnd={(e, info) => {
+            setConfig((prev: any) => ({ ...prev, photo: { ...prev.photo, x: Math.round(prev.photo.x + info.offset.x / scale), y: Math.round(prev.photo.y + info.offset.y / scale) }}));
+          }}
+          animate={{ x: config.photo.x, y: config.photo.y }}
+          onClick={(e: any) => { e.stopPropagation(); setSelectedElement('photo'); }}
+          className={`absolute group ${selectedElement === 'photo' ? 'ring-4 ring-indigo-500 ring-offset-4 ring-offset-transparent' : ''}`}
+          style={{ width: config.photo.w, height: config.photo.h, zIndex: 20 }}
+        >
+          {userPhotoUrl ? (
+            <img src={userPhotoUrl} className="w-full h-full object-cover rounded-md shadow-2xl" />
+          ) : (
+            <div className="w-full h-full bg-gray-800/80 backdrop-blur flex flex-col items-center justify-center text-gray-400 rounded-md border-2 border-dashed border-gray-600">
+              <ImageIcon className="w-32 h-32 mb-4" />
+              <span className="text-3xl font-medium">Cover Photo</span>
+            </div>
+          )}
+
+          {selectedElement === 'photo' && (
+            <motion.div
+              drag
+              dragMomentum={false}
+              onPointerDownCapture={(e: any) => e.stopPropagation()}
+              onDrag={(e, info) => {
+                const newW = Math.max(200, config.photo.w + info.delta.x / scale);
+                const newH = Math.max(200, config.photo.h + info.delta.y / scale);
+                setConfig((prev: any) => ({ ...prev, photo: { ...prev.photo, w: Math.round(newW), h: Math.round(newH) }}));
+              }}
+              className="absolute -bottom-8 -right-8 w-16 h-16 bg-indigo-600 rounded-full cursor-nwse-resize shadow-[0_0_30px_rgba(0,0,0,0.5)] border-[6px] border-white z-50 flex items-center justify-center hover:scale-110 transition-transform"
+            >
+              <div className="w-6 h-6 border-b-4 border-r-4 border-white translate-x-[-4px] translate-y-[-4px]" />
+            </motion.div>
+          )}
+        </motion.div>
+
+        {renderTextNode('titulo', titulo, 'Título de Canción')}
+        {renderTextNode('artista', artista, 'Nombre del Artista')}
+        {renderTextNode('dedicatoria', dedicatoria, 'Mensaje de dedicatoria...')}
+      </div>
+    </div>
+  );
 };
 
 const statusColors: Record<JobStatus, string> = {
@@ -755,94 +869,19 @@ export default function Dashboard() {
 
                   {/* Live Preview */}
                   <div className="mt-6 flex flex-col items-center">
-                    <p className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">Live Preview</p>
-                    <div className="relative w-[280px] h-[497.77px] bg-black rounded-xl overflow-hidden border border-gray-800 shrink-0 shadow-2xl">
-                      <div
-                        className="absolute top-0 left-0 w-[1080px] h-[1920px] origin-top-left"
-                        style={{ transform: 'scale(0.259259)' }} // 280 / 1080
-                      >
-                        {/* Background */}
-                        {backgroundUrl !== 'custom' ? (
-                          <img src={`/media/${backgroundUrl}`} className="w-full h-full object-cover" />
-                        ) : customBackground ? (
-                          <img src={customBackground} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-gray-900" />
-                        )}
-                        
-                        {/* Photo Cover */}
-                        {(() => {
-                          const t = studioTemplateConfig;
-                          return (
-                            <>
-                              {userPhotoUrl ? (
-                                <img
-                                  src={userPhotoUrl}
-                                  className="absolute object-cover"
-                                  style={{
-                                    left: `${t.photo.x}px`,
-                                    top: `${t.photo.y}px`,
-                                    width: `${t.photo.w}px`,
-                                    height: `${t.photo.h}px`,
-                                  }}
-                                />
-                              ) : (
-                                <div
-                                  className="absolute bg-gray-800 flex items-center justify-center text-gray-500"
-                                  style={{
-                                    left: `${t.photo.x}px`,
-                                    top: `${t.photo.y}px`,
-                                    width: `${t.photo.w}px`,
-                                    height: `${t.photo.h}px`,
-                                  }}
-                                >
-                                  <ImageIcon className="w-48 h-48" />
-                                </div>
-                              )}
-
-                              {/* Textos */}
-                              <div
-                                className="absolute truncate"
-                                style={{
-                                  top: `${t.titulo.y}px`,
-                                  fontSize: `${t.titulo.fontSize}px`,
-                                  color: t.titulo.color,
-                                  textAlign: t.titulo.align,
-                                  ...(t.titulo.align === 'left' ? { left: `${t.titulo.x}px`, width: `calc(1080px - ${Number(t.titulo.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
-                                }}
-                              >
-                                {titulo || 'Título de Canción'}
-                              </div>
-
-                              <div
-                                className="absolute truncate"
-                                style={{
-                                  top: `${t.artista.y}px`,
-                                  fontSize: `${t.artista.fontSize}px`,
-                                  color: t.artista.color,
-                                  textAlign: t.artista.align,
-                                  ...(t.artista.align === 'left' ? { left: `${t.artista.x}px`, width: `calc(1080px - ${Number(t.artista.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
-                                }}
-                              >
-                                {artista || 'Nombre del Artista'}
-                              </div>
-
-                              <div
-                                className="absolute line-clamp-3"
-                                style={{
-                                  top: `${t.dedicatoria.y}px`,
-                                  fontSize: `${t.dedicatoria.fontSize}px`,
-                                  color: t.dedicatoria.color,
-                                  textAlign: t.dedicatoria.align,
-                                  ...(t.dedicatoria.align === 'left' ? { left: `${t.dedicatoria.x}px`, width: `calc(1080px - ${Number(t.dedicatoria.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
-                                }}
-                              >
-                                {dedicatoria || 'Mensaje de dedicatoria...'}
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
+                    <p className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">Live Preview Editor</p>
+                    <div className="w-[280px] h-[497.77px]">
+                      <LivePreviewEditor
+                        config={studioTemplateConfig}
+                        setConfig={setStudioTemplateConfig}
+                        backgroundUrl={backgroundUrl}
+                        customBackground={customBackground}
+                        userPhotoUrl={userPhotoUrl}
+                        titulo={titulo}
+                        artista={artista}
+                        dedicatoria={dedicatoria}
+                        scale={0.259259}
+                      />
                     </div>
                   </div>
 
@@ -1028,93 +1067,19 @@ export default function Dashboard() {
 
               {/* Live Preview Col */}
               <div className="shrink-0 flex flex-col items-center justify-center">
-                <p className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wider">Preview</p>
-                <div className="relative w-[220px] h-[391.11px] bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl">
-                  <div
-                    className="absolute top-0 left-0 w-[1080px] h-[1920px] origin-top-left"
-                    style={{ transform: 'scale(0.2037)' }} // 220 / 1080
-                  >
-                    {/* Background */}
-                    {regenerateBgUrl !== 'custom' ? (
-                      <img src={`/media/${regenerateBgUrl}`} className="w-full h-full object-cover" />
-                    ) : regenerateCustomBg ? (
-                      <img src={regenerateCustomBg} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gray-900" />
-                    )}
-                    
-                    {/* Photo Cover & Text */}
-                    {(() => {
-                      const t = regenerateTemplateConfig;
-                      return (
-                        <>
-                          {regenerateUserPhotoUrl ? (
-                            <img
-                              src={regenerateUserPhotoUrl}
-                              className="absolute object-cover"
-                              style={{
-                                left: `${t.photo.x}px`,
-                                top: `${t.photo.y}px`,
-                                width: `${t.photo.w}px`,
-                                height: `${t.photo.h}px`,
-                              }}
-                            />
-                          ) : (
-                            <div
-                              className="absolute bg-gray-800 flex items-center justify-center text-gray-500"
-                              style={{
-                                left: `${t.photo.x}px`,
-                                top: `${t.photo.y}px`,
-                                width: `${t.photo.w}px`,
-                                height: `${t.photo.h}px`,
-                              }}
-                            >
-                              <ImageIcon className="w-48 h-48" />
-                            </div>
-                          )}
-
-                          <div
-                            className="absolute truncate"
-                            style={{
-                              top: `${t.titulo.y}px`,
-                              fontSize: `${t.titulo.fontSize}px`,
-                              color: t.titulo.color,
-                              textAlign: t.titulo.align,
-                              ...(t.titulo.align === 'left' ? { left: `${t.titulo.x}px`, width: `calc(1080px - ${Number(t.titulo.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
-                            }}
-                          >
-                            {regenerateTitulo || 'Título de Canción'}
-                          </div>
-
-                          <div
-                            className="absolute truncate"
-                            style={{
-                              top: `${t.artista.y}px`,
-                              fontSize: `${t.artista.fontSize}px`,
-                              color: t.artista.color,
-                              textAlign: t.artista.align,
-                              ...(t.artista.align === 'left' ? { left: `${t.artista.x}px`, width: `calc(1080px - ${Number(t.artista.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
-                            }}
-                          >
-                            {regenerateArtista || 'Nombre del Artista'}
-                          </div>
-
-                          <div
-                            className="absolute line-clamp-3"
-                            style={{
-                              top: `${t.dedicatoria.y}px`,
-                              fontSize: `${t.dedicatoria.fontSize}px`,
-                              color: t.dedicatoria.color,
-                              textAlign: t.dedicatoria.align,
-                              ...(t.dedicatoria.align === 'left' ? { left: `${t.dedicatoria.x}px`, width: `calc(1080px - ${Number(t.dedicatoria.x) * 2}px)` } : { left: 0, width: '100%', padding: '0 130px' })
-                            }}
-                          >
-                            {regenerateDedicatoria || 'Mensaje de dedicatoria...'}
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                <p className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wider">Live Preview Editor</p>
+                <div className="w-[220px] h-[391.11px]">
+                  <LivePreviewEditor
+                    config={regenerateTemplateConfig}
+                    setConfig={setRegenerateTemplateConfig}
+                    backgroundUrl={regenerateBgUrl}
+                    customBackground={regenerateCustomBg}
+                    userPhotoUrl={regenerateUserPhotoUrl}
+                    titulo={regenerateTitulo}
+                    artista={regenerateArtista}
+                    dedicatoria={regenerateDedicatoria}
+                    scale={0.2037}
+                  />
                 </div>
                 <div className="flex justify-center mt-2">
                   <button
