@@ -68,7 +68,7 @@ export default function Dashboard() {
   // Regenerate Video Modal State
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
   const [regenerateJobId, setRegenerateJobId] = useState<string | null>(null);
-  const [regenerateBgUrl, setRegenerateBgUrl] = useState('image_f840ac.jpg');
+  const [regenerateBgUrl, setRegenerateBgUrl] = useState('');
   const [regenerateCustomBg, setRegenerateCustomBg] = useState('');
   const [regenerateUserPhotoUrl, setRegenerateUserPhotoUrl] = useState('');
   const [regenerateTitulo, setRegenerateTitulo] = useState('');
