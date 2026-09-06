@@ -91,6 +91,7 @@ export default function Dashboard() {
   const [regenerateTitulo, setRegenerateTitulo] = useState('');
   const [regenerateArtista, setRegenerateArtista] = useState('');
   const [regenerateDedicatoria, setRegenerateDedicatoria] = useState('');
+  const [regenerateTemplateConfig, setRegenerateTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
   // WhatsApp Modal State
@@ -111,6 +112,45 @@ export default function Dashboard() {
   const [titulo, setTitulo] = useState('');
   const [artista, setArtista] = useState('');
   const [dedicatoria, setDedicatoria] = useState('');
+  const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>(TEMPLATES_CONFIG.spotify);
+  
+  // Custom Templates from DB
+  const [dbTemplates, setDbTemplates] = useState<TemplateConfig[]>([]);
+
+  const loadTemplates = async () => {
+    try {
+      const res = await fetch('/api/templates');
+      if (res.ok) {
+        setDbTemplates(await res.json());
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const handleSaveTemplate = async (config: TemplateConfig, bgUrl: string) => {
+    const name = window.prompt('Nombre de la nueva plantilla:');
+    if (!name) return;
+    try {
+      const res = await fetch('/api/templates/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, bgUrl, config })
+      });
+      if (res.ok) {
+        alert('Plantilla guardada!');
+        loadTemplates();
+      } else {
+        alert('Error al guardar plantilla.');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
   
   // Studio Step 3
   const [phone, setPhone] = useState('');
@@ -207,12 +247,6 @@ export default function Dashboard() {
     const finalBg = regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl;
     if (!regenerateJobId || !regenerateUserPhotoUrl || !regenerateTitulo || !regenerateArtista || (regenerateBgUrl === 'custom' && !regenerateCustomBg)) return;
     setIsRegenerating(true);
-    
-    // Determine template config
-    let templateKey = 'custom';
-    if (regenerateBgUrl === 'image_f840ac.jpg') templateKey = 'spotify';
-    else if (regenerateBgUrl === 'image_apple.jpg') templateKey = 'apple';
-    const templateConfig = TEMPLATES_CONFIG[templateKey];
 
     try {
       const res = await fetch('/api/manual/video', {
@@ -225,7 +259,7 @@ export default function Dashboard() {
           titulo: regenerateTitulo,
           artista: regenerateArtista,
           dedicatoria: regenerateDedicatoria,
-          templateConfig
+          templateConfig: regenerateTemplateConfig
         })
       });
       
@@ -274,12 +308,6 @@ export default function Dashboard() {
     
     setIsProcessing(true);
 
-    // Determine template config
-    let templateKey = 'custom';
-    if (backgroundUrl === 'image_f840ac.jpg') templateKey = 'spotify';
-    else if (backgroundUrl === 'image_apple.jpg') templateKey = 'apple';
-    const templateConfig = TEMPLATES_CONFIG[templateKey];
-
     try {
       const res = await fetch('/api/manual/video', {
         method: 'POST',
@@ -291,7 +319,7 @@ export default function Dashboard() {
           titulo,
           artista,
           dedicatoria,
-          templateConfig
+          templateConfig: studioTemplateConfig
         })
       });
       const data = await res.json();
@@ -374,8 +402,42 @@ export default function Dashboard() {
     setPhone('');
     setStudioAudioUrl(null);
     setStudioVideoUrl(null);
+    setStudioTemplateConfig(TEMPLATES_CONFIG.spotify);
     localStorage.removeItem('videoFlowStudioState');
   };
+
+  const renderConfigControls = (config: TemplateConfig, setConfig: any, key: 'titulo'|'artista'|'dedicatoria') => (
+    <div className="flex gap-2 mt-2">
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-500">X:</span>
+        <input
+          type="number"
+          value={config[key].x === 'center' ? '' : config[key].x}
+          onChange={(e) => setConfig({...config, [key]: {...config[key], x: Number(e.target.value), align: 'left'}})}
+          className="w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          placeholder="Ctr"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-500">Y:</span>
+        <input
+          type="number"
+          value={config[key].y}
+          onChange={(e) => setConfig({...config, [key]: {...config[key], y: Number(e.target.value)}})}
+          className="w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-500">Size:</span>
+        <input
+          type="number"
+          value={config[key].fontSize}
+          onChange={(e) => setConfig({...config, [key]: {...config[key], fontSize: Number(e.target.value)}})}
+          className="w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-[#0B0F19] text-gray-200 p-8">
@@ -592,26 +654,37 @@ export default function Dashboard() {
                   
                   {/* Selector de Fondo */}
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor</label>
+                    <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
-                      <div 
-                        onClick={() => studioStep === 2 && !isProcessing && setBackgroundUrl('image_f840ac.jpg')}
-                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === 'image_f840ac.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                      >
-                        <span className="text-sm font-medium text-white text-center">Plantilla Spotify</span>
-                      </div>
-                      <div 
-                        onClick={() => studioStep === 2 && !isProcessing && setBackgroundUrl('image_apple.jpg')}
-                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === 'image_apple.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                      >
-                        <span className="text-sm font-medium text-white text-center">Plantilla Apple</span>
-                      </div>
-                      <div 
-                        onClick={() => studioStep === 2 && !isProcessing && setBackgroundUrl('custom')}
-                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === 'custom' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                      >
-                        <span className="text-sm font-medium text-white text-center">Fondo Propio</span>
-                      </div>
+                      {Object.values(TEMPLATES_CONFIG).map(t => (
+                        <div
+                          key={t.id}
+                          onClick={() => {
+                            if (studioStep === 2 && !isProcessing) {
+                              setBackgroundUrl(t.bgUrl);
+                              setStudioTemplateConfig(JSON.parse(JSON.stringify(t)));
+                            }
+                          }}
+                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${backgroundUrl === t.bgUrl ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                        >
+                          <span className="text-sm font-medium text-white text-center">{t.name}</span>
+                        </div>
+                      ))}
+                      {dbTemplates.map(t => (
+                        <div
+                          key={t.id}
+                          onClick={() => {
+                            if (studioStep === 2 && !isProcessing) {
+                              setBackgroundUrl(t.bgUrl || 'custom');
+                              if (t.bgUrl && t.bgUrl.startsWith('http')) setCustomBackground(t.bgUrl);
+                              setStudioTemplateConfig(JSON.parse(JSON.stringify(t)));
+                            }
+                          }}
+                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-center ${studioTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                        >
+                          <span className="text-sm font-medium text-purple-200 text-center">{t.name}</span>
+                        </div>
+                      ))}
                     </div>
                     {backgroundUrl === 'custom' && (
                       <input
@@ -650,6 +723,7 @@ export default function Dashboard() {
                         placeholder="Ej. Nuestra Historia"
                         className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                       />
+                      {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'titulo')}
                     </div>
                     <div>
                       <label className="block text-sm text-gray-400 mb-1">Artista</label>
@@ -661,6 +735,7 @@ export default function Dashboard() {
                         placeholder="Ej. Juan & María"
                         className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                       />
+                      {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'artista')}
                     </div>
                   </div>
 
@@ -675,6 +750,7 @@ export default function Dashboard() {
                       rows={2}
                       className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                     />
+                    {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'dedicatoria')}
                   </div>
 
                   {/* Live Preview */}
@@ -696,8 +772,7 @@ export default function Dashboard() {
                         
                         {/* Photo Cover */}
                         {(() => {
-                          const tKey = backgroundUrl === 'image_f840ac.jpg' ? 'spotify' : backgroundUrl === 'image_apple.jpg' ? 'apple' : 'custom';
-                          const t = TEMPLATES_CONFIG[tKey];
+                          const t = studioTemplateConfig;
                           return (
                             <>
                               {userPhotoUrl ? (
@@ -771,6 +846,18 @@ export default function Dashboard() {
                     </div>
                   </div>
 
+                  {/* Live Preview Save Button */}
+                  {studioStep === 2 && (
+                    <div className="flex justify-center mt-2">
+                      <button
+                        onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl)}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 underline"
+                      >
+                        Guardar Diseño como Plantilla
+                      </button>
+                    </div>
+                  )}
+
                   {studioStep === 2 && (
                     <button
                       onClick={handleGenerateVideo}
@@ -841,26 +928,37 @@ export default function Dashboard() {
                 
                 {/* Selector de Fondo */}
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor</label>
+                  <label className="block text-sm text-gray-400 mb-2">Fondo del Reproductor / Plantilla</label>
                   <div className="grid grid-cols-3 gap-2 mb-2">
-                    <div
-                      onClick={() => !isRegenerating && setRegenerateBgUrl('image_f840ac.jpg')}
-                      className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_f840ac.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                    >
-                      <span className="text-xs font-medium text-white text-center">Spotify</span>
-                    </div>
-                    <div
-                      onClick={() => !isRegenerating && setRegenerateBgUrl('image_apple.jpg')}
-                      className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'image_apple.jpg' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                    >
-                      <span className="text-xs font-medium text-white text-center">Apple</span>
-                    </div>
-                    <div
-                      onClick={() => !isRegenerating && setRegenerateBgUrl('custom')}
-                      className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === 'custom' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
-                    >
-                      <span className="text-xs font-medium text-white text-center">Propio</span>
-                    </div>
+                    {Object.values(TEMPLATES_CONFIG).map(t => (
+                      <div
+                        key={t.id}
+                        onClick={() => {
+                          if (!isRegenerating) {
+                            setRegenerateBgUrl(t.bgUrl);
+                            setRegenerateTemplateConfig(JSON.parse(JSON.stringify(t)));
+                          }
+                        }}
+                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateBgUrl === t.bgUrl ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                      >
+                        <span className="text-xs font-medium text-white text-center">{t.name}</span>
+                      </div>
+                    ))}
+                    {dbTemplates.map(t => (
+                      <div
+                        key={t.id}
+                        onClick={() => {
+                          if (!isRegenerating) {
+                            setRegenerateBgUrl(t.bgUrl || 'custom');
+                            if (t.bgUrl && t.bgUrl.startsWith('http')) setRegenerateCustomBg(t.bgUrl);
+                            setRegenerateTemplateConfig(JSON.parse(JSON.stringify(t)));
+                          }
+                        }}
+                        className={`p-2 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center ${regenerateTemplateConfig.id === t.id ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-[#1F2937] hover:border-gray-500'}`}
+                      >
+                        <span className="text-xs font-medium text-purple-200 text-center">{t.name}</span>
+                      </div>
+                    ))}
                   </div>
                   {regenerateBgUrl === 'custom' && (
                     <input
@@ -898,6 +996,7 @@ export default function Dashboard() {
                       placeholder="Ej. Nuestra Historia"
                       className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                     />
+                    {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'titulo')}
                   </div>
                   <div>
                     <label className="block text-sm text-gray-400 mb-1">Artista</label>
@@ -909,6 +1008,7 @@ export default function Dashboard() {
                       placeholder="Ej. Juan & María"
                       className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                     />
+                    {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'artista')}
                   </div>
                 </div>
 
@@ -922,6 +1022,7 @@ export default function Dashboard() {
                     rows={2}
                     className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
                   />
+                  {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'dedicatoria')}
                 </div>
               </div>
 
@@ -944,8 +1045,7 @@ export default function Dashboard() {
                     
                     {/* Photo Cover & Text */}
                     {(() => {
-                      const tKey = regenerateBgUrl === 'image_f840ac.jpg' ? 'spotify' : regenerateBgUrl === 'image_apple.jpg' ? 'apple' : 'custom';
-                      const t = TEMPLATES_CONFIG[tKey];
+                      const t = regenerateTemplateConfig;
                       return (
                         <>
                           {regenerateUserPhotoUrl ? (
@@ -1015,6 +1115,14 @@ export default function Dashboard() {
                       );
                     })()}
                   </div>
+                </div>
+                <div className="flex justify-center mt-2">
+                  <button
+                    onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl)}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 underline"
+                  >
+                    Guardar Diseño como Plantilla
+                  </button>
                 </div>
               </div>
             </div>
