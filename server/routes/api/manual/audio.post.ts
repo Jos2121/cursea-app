@@ -127,7 +127,7 @@ export default defineHandler(async (event) => {
   const mediaDir = path.resolve(process.cwd(), "public/media");
   fs.mkdirSync(mediaDir, { recursive: true });
   
-  const jobId = randomUUID();
+  const jobId = body.jobId || randomUUID();
   const fileName = `audio_${Date.now()}.mp3`;
   const relativeUrl = `/media/${fileName}`;
   const filePath = path.join(mediaDir, fileName);
@@ -135,12 +135,21 @@ export default defineHandler(async (event) => {
   // Guardar archivo físico
   fs.writeFileSync(filePath, buffer);
 
-  // Guardar registro en la BD
-  const result = await pool.query(
-    `INSERT INTO "MediaJob" (id, prompt, status, "audioUrl", "createdAt", "updatedAt") 
-     VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *`,
-    [jobId, body.prompt, 'audio_ready', relativeUrl]
-  );
+  let result;
+  if (body.jobId) {
+    // Actualizar registro existente
+    result = await pool.query(
+      `UPDATE "MediaJob" SET status = $1, "audioUrl" = $2, "updatedAt" = NOW() WHERE id = $3 RETURNING *`,
+      ['audio_ready', relativeUrl, body.jobId]
+    );
+  } else {
+    // Guardar nuevo registro en la BD
+    result = await pool.query(
+      `INSERT INTO "MediaJob" (id, prompt, status, "audioUrl", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *`,
+      [jobId, body.prompt, 'audio_ready', relativeUrl]
+    );
+  }
 
   return { ok: true, job: result.rows[0] };
 });

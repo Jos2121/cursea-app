@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VideoEditorPreview } from '../components/VideoEditorPreview';
 
-type JobStatus = 'pending' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
+type JobStatus = 'pending' | 'pendiente' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
 
 interface MediaJob {
   id: string;
@@ -18,6 +18,13 @@ interface MediaJob {
   recipient: string | null;
   errorLog: string | null;
   createdAt: string;
+  backgroundUrl?: string;
+  userPhotoUrl?: string;
+  titulo?: string;
+  artista?: string;
+  dedicatoria?: string;
+  config?: any;
+  whatsappNumber?: string;
 }
 
 export interface TemplateConfig {
@@ -43,6 +50,7 @@ export const DEFAULT_TEMPLATE: TemplateConfig = {
 
 const statusColors: Record<JobStatus, string> = {
   pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+  pendiente: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
   audio_ready: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
   video_ready: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
   sent: 'bg-green-500/10 text-green-500 border-green-500/20',
@@ -51,6 +59,7 @@ const statusColors: Record<JobStatus, string> = {
 
 const statusIcons: Record<JobStatus, React.ReactNode> = {
   pending: <Clock className="w-3 h-3 mr-1" />,
+  pendiente: <Clock className="w-3 h-3 mr-1" />,
   audio_ready: <Music className="w-3 h-3 mr-1" />,
   video_ready: <Video className="w-3 h-3 mr-1" />,
   sent: <CheckCircle2 className="w-3 h-3 mr-1" />,
@@ -64,6 +73,7 @@ export default function Dashboard() {
   // History state
   const [jobs, setJobs] = useState<MediaJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generatingAudioId, setGeneratingAudioId] = useState<string | null>(null);
 
   // Regenerate Video Modal State
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
@@ -336,6 +346,29 @@ export default function Dashboard() {
       alert(`Error: ${err.message || 'Network error occurred'}`);
     } finally {
       setIsRegenerating(false);
+    }
+  };
+
+  const handleGenerateAudioFromHistory = async (job: MediaJob) => {
+    setGeneratingAudioId(job.id);
+    try {
+      const res = await fetch('/api/manual/audio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: job.prompt, jobId: job.id })
+      });
+      
+      if (res.ok) {
+        fetchJobs();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(`Error al generar audio: ${data.statusMessage || data.message || 'Error desconocido'}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Error: ${err.message || 'Error de red'}`);
+    } finally {
+      setGeneratingAudioId(null);
     }
   };
 
@@ -800,17 +833,82 @@ export default function Dashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                        {job.prompt && !job.audioUrl && (
+                          <button
+                            onClick={() => handleGenerateAudioFromHistory(job)}
+                            disabled={generatingAudioId === job.id}
+                            className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors inline-block disabled:opacity-50"
+                            title="Generate Audio"
+                          >
+                            {generatingAudioId === job.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
+                          </button>
+                        )}
                         {job.audioUrl && (
                           <button
                             onClick={() => {
                               setRegenerateJobId(job.id);
-                              setRegenerateBgUrl('');
-                              setRegenerateCustomBg('');
-                              setRegenerateUserPhotoUrl('');
-                              setRegenerateTitulo('');
-                              setRegenerateArtista('');
-                              setRegenerateDedicatoria('');
-                              setRegenerateTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
+                              
+                              // Pre-fill fields from DB
+                              const bg = job.backgroundUrl || '';
+                              setRegenerateBgUrl(bg);
+                              setRegenerateCustomBg(bg);
+                              setRegenerateUserPhotoUrl(job.userPhotoUrl || '');
+                              setRegenerateTitulo(job.titulo || '');
+                              setRegenerateArtista(job.artista || '');
+                              setRegenerateDedicatoria(job.dedicatoria || '');
+                              
+                              let parsedConfig: any = null;
+                              if (job.config) {
+                                try {
+                                  parsedConfig = typeof job.config === 'string' ? JSON.parse(job.config) : job.config;
+                                  if (typeof parsedConfig === 'string') {
+                                    parsedConfig = JSON.parse(parsedConfig);
+                                  }
+                                } catch(e) {
+                                  console.error("Error parsing config", e);
+                                }
+                              }
+
+                              if (parsedConfig) {
+                                const dedSize = parsedConfig.dedicatoriaSize ?? parsedConfig.dedicatorySize ?? parsedConfig.dedicatoria?.fontSize ?? 28;
+                                setRegenerateDedicatoriaSize(Number(dedSize));
+                                
+                                const newConfig: TemplateConfig = {
+                                  ...DEFAULT_TEMPLATE,
+                                  id: parsedConfig.id || '',
+                                  name: parsedConfig.name || 'Plantilla Cliente',
+                                  bgUrl: parsedConfig.backgroundUrl || parsedConfig.bgUrl || bg,
+                                  photo: {
+                                    x: Number(parsedConfig.photoX ?? parsedConfig.photo?.x ?? 130),
+                                    y: Number(parsedConfig.photoY ?? parsedConfig.photo?.y ?? 180),
+                                    w: Number(parsedConfig.photoWidth ?? parsedConfig.photo?.w ?? 820),
+                                    h: Number(parsedConfig.photoHeight ?? parsedConfig.photo?.h ?? 820)
+                                  },
+                                  titulo: {
+                                    ...DEFAULT_TEMPLATE.titulo,
+                                    x: parsedConfig.tituloX ?? parsedConfig.titulo?.x ?? 130,
+                                    y: Number(parsedConfig.tituloY ?? parsedConfig.titulo?.y ?? 1040),
+                                    fontSize: Number(parsedConfig.tituloSize ?? parsedConfig.titulo?.fontSize ?? 42)
+                                  },
+                                  artista: {
+                                    ...DEFAULT_TEMPLATE.artista,
+                                    x: parsedConfig.artistaX ?? parsedConfig.artista?.x ?? 130,
+                                    y: Number(parsedConfig.artistaY ?? parsedConfig.artista?.y ?? 1095),
+                                    fontSize: Number(parsedConfig.artistaSize ?? parsedConfig.artista?.fontSize ?? 30)
+                                  },
+                                  dedicatoria: {
+                                    ...DEFAULT_TEMPLATE.dedicatoria,
+                                    x: parsedConfig.dedicatoriaX ?? parsedConfig.dedicatoryX ?? parsedConfig.dedicatoria?.x ?? 540,
+                                    y: Number(parsedConfig.dedicatoriaY ?? parsedConfig.dedicatoryY ?? parsedConfig.dedicatoria?.y ?? 1620),
+                                    fontSize: Number(dedSize)
+                                  }
+                                };
+                                setRegenerateTemplateConfig(newConfig);
+                              } else {
+                                setRegenerateTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
+                                setRegenerateDedicatoriaSize(28);
+                              }
+
                               setIsRegenerateModalOpen(true);
                             }}
                             className="p-2 text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors inline-block"
@@ -823,7 +921,7 @@ export default function Dashboard() {
                           <button
                             onClick={() => {
                               setWhatsappJobId(job.id);
-                              setWhatsappModalPhone(job.recipient || '');
+                              setWhatsappModalPhone(job.whatsappNumber || job.recipient || '');
                               setIsWhatsappModalOpen(true);
                             }}
                             className="p-2 text-gray-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors inline-block"
