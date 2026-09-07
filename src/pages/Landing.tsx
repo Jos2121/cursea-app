@@ -1,7 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, Image as ImageIcon, UploadCloud, X, ChevronDown, Check } from 'lucide-react';
+import { 
+  Loader2, 
+  Image as ImageIcon, 
+  UploadCloud, 
+  X, 
+  ChevronDown, 
+  Check, 
+  Music, 
+  Sparkles, 
+  Heart, 
+  Palette, 
+  MessageSquareText, 
+  Send,
+  Headphones,
+  PlayCircle
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -113,7 +128,7 @@ export default function Landing() {
         if (data && Array.isArray(data)) {
           setTemplates(data);
           if (data.length > 0) {
-            setSelectedTemplateId(data[0].id);
+            handleTemplateSelect(data[0]);
           }
         }
       })
@@ -126,7 +141,6 @@ export default function Landing() {
   const handleTemplateSelect = (t: any) => {
     setSelectedTemplateId(t.id);
     const parsedConfig = (t as any).config || t;
-    // Parsea string a object si es necesario (doble stringify en db)
     const configData = typeof parsedConfig === 'string' ? JSON.parse(parsedConfig) : parsedConfig;
     
     const isCoords = configData.type === 'coordenadas';
@@ -274,32 +288,32 @@ export default function Landing() {
 
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 text-left h-12 shadow-sm">
+        <DropdownMenuTrigger className="flex items-center justify-between w-full px-4 py-3 bg-white border border-neutral-200 rounded-xl text-neutral-900 focus:outline-none focus:ring-1 focus:ring-[#8B1F32] focus:border-[#8B1F32] text-left h-12 shadow-sm transition-all">
           <span className="truncate">
             {selectedTemplateId
               ? templates.find(x => x.id === selectedTemplateId)?.name || 'Plantilla seleccionada'
               : "Seleccionar plantilla..."}
           </span>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-gray-500" />
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-neutral-400" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[320px] bg-white border-gray-200 max-h-64 overflow-y-auto">
+        <DropdownMenuContent className="w-[320px] bg-white border-neutral-200 max-h-64 overflow-y-auto rounded-xl">
           {templates.length === 0 ? (
-            <div className="p-4 text-sm text-gray-500 text-center">No hay plantillas.</div>
+            <div className="p-4 text-sm text-neutral-500 text-center">No hay plantillas disponibles.</div>
           ) : (
             <>
               {templatesWithBg.length > 0 && (
                 <>
-                  <DropdownMenuLabel className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                  <DropdownMenuLabel className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider px-3 py-2">
                     Fondo + Posiciones
                   </DropdownMenuLabel>
                   {templatesWithBg.map(t => (
                     <DropdownMenuItem
                       key={t.id}
                       onClick={() => handleTemplateSelect(t)}
-                      className="flex items-center justify-between cursor-pointer py-2 px-3 text-gray-800 hover:bg-gray-100 focus:bg-gray-100"
+                      className="flex items-center justify-between cursor-pointer py-2.5 px-3 text-neutral-800 hover:bg-[#F5EADC]/40 focus:bg-[#F5EADC]/40 transition-colors"
                     >
                       <div className="flex items-center truncate w-full">
-                        <Check className={`mr-2 h-4 w-4 shrink-0 text-indigo-600 ${selectedTemplateId === t.id ? "opacity-100" : "opacity-0"}`} />
+                        <Check className={`mr-2 h-4 w-4 shrink-0 text-[#8B1F32] ${selectedTemplateId === t.id ? "opacity-100" : "opacity-0"}`} />
                         <span className="truncate">{t.name}</span>
                       </div>
                     </DropdownMenuItem>
@@ -308,22 +322,22 @@ export default function Landing() {
               )}
               
               {templatesWithBg.length > 0 && templatesWithoutBg.length > 0 && (
-                <DropdownMenuSeparator className="bg-gray-100" />
+                <DropdownMenuSeparator className="bg-neutral-100" />
               )}
 
               {templatesWithoutBg.length > 0 && (
                 <>
-                  <DropdownMenuLabel className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                  <DropdownMenuLabel className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider px-3 py-2">
                     Solo Posiciones
                   </DropdownMenuLabel>
                   {templatesWithoutBg.map(t => (
                     <DropdownMenuItem
                       key={t.id}
                       onClick={() => handleTemplateSelect(t)}
-                      className="flex items-center justify-between cursor-pointer py-2 px-3 text-gray-800 hover:bg-gray-100 focus:bg-gray-100"
+                      className="flex items-center justify-between cursor-pointer py-2.5 px-3 text-neutral-800 hover:bg-[#F5EADC]/40 focus:bg-[#F5EADC]/40 transition-colors"
                     >
                       <div className="flex items-center truncate w-full">
-                        <Check className={`mr-2 h-4 w-4 shrink-0 text-purple-600 ${selectedTemplateId === t.id ? "opacity-100" : "opacity-0"}`} />
+                        <Check className={`mr-2 h-4 w-4 shrink-0 text-[#8B1F32]/70 ${selectedTemplateId === t.id ? "opacity-100" : "opacity-0"}`} />
                         <span className="truncate">{t.name}</span>
                       </div>
                     </DropdownMenuItem>
@@ -338,253 +352,331 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-10">
-        
-        {/* FORM COLUMN */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Crea tu canción</h1>
-            <p className="text-gray-500">Personaliza tu regalo y obtén una vista previa al instante.</p>
-          </div>
+    <div className="min-h-screen bg-[#F5EADC] font-sans selection:bg-[#8B1F32]/20">
+      
+      {/* HEADER SECTION */}
+      <header className="pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#8B1F32]/10 text-[#8B1F32] font-semibold text-xs uppercase tracking-wider shadow-sm">
+          <Sparkles className="w-3.5 h-3.5" />
+          Estudio de Canciones Personalizadas
+        </div>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-neutral-900 tracking-tight leading-[1.1]">
+          Convierte tu historia en una <br className="hidden sm:block" />
+          <span className="text-[#8B1F32]">canción única</span>
+        </h1>
+        <p className="text-lg text-neutral-600 max-w-xl mx-auto leading-relaxed">
+          Dinos qué sientes, elige el estilo musical y déjanos componer una obra de arte para esa persona especial.
+        </p>
+      </header>
 
-          <form onSubmit={handleSubmit} className="space-y-6 flex-1">
+      <main className="max-w-6xl mx-auto px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          
+          {/* FORM COLUMN */}
+          <form onSubmit={handleSubmit} className="space-y-8">
             
-            {/* SECCIÓN 1: Detalles para componer tu canción */}
-            <h3 className="text-lg font-semibold mt-2 mb-4 border-b pb-2">1. Detalles para componer tu canción</h3>
-            
-            <div className="space-y-3">
-              <Label>¿Para quién es la canción? <span className="text-red-500">*</span></Label>
-              <Select value={paraQuien} onValueChange={setParaQuien}>
-                <SelectTrigger className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Selecciona una opción" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['Esposo/a', 'Novio/a', 'Mi pareja', 'Mama', 'Papa', 'Hijo/a', 'Amigo/a', 'Abuelo/a', 'Nieto/a', 'Para mi', 'Otro'].map(opt => (
-                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {paraQuien === 'Otro' && (
-                <Input placeholder="Especifica para quién..." value={paraQuienOtro} onChange={e => setParaQuienOtro(e.target.value)} className="rounded-xl mt-2" />
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <Label>¿Cuál es la ocasión? <span className="text-red-500">*</span></Label>
-              <Select value={ocasion} onValueChange={setOcasion}>
-                <SelectTrigger className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Selecciona una opción" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['Solo para sorprender', 'San Valentin', 'Declararse', 'Cumpleaños', 'Aniversario', 'Pedir matrimonio', 'Pedir perdon', 'Boda', 'Dia de la madre', 'Dia del padre', 'Para mi', 'Otro'].map(opt => (
-                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {ocasion === 'Otro' && (
-                <Input placeholder="Especifica la ocasión..." value={ocasionOtro} onChange={e => setOcasionOtro(e.target.value)} className="rounded-xl mt-2" />
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <Label>¿Qué estilo musical? <span className="text-red-500">*</span></Label>
-              <Select value={estiloMusical} onValueChange={setEstiloMusical}>
-                <SelectTrigger className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Selecciona un estilo" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['Balada romantica', 'Pop latino', 'Reggaeton romantico', 'Cumbia', 'Bachata', 'Salsa', 'Vallenato', 'Huayno peruano', 'Musica cristiana', 'Rock', 'Trap', 'Otro'].map(opt => (
-                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {estiloMusical === 'Otro' && (
-                <Input placeholder="Especifica el estilo musical..." value={estiloMusicalOtro} onChange={e => setEstiloMusicalOtro(e.target.value)} className="rounded-xl mt-2" />
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <Label>Voz masculina o femenina? <span className="text-red-500">*</span></Label>
-              <Select value={tipoVoz} onValueChange={setTipoVoz}>
-                <SelectTrigger className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Selecciona el tipo de voz" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['Masculino', 'Femenina'].map(opt => (
-                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-3">
-              <Label>¿Cuál es el tono de la canción? <span className="text-red-500">*</span></Label>
-              <Select value={tono} onValueChange={setTono}>
-                <SelectTrigger className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Selecciona el tono" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['Romantica', 'Animada', 'Emocionante', 'Divertida', 'Reflexiva'].map(opt => (
-                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-3">
-              <Label>A quien se lo dedicas? (Nombre) <span className="text-red-500">*</span></Label>
-              <Input 
-                value={nombreDedicado} 
-                onChange={e => setNombreDedicado(e.target.value)} 
-                placeholder="Ej. María"
-                className="rounded-xl border-gray-200"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label>Cuéntanos la historia de ustedes: <span className="text-red-500">*</span></Label>
-              <Textarea 
-                value={historia} 
-                onChange={e => setHistoria(e.target.value)} 
-                placeholder="Escribe aquí su historia..."
-                className="rounded-xl border-gray-200 resize-none min-h-[140px]"
-              />
-              <p className="text-sm text-muted-foreground">
-                [💡 ideas de qué contar: ♥ Cómo y dónde se conocieron ♥ Apodos y la forma cariñosa en que se llaman ♥ Un momento que los marcó ♥ Lo que más amas de esa persona ♥ Fechas especiales ♥ Una canción, lugar u olor que los recuerda ♥ El mensaje que quieres dejarle]
-              </p>
-            </div>
-
-            {/* SECCIÓN 2: Detalles visuales del video */}
-            <h3 className="text-lg font-semibold mt-8 mb-4 border-b pb-2">2. Detalles visuales del video</h3>
-            
-            <div className="space-y-3">
-              <Label>Plantilla de Fondo <span className="text-red-500">*</span></Label>
-              {renderTemplateSelector()}
-            </div>
-
-            <div className="space-y-3">
-              <Label>Foto de Portada <span className="text-red-500">*</span></Label>
+            {/* BLOQUE 1: COMPOSICIÓN */}
+            <div className="bg-white p-8 rounded-3xl border border-[#8B1F32]/15 shadow-md space-y-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 transition-opacity group-hover:opacity-10 pointer-events-none">
+                <Music className="w-24 h-24 text-[#8B1F32]" />
+              </div>
               
-              {!userPhotoUrl ? (
-                <div 
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                    isUploading ? 'bg-gray-50 border-gray-300' : 'hover:bg-gray-50 border-gray-200 cursor-pointer'
-                  }`}
-                  onClick={() => !isUploading && fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                    disabled={isUploading}
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#8B1F32] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-[#8B1F32]/20 shrink-0">
+                  1
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-neutral-900">Cuéntanos tu Historia</h2>
+                  <p className="text-sm text-neutral-500">Define el sentimiento y estilo de tu obra.</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Heart className="w-3 h-3 text-[#8B1F32]" /> ¿Para quién es?
+                    </Label>
+                    <Select value={paraQuien} onValueChange={setParaQuien}>
+                      <SelectTrigger className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all">
+                        <SelectValue placeholder="Selecciona..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {['Esposo/a', 'Novio/a', 'Mi pareja', 'Mama', 'Papa', 'Hijo/a', 'Amigo/a', 'Abuelo/a', 'Nieto/a', 'Para mi', 'Otro'].map(opt => (
+                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {paraQuien === 'Otro' && (
+                      <Input placeholder="Especifica..." value={paraQuienOtro} onChange={e => setParaQuienOtro(e.target.value)} className="rounded-xl mt-2 text-sm" />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-[#8B1F32]" /> ¿Cuál es la ocasión?
+                    </Label>
+                    <Select value={ocasion} onValueChange={setOcasion}>
+                      <SelectTrigger className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all">
+                        <SelectValue placeholder="Selecciona..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {['Solo para sorprender', 'San Valentin', 'Declararse', 'Cumpleaños', 'Aniversario', 'Pedir matrimonio', 'Pedir perdon', 'Boda', 'Dia de la madre', 'Dia del padre', 'Para mi', 'Otro'].map(opt => (
+                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {ocasion === 'Otro' && (
+                      <Input placeholder="Especifica..." value={ocasionOtro} onChange={e => setOcasionOtro(e.target.value)} className="rounded-xl mt-2 text-sm" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Music className="w-3 h-3 text-[#8B1F32]" /> Estilo Musical
+                    </Label>
+                    <Select value={estiloMusical} onValueChange={setEstiloMusical}>
+                      <SelectTrigger className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all">
+                        <SelectValue placeholder="Selecciona estilo..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {['Balada romantica', 'Pop latino', 'Reggaeton romantico', 'Cumbia', 'Bachata', 'Salsa', 'Vallenato', 'Huayno peruano', 'Musica cristiana', 'Rock', 'Trap', 'Otro'].map(opt => (
+                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {estiloMusical === 'Otro' && (
+                      <Input placeholder="Especifica..." value={estiloMusicalOtro} onChange={e => setEstiloMusicalOtro(e.target.value)} className="rounded-xl mt-2 text-sm" />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Headphones className="w-3 h-3 text-[#8B1F32]" /> Voz del Cantante
+                    </Label>
+                    <Select value={tipoVoz} onValueChange={setTipoVoz}>
+                      <SelectTrigger className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all">
+                        <SelectValue placeholder="Tipo de voz..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {['Masculino', 'Femenina'].map(opt => (
+                          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <MessageSquareText className="w-3 h-3 text-[#8B1F32]" /> Tono Emocional
+                  </Label>
+                  <Select value={tono} onValueChange={setTono}>
+                    <SelectTrigger className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all">
+                      <SelectValue placeholder="Selecciona el tono..." />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {['Romantica', 'Animada', 'Emocionante', 'Divertida', 'Reflexiva'].map(opt => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Nombre de la persona dedicada</Label>
+                  <Input 
+                    value={nombreDedicado} 
+                    onChange={e => setNombreDedicado(e.target.value)} 
+                    placeholder="Ej. María"
+                    className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all"
                   />
-                  {isUploading ? (
-                    <div className="flex flex-col items-center justify-center text-gray-400">
-                      <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                      <span className="text-sm">Subiendo foto...</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-gray-500">
-                      <UploadCloud className="h-8 w-8 mb-2 text-gray-400" />
-                      <span className="text-sm font-medium">Toca para seleccionar</span>
-                      <span className="text-xs text-gray-400 mt-1">Máximo 6MB (JPG, PNG)</span>
-                    </div>
-                  )}
                 </div>
-              ) : (
-                <div className="relative inline-block">
-                  <img src={userPhotoUrl} alt="Portada" className="h-32 w-32 object-cover rounded-xl shadow-sm border border-gray-200" />
-                  <button
-                    type="button"
-                    onClick={() => setUserPhotoUrl('')}
-                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 text-gray-500 hover:text-red-500 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+
+                <div className="space-y-3">
+                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Cuéntanos su historia de amor</Label>
+                  <Textarea 
+                    value={historia} 
+                    onChange={e => setHistoria(e.target.value)} 
+                    placeholder="Escribe aquí los momentos que los definen..."
+                    className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all resize-none min-h-[160px]"
+                  />
+                  <div className="bg-[#F5EADC]/40 border border-dashed border-[#8B1F32]/20 p-4 rounded-xl text-[11px] leading-relaxed text-neutral-600">
+                    <span className="font-bold text-[#8B1F32] block mb-1 uppercase tracking-widest">💡 Ideas para tu letra:</span>
+                    • Momentos que los marcaron • Apodos cariñosos • Fechas especiales • Lo que más amas de esa persona • Un lugar u olor que los recuerde • El mensaje final que quieres dejarle.
+                  </div>
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="titulo">Título de la Canción <span className="text-red-500">*</span></Label>
-              <Input 
-                id="titulo" 
-                value={titulo} 
-                onChange={e => setTitulo(e.target.value)} 
-                placeholder="Ej. Nuestra Historia"
-                className="rounded-xl border-gray-200"
-                maxLength={40}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="artista">Artista <span className="text-red-500">*</span></Label>
-              <Input 
-                id="artista" 
-                value={artista} 
-                onChange={e => setArtista(e.target.value)} 
-                placeholder="Ej. Juan y María"
-                className="rounded-xl border-gray-200"
-                maxLength={30}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="dedicatoria">Mensaje Corto / Dedicatoria</Label>
-              <Textarea 
-                id="dedicatoria" 
-                value={dedicatoria} 
-                onChange={e => setDedicatoria(e.target.value)} 
-                placeholder="Un pequeño mensaje de amor..."
-                className="rounded-xl border-gray-200 resize-none min-h-[100px]"
-                maxLength={80}
-              />
-              <div className="text-xs text-right text-gray-400">
-                {dedicatoria.length}/80
               </div>
             </div>
 
-            {/* SECCIÓN 3: Envío */}
-            <h3 className="text-lg font-semibold mt-8 mb-4 border-b pb-2">3. Envío</h3>
+            {/* BLOQUE 2: DISEÑO VISUAL */}
+            <div className="bg-white p-8 rounded-3xl border border-[#8B1F32]/15 shadow-md space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#8B1F32] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-[#8B1F32]/20 shrink-0">
+                  2
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-neutral-900">Personaliza tu Video</h2>
+                  <p className="text-sm text-neutral-500">Elige la estética visual de tu regalo.</p>
+                </div>
+              </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="whatsapp">Número de WhatsApp (con prefijo) <span className="text-red-500">*</span></Label>
-              <Input 
-                id="whatsapp" 
-                value={whatsappNumber} 
-                onChange={e => setWhatsappNumber(e.target.value)} 
-                placeholder="Ej. +34612345678"
-                className="rounded-xl border-gray-200"
-                type="tel"
-              />
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Plantilla Artística</Label>
+                  {renderTemplateSelector()}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Foto de Portada</Label>
+                  {!userPhotoUrl ? (
+                    <div 
+                      className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                        isUploading ? 'bg-[#F5EADC]/20 border-neutral-300' : 'hover:bg-[#F5EADC]/20 border-[#8B1F32]/20 hover:border-[#8B1F32] cursor-pointer'
+                      }`}
+                      onClick={() => !isUploading && fileInputRef.current?.click()}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        disabled={isUploading}
+                      />
+                      {isUploading ? (
+                        <div className="flex flex-col items-center justify-center text-neutral-400">
+                          <Loader2 className="h-8 w-8 animate-spin mb-2 text-[#8B1F32]" />
+                          <span className="text-xs">Subiendo imagen...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <UploadCloud className="h-10 w-10 text-[#8B1F32]/60" />
+                          <div>
+                            <span className="text-sm font-semibold text-neutral-800">Sube tu foto favorita</span>
+                            <span className="text-[10px] text-neutral-400 block mt-0.5 uppercase tracking-tighter">JPG o PNG (Máx. 6MB)</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="relative inline-block group">
+                      <img src={userPhotoUrl} alt="Portada" className="h-32 w-32 object-cover rounded-xl shadow-lg border border-neutral-200" />
+                      <button
+                        type="button"
+                        onClick={() => setUserPhotoUrl('')}
+                        className="absolute -top-2 -right-2 bg-white rounded-full p-1.5 shadow-md border border-neutral-100 text-neutral-400 hover:text-[#8B1F32] transition-all transform hover:scale-110"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Título de la Canción</Label>
+                    <Input 
+                      value={titulo} 
+                      onChange={e => setTitulo(e.target.value)} 
+                      placeholder="Ej. Nuestra Historia Eterna"
+                      className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all"
+                      maxLength={40}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Artista(s)</Label>
+                    <Input 
+                      value={artista} 
+                      onChange={e => setArtista(e.target.value)} 
+                      placeholder="Ej. Juan y María"
+                      className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all"
+                      maxLength={30}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Dedicatoria Final</Label>
+                    <Textarea 
+                      value={dedicatoria} 
+                      onChange={e => setDedicatoria(e.target.value)} 
+                      placeholder="Un pequeño mensaje de amor para el cierre..."
+                      className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all resize-none min-h-[100px]"
+                      maxLength={80}
+                    />
+                    <div className="text-[10px] text-right text-neutral-400 font-mono">
+                      {dedicatoria.length}/80
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div className="pt-6">
-              <Button 
-                type="submit" 
-                className="w-full rounded-xl py-6 text-base font-semibold shadow-sm bg-black hover:bg-gray-800 transition-all"
-                disabled={isSubmitting || isUploading}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Procesando...
-                  </>
-                ) : (
-                  "Registrar petición"
-                )}
-              </Button>
+
+            {/* BLOQUE 3: ENTREGA */}
+            <div className="bg-white p-8 rounded-3xl border border-[#8B1F32]/15 shadow-md space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#8B1F32] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-[#8B1F32]/20 shrink-0">
+                  3
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-neutral-900">Datos de Entrega</h2>
+                  <p className="text-sm text-neutral-500">¿A dónde enviamos tu obra terminada?</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Número de WhatsApp (con prefijo)</Label>
+                  <Input 
+                    value={whatsappNumber} 
+                    onChange={e => setWhatsappNumber(e.target.value)} 
+                    placeholder="Ej. +34600000000"
+                    className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all"
+                    type="tel"
+                  />
+                </div>
+                
+                <div className="pt-4">
+                  <Button 
+                    type="submit" 
+                    className="w-full h-14 rounded-2xl text-base font-bold shadow-xl bg-[#8B1F32] hover:bg-[#731929] shadow-[#8B1F32]/25 text-white transition-all transform hover:-translate-y-0.5 active:scale-95"
+                    disabled={isSubmitting || isUploading}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Componiendo tu obra...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5 mr-2" />
+                        Registrar Petición
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           </form>
-        </div>
 
-        {/* PREVIEW COLUMN */}
-        <div className="flex flex-col items-center justify-start lg:sticky lg:top-10 h-max">
-          <div className="bg-gray-100 rounded-3xl p-6 shadow-inner w-full max-w-sm flex items-center justify-center">
-             <div ref={previewContainerRef} className="w-full">
+          {/* PREVIEW COLUMN (ATRIL DE ESTUDIO) */}
+          <div className="lg:sticky lg:top-12 flex flex-col items-center">
+            <div className="w-full max-w-[360px] bg-white p-3 rounded-[40px] shadow-2xl border border-neutral-100 relative group">
+              
+              {/* STATUS HEADER */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-50 mb-3">
+                <div className="flex items-center gap-2">
+                  <Headphones className="w-4 h-4 text-[#8B1F32]" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">Estudio en vivo</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-red-500">Preview</span>
+                </div>
+              </div>
+
+              <div ref={previewContainerRef} className="rounded-[32px] overflow-hidden bg-neutral-950 aspect-[9/16] shadow-inner relative">
                 <VideoEditorPreview
                   config={constructedConfig}
                   onUpdateConfig={() => {}} // Read-only for landing
@@ -611,14 +703,36 @@ export default function Landing() {
                   
                   scale={previewScale}
                 />
-             </div>
-          </div>
-          <p className="text-sm text-gray-400 mt-6 text-center max-w-xs">
-            Esta es una vista previa de cómo quedará el diseño final en tu celular.
-          </p>
-        </div>
-      </div>
+                
+                {/* DECORATIVE OVERLAY */}
+                <div className="absolute inset-0 pointer-events-none border-[12px] border-white/5 rounded-[32px]" />
+              </div>
 
+              {/* FOOTER DE CONFIANZA */}
+              <div className="px-6 py-8 text-center space-y-3">
+                <div className="flex justify-center -space-x-2">
+                  {[1,2,3].map(i => (
+                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-neutral-100 overflow-hidden shadow-sm">
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i+10}`} alt="User" />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed max-w-[220px] mx-auto italic">
+                  "Al registrar tu pedido, nuestro productor musical comenzará los arreglos exclusivos para tu tema."
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+      
+      {/* FOOTER BRanding */}
+      <footer className="py-12 border-t border-[#8B1F32]/10 bg-white/50 text-center">
+        <p className="text-neutral-400 text-xs font-semibold uppercase tracking-[0.3em]">
+          VideoFlow • Canciones con Alma
+        </p>
+      </footer>
     </div>
   );
 }
