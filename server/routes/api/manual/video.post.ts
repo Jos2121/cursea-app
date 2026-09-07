@@ -51,21 +51,35 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Audio file not found on disk" });
   }
 
-  let tempPhotoPath = "";
+  let finalImagePath = "";
+  let tempImagePath = "";
   let tempBgPath = "";
   
   try {
-    const finalPhotoUrl = userPhotoUrl || imageUrl;
+    const targetImage = userPhotoUrl || imageUrl;
     const finalBgStr = backgroundUrl || 'image_f840ac.jpg';
 
-    // Download user photo
-    const imageRes = await fetch(finalPhotoUrl);
-    if (!imageRes.ok) {
-      throw new Error(`Failed to download image from ${finalPhotoUrl}`);
+    if (!targetImage) {
+      throw createError({ statusCode: 400, statusMessage: "No image provided" });
     }
-    const arrayBuffer = await imageRes.arrayBuffer();
-    tempPhotoPath = path.join(mediaDir, `temp_photo_${Date.now()}.jpg`);
-    fs.writeFileSync(tempPhotoPath, Buffer.from(arrayBuffer));
+
+    if (targetImage.startsWith("http")) {
+      // Es una URL externa: descargarla
+      const imageRes = await fetch(targetImage);
+      if (!imageRes.ok) throw new Error(`Failed to download image from ${targetImage}`);
+      const arrayBuffer = await imageRes.arrayBuffer();
+      tempImagePath = path.join(mediaDir, `temp_photo_${Date.now()}.jpg`);
+      fs.writeFileSync(tempImagePath, Buffer.from(arrayBuffer));
+      finalImagePath = tempImagePath;
+    } else if (targetImage.startsWith("/media/")) {
+      // Es un archivo local que ya existe en el disco
+      finalImagePath = path.join(mediaDir, path.basename(targetImage));
+      if (!fs.existsSync(finalImagePath)) {
+        throw createError({ statusCode: 404, statusMessage: "Local image file not found on disk" });
+      }
+    } else {
+      throw createError({ statusCode: 400, statusMessage: "Invalid image URL format" });
+    }
 
     // Handle background (download if URL, otherwise check local file)
     if (finalBgStr.startsWith('http')) {
@@ -166,11 +180,11 @@ export default defineHandler(async (event) => {
         vIndex++;
       }
 
-      ffmpegCommand = `ffmpeg -y -loop 1 -framerate 1 -i "${tempPhotoPath}" ${bgInput} -i "${audioPath}" -filter_complex "${filter}" -map "[${lastV}]" -map 2:a -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
+      ffmpegCommand = `ffmpeg -y -loop 1 -framerate 1 -i "${finalImagePath}" ${bgInput} -i "${audioPath}" -filter_complex "${filter}" -map "[${lastV}]" -map 2:a -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
 
     } else {
       // Comportamiento fallback
-      ffmpegCommand = `ffmpeg -y -loop 1 -framerate 1 -i "${tempPhotoPath}" -i "${audioPath}" -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
+      ffmpegCommand = `ffmpeg -y -loop 1 -framerate 1 -i "${finalImagePath}" -i "${audioPath}" -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
     }
 
     await execPromise(ffmpegCommand);
@@ -190,8 +204,8 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: error.message || "Error processing video" });
   } finally {
     // Limpieza de archivos temporales
-    if (tempPhotoPath && fs.existsSync(tempPhotoPath)) {
-      fs.unlinkSync(tempPhotoPath);
+    if (tempImagePath && fs.existsSync(tempImagePath)) {
+      fs.unlinkSync(tempImagePath);
     }
     if (tempBgPath && tempBgPath.includes('temp_bg_') && fs.existsSync(tempBgPath)) {
       fs.unlinkSync(tempBgPath);
