@@ -29,6 +29,18 @@ export default function Landing() {
   const [dedicatoria, setDedicatoria] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   
+  // Questionnaire fields
+  const [paraQuien, setParaQuien] = useState('');
+  const [paraQuienOtro, setParaQuienOtro] = useState('');
+  const [ocasion, setOcasion] = useState('');
+  const [ocasionOtro, setOcasionOtro] = useState('');
+  const [estiloMusical, setEstiloMusical] = useState('');
+  const [estiloMusicalOtro, setEstiloMusicalOtro] = useState('');
+  const [tipoVoz, setTipoVoz] = useState('');
+  const [tono, setTono] = useState('');
+  const [nombreDedicado, setNombreDedicado] = useState('');
+  const [historia, setHistoria] = useState('');
+
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -126,8 +138,12 @@ export default function Landing() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedTemplateId || !userPhotoUrl || !titulo || !artista || !whatsappNumber) {
-      toast.error('Por favor, completa todos los campos requeridos (incluyendo la foto de portada).');
+    const finalParaQuien = paraQuien === 'Otro' ? paraQuienOtro : paraQuien;
+    const finalOcasion = ocasion === 'Otro' ? ocasionOtro : ocasion;
+    const finalEstiloMusical = estiloMusical === 'Otro' ? estiloMusicalOtro : estiloMusical;
+
+    if (!selectedTemplateId || !userPhotoUrl || !titulo || !artista || !whatsappNumber || !finalParaQuien || !finalOcasion || !finalEstiloMusical || !tipoVoz || !tono || !nombreDedicado || !historia) {
+      toast.error('Por favor, completa todos los campos requeridos (incluyendo los detalles de la canción).');
       return;
     }
 
@@ -144,7 +160,14 @@ export default function Landing() {
           artista,
           dedicatoria,
           whatsappNumber,
-          config
+          config,
+          paraQuien: finalParaQuien,
+          ocasion: finalOcasion,
+          estiloMusical: finalEstiloMusical,
+          tipoVoz,
+          tono,
+          nombreDedicado,
+          historia
         })
       });
 
@@ -291,8 +314,115 @@ export default function Landing() {
                 type="tel"
               />
             </div>
+
+            {/* CUESTIONARIO DE LA CANCIÓN */}
+            <div className="space-y-6 pt-6 mt-6 border-t border-gray-100">
+              <h3 className="font-semibold text-gray-800 text-lg">Detalles para componer tu canción</h3>
+
+              <div className="space-y-3">
+                <Label>¿Para quién es la canción? <span className="text-red-500">*</span></Label>
+                <Select value={paraQuien} onValueChange={setParaQuien}>
+                  <SelectTrigger className="rounded-xl border-gray-200">
+                    <SelectValue placeholder="Selecciona una opción" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {['Esposo/a', 'Novio/a', 'Mi pareja', 'Mama', 'Papa', 'Hijo/a', 'Amigo/a', 'Abuelo/a', 'Nieto/a', 'Para mi', 'Otro'].map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {paraQuien === 'Otro' && (
+                  <Input placeholder="Especifica para quién..." value={paraQuienOtro} onChange={e => setParaQuienOtro(e.target.value)} className="rounded-xl mt-2" />
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <Label>¿Cuál es la ocasión? <span className="text-red-500">*</span></Label>
+                <Select value={ocasion} onValueChange={setOcasion}>
+                  <SelectTrigger className="rounded-xl border-gray-200">
+                    <SelectValue placeholder="Selecciona una opción" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {['Solo para sorprender', 'San Valentin', 'Declararse', 'Cumpleaños', 'Aniversario', 'Pedir matrimonio', 'Pedir perdon', 'Boda', 'Dia de la madre', 'Dia del padre', 'Para mi', 'Otro'].map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {ocasion === 'Otro' && (
+                  <Input placeholder="Especifica la ocasión..." value={ocasionOtro} onChange={e => setOcasionOtro(e.target.value)} className="rounded-xl mt-2" />
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <Label>¿Qué estilo musical? <span className="text-red-500">*</span></Label>
+                <Select value={estiloMusical} onValueChange={setEstiloMusical}>
+                  <SelectTrigger className="rounded-xl border-gray-200">
+                    <SelectValue placeholder="Selecciona un estilo" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {['Balada romantica', 'Pop latino', 'Reggaeton romantico', 'Cumbia', 'Bachata', 'Salsa', 'Vallenato', 'Huayno peruano', 'Musica cristiana', 'Rock', 'Trap', 'Otro'].map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {estiloMusical === 'Otro' && (
+                  <Input placeholder="Especifica el estilo musical..." value={estiloMusicalOtro} onChange={e => setEstiloMusicalOtro(e.target.value)} className="rounded-xl mt-2" />
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <Label>Voz masculina o femenina? <span className="text-red-500">*</span></Label>
+                <Select value={tipoVoz} onValueChange={setTipoVoz}>
+                  <SelectTrigger className="rounded-xl border-gray-200">
+                    <SelectValue placeholder="Selecciona el tipo de voz" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {['Masculino', 'Femenina'].map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <Label>¿Cuál es el tono de la canción? <span className="text-red-500">*</span></Label>
+                <Select value={tono} onValueChange={setTono}>
+                  <SelectTrigger className="rounded-xl border-gray-200">
+                    <SelectValue placeholder="Selecciona el tono" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {['Romantica', 'Animada', 'Emocionante', 'Divertida', 'Reflexiva'].map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <Label>A quien se lo dedicas? (Nombre) <span className="text-red-500">*</span></Label>
+                <Input 
+                  value={nombreDedicado} 
+                  onChange={e => setNombreDedicado(e.target.value)} 
+                  placeholder="Ej. María"
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>Cuéntanos la historia de ustedes: <span className="text-red-500">*</span></Label>
+                <Textarea 
+                  value={historia} 
+                  onChange={e => setHistoria(e.target.value)} 
+                  placeholder="Escribe aquí su historia..."
+                  className="rounded-xl border-gray-200 resize-none min-h-[140px]"
+                />
+                <p className="text-sm text-muted-foreground">
+                  [💡 ideas de qué contar: ♥ Cómo y dónde se conocieron ♥ Apodos y la forma cariñosa en que se llaman ♥ Un momento que los marcó ♥ Lo que más amas de esa persona ♥ Fechas especiales ♥ Una canción, lugar u olor que los recuerda ♥ El mensaje que quieres dejarle]
+                </p>
+              </div>
+            </div>
             
-            <div className="pt-4">
+            <div className="pt-6">
               <Button 
                 type="submit" 
                 className="w-full rounded-xl py-6 text-base font-semibold shadow-sm bg-black hover:bg-gray-800 transition-all"

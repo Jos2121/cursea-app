@@ -10,7 +10,10 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Body is required" });
   }
 
-  const { backgroundUrl, userPhotoUrl, titulo, artista, dedicatoria, whatsappNumber, config } = body;
+  const { 
+    backgroundUrl, userPhotoUrl, titulo, artista, dedicatoria, whatsappNumber, config,
+    paraQuien, ocasion, estiloMusical, tipoVoz, tono, nombreDedicado, historia 
+  } = body;
   
   // Ensure we have the required columns
   try {
@@ -33,9 +36,33 @@ export default defineHandler(async (event) => {
   const status = 'pendiente';
   const source = 'landing';
   
-  // prompt may be required in some older definitions, we'll set it to null or empty if so. 
-  // Wait, if "prompt" is required without a default, it will fail. I will insert an empty string for "prompt" just in case. 
-  // "Los campos obligatorios a insertar son: status = 'pendiente', source = 'landing' y los datos recibidos (audioUrl y videoUrl quedarán nulos por ahora)."
+  // Create prompt from questionnaire answers
+  const promptGenerado = `Actúa como un productor musical de talla mundial y un letrista galardonado. Tu objetivo es componer y producir una pista de calidad de estudio basada en los siguientes metadatos.
+
+[DIRECCIÓN ACÚSTICA Y MUSICAL]
+- Género y Estilo: ${estiloMusical}.
+- Calidad de Producción: Alta fidelidad, mezcla estéreo inmersiva, instrumentación profesional, masterización estándar de radio.
+- Atmósfera General: ${tono}.
+- Pista Vocal: Voz ${tipoVoz}, interpretación profundamente emotiva, dicción cristalina, afinación perfecta, presencia frontal en la mezcla.
+
+[CONTEXTO DE LA LETRA]
+- Destinatario: ${paraQuien} (Nombre: ${nombreDedicado}).
+- Ocasión / Motivo Central: ${ocasion}.
+- Material Fuente (Nuestra Historia): "${historia}".
+
+[DIRECTRICES DE COMPOSICIÓN]
+1. Transformación Poética: Extrae los sentimientos, anécdotas y detalles del "Material Fuente" y conviértelos en metáforas visuales. No hagas un resumen o una lista de hechos; crea una declaración natural y emocional.
+2. Sinergia Rítmica: Adapta la métrica de los versos para que fluya naturalmente con el tempo y los patrones rítmicos típicos del género ${estiloMusical}.
+3. Estructura Obligatoria: Formatea la letra utilizando corchetes para guiar la generación musical. Debes incluir:
+[Intro] (Establece el ambiente musical)
+[Verse 1] (Introduce la historia de forma sutil)
+[Pre-Chorus] (Construye la emoción)
+[Chorus] (El clímax pegadizo que resalta el motivo de la canción)
+[Verse 2] (Profundiza en un detalle específico de la historia)
+[Chorus]
+[Bridge] (Pico emocional y variación melódica)
+[Chorus]
+[Outro] (Cierre musical gradual)`;
   
   try {
     await pool.query(
@@ -55,7 +82,7 @@ export default defineHandler(async (event) => {
         dedicatoria || null,
         whatsappNumber || null,
         config ? JSON.stringify(config) : null,
-        '', // prompt fallback
+        promptGenerado, // prompt maestro guardado directamente
       ]
     );
 
