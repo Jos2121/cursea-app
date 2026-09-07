@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2, Image as ImageIcon, UploadCloud, X } from 'lucide-react';
+import { Loader2, Image as ImageIcon, UploadCloud, X, ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VideoEditorPreview } from '@/components/VideoEditorPreview';
 import { TemplateConfig } from './Dashboard';
 
 const DEFAULT_CONFIG: TemplateConfig = {
-  photo: { x: 120, y: 350, w: 840, h: 840 },
-  titulo: { x: 100, y: 1300, fontSize: 64, color: '#ffffff', align: 'center' },
-  artista: { x: 100, y: 1400, fontSize: 42, color: '#e5e7eb', align: 'center' },
-  dedicatoria: { x: 100, y: 1550, fontSize: 36, color: '#f3f4f6', align: 'center' }
+  id: '',
+  name: 'Plantilla por Defecto',
+  bgUrl: '',
+  photo: { x: 130, y: 180, w: 820, h: 820 },
+  titulo: { x: 130, y: 1040, fontSize: 42, color: 'white', align: 'left' },
+  artista: { x: 130, y: 1095, fontSize: 30, color: '#B3B3B3', align: 'left' },
+  dedicatoria: { x: 540, y: 1620, fontSize: 28, color: '#E5E5E5', align: 'center' }
 };
 
 export default function Landing() {
@@ -119,47 +123,62 @@ export default function Landing() {
       });
   }, []);
 
-  const handleTemplateChange = (val: string) => {
-    setSelectedTemplateId(val);
-    // Asegurar coincidencia de ID convirtiendo ambos a String
-    const t = templates.find(temp => String(temp.id) === String(val));
+  const handleTemplateSelect = (t: any) => {
+    setSelectedTemplateId(t.id);
+    const parsedConfig = (t as any).config || t;
+    // Parsea string a object si es necesario (doble stringify en db)
+    const configData = typeof parsedConfig === 'string' ? JSON.parse(parsedConfig) : parsedConfig;
     
-    if (t && t.config) {
-      try {
-        // Si el config viene como string (doble stringify en DB), lo parseamos
-        const config = typeof t.config === 'string' ? JSON.parse(t.config) : t.config;
-
-        if (config.backgroundUrl) setBackgroundUrl(String(config.backgroundUrl));
-        
-        // Coordenadas Foto
-        if (config.photoX !== undefined) setPhotoX(Number(config.photoX));
-        if (config.photoY !== undefined) setPhotoY(Number(config.photoY));
-        if (config.photoWidth !== undefined) setPhotoWidth(Number(config.photoWidth));
-        if (config.photoHeight !== undefined) setPhotoHeight(Number(config.photoHeight));
-
-        // Título
-        if (config.tituloX !== undefined) setTituloX(Number(config.tituloX));
-        if (config.tituloY !== undefined) setTituloY(Number(config.tituloY));
-        if (config.tituloSize !== undefined) setTituloSize(Number(config.tituloSize));
-
-        // Artista
-        if (config.artistaX !== undefined) setArtistaX(Number(config.artistaX));
-        if (config.artistaY !== undefined) setArtistaY(Number(config.artistaY));
-        if (config.artistaSize !== undefined) setArtistaSize(Number(config.artistaSize));
-
-        // Dedicatoria (soportando alias)
-        const dX = config.dedicatoriaX ?? config.dedicatoryX;
-        const dY = config.dedicatoriaY ?? config.dedicatoryY;
-        const dSize = config.dedicatoriaSize ?? config.dedicatorySize;
-        
-        if (dX !== undefined) setDedicatoriaX(Number(dX));
-        if (dY !== undefined) setDedicatoriaY(Number(dY));
-        if (dSize !== undefined) setDedicatoriaSize(Number(dSize));
-
-      } catch (error) {
-        console.error("Error al parsear el config de la plantilla:", error);
+    const isCoords = configData.type === 'coordenadas';
+    
+    if (!isCoords) {
+      const bg = configData.backgroundUrl || configData.bgUrl || t.bgUrl;
+      if (bg !== undefined) {
+        setBackgroundUrl(String(bg).trim());
       }
     }
+    
+    if (configData.photoUrl !== undefined) {
+      setUserPhotoUrl(String(configData.photoUrl).trim());
+    }
+    
+    if (configData.photoX !== undefined) setPhotoX(Number(configData.photoX));
+    else if (configData.photo?.x !== undefined) setPhotoX(Number(configData.photo.x));
+
+    if (configData.photoY !== undefined) setPhotoY(Number(configData.photoY));
+    else if (configData.photo?.y !== undefined) setPhotoY(Number(configData.photo.y));
+
+    if (configData.photoWidth !== undefined) setPhotoWidth(Number(configData.photoWidth));
+    else if (configData.photo?.w !== undefined) setPhotoWidth(Number(configData.photo.w));
+
+    if (configData.photoHeight !== undefined) setPhotoHeight(Number(configData.photoHeight));
+    else if (configData.photo?.h !== undefined) setPhotoHeight(Number(configData.photo.h));
+
+    if (configData.tituloX !== undefined) setTituloX(configData.tituloX);
+    else if (configData.titulo?.x !== undefined) setTituloX(configData.titulo.x);
+
+    if (configData.tituloY !== undefined) setTituloY(Number(configData.tituloY));
+    else if (configData.titulo?.y !== undefined) setTituloY(Number(configData.titulo.y));
+
+    if (configData.tituloSize !== undefined) setTituloSize(Number(configData.tituloSize));
+    else if (configData.titulo?.fontSize !== undefined) setTituloSize(Number(configData.titulo.fontSize));
+
+    if (configData.artistaX !== undefined) setArtistaX(configData.artistaX);
+    else if (configData.artista?.x !== undefined) setArtistaX(configData.artista.x);
+
+    if (configData.artistaY !== undefined) setArtistaY(Number(configData.artistaY));
+    else if (configData.artista?.y !== undefined) setArtistaY(Number(configData.artista.y));
+
+    if (configData.artistaSize !== undefined) setArtistaSize(Number(configData.artistaSize));
+    else if (configData.artista?.fontSize !== undefined) setArtistaSize(Number(configData.artista.fontSize));
+
+    const dX = configData.dedicatoriaX ?? configData.dedicatoryX ?? configData.dedicatoria?.x;
+    const dY = configData.dedicatoriaY ?? configData.dedicatoryY ?? configData.dedicatoria?.y;
+    let dSize = configData.dedicatoriaSize ?? configData.dedicatorySize ?? configData.dedicatoria?.fontSize;
+    
+    if (dX !== undefined) setDedicatoriaX(dX);
+    if (dY !== undefined) setDedicatoriaY(Number(dY));
+    if (dSize !== undefined) setDedicatoriaSize(Number(dSize));
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,6 +259,82 @@ export default function Landing() {
       toast.error(error.message || 'Error al procesar tu solicitud. Intenta de nuevo.');
       setIsSubmitting(false);
     }
+  };
+
+  const renderTemplateSelector = () => {
+    const templatesWithBg = templates.filter(t => {
+      const parsedConfig = typeof t.config === 'string' ? JSON.parse(t.config) : (t.config || t);
+      return parsedConfig.type !== 'coordenadas' && (parsedConfig.backgroundUrl || parsedConfig.bgUrl || (t as any).bgUrl);
+    });
+
+    const templatesWithoutBg = templates.filter(t => {
+      const parsedConfig = typeof t.config === 'string' ? JSON.parse(t.config) : (t.config || t);
+      return parsedConfig.type === 'coordenadas' || (!parsedConfig.backgroundUrl && !parsedConfig.bgUrl && !(t as any).bgUrl);
+    });
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center justify-between w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 text-left h-12 shadow-sm">
+          <span className="truncate">
+            {selectedTemplateId
+              ? templates.find(x => x.id === selectedTemplateId)?.name || 'Plantilla seleccionada'
+              : "Seleccionar plantilla..."}
+          </span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-gray-500" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-[320px] bg-white border-gray-200 max-h-64 overflow-y-auto">
+          {templates.length === 0 ? (
+            <div className="p-4 text-sm text-gray-500 text-center">No hay plantillas.</div>
+          ) : (
+            <>
+              {templatesWithBg.length > 0 && (
+                <>
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                    Fondo + Posiciones
+                  </DropdownMenuLabel>
+                  {templatesWithBg.map(t => (
+                    <DropdownMenuItem
+                      key={t.id}
+                      onClick={() => handleTemplateSelect(t)}
+                      className="flex items-center justify-between cursor-pointer py-2 px-3 text-gray-800 hover:bg-gray-100 focus:bg-gray-100"
+                    >
+                      <div className="flex items-center truncate w-full">
+                        <Check className={`mr-2 h-4 w-4 shrink-0 text-indigo-600 ${selectedTemplateId === t.id ? "opacity-100" : "opacity-0"}`} />
+                        <span className="truncate">{t.name}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+              
+              {templatesWithBg.length > 0 && templatesWithoutBg.length > 0 && (
+                <DropdownMenuSeparator className="bg-gray-100" />
+              )}
+
+              {templatesWithoutBg.length > 0 && (
+                <>
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                    Solo Posiciones
+                  </DropdownMenuLabel>
+                  {templatesWithoutBg.map(t => (
+                    <DropdownMenuItem
+                      key={t.id}
+                      onClick={() => handleTemplateSelect(t)}
+                      className="flex items-center justify-between cursor-pointer py-2 px-3 text-gray-800 hover:bg-gray-100 focus:bg-gray-100"
+                    >
+                      <div className="flex items-center truncate w-full">
+                        <Check className={`mr-2 h-4 w-4 shrink-0 text-purple-600 ${selectedTemplateId === t.id ? "opacity-100" : "opacity-0"}`} />
+                        <span className="truncate">{t.name}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
   };
 
   return (
@@ -364,20 +459,8 @@ export default function Landing() {
             <h3 className="text-lg font-semibold mt-8 mb-4 border-b pb-2">2. Detalles visuales del video</h3>
             
             <div className="space-y-3">
-              <Label htmlFor="template">Plantilla de Fondo <span className="text-red-500">*</span></Label>
-              <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
-                <SelectTrigger id="template" className="rounded-xl border-gray-200">
-                  <SelectValue placeholder="Selecciona una plantilla" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {templates.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                  ))}
-                  {templates.length === 0 && (
-                    <SelectItem value="none" disabled>No hay plantillas disponibles</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              <Label>Plantilla de Fondo <span className="text-red-500">*</span></Label>
+              {renderTemplateSelector()}
             </div>
 
             <div className="space-y-3">
