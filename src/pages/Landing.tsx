@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VideoEditorPreview } from '@/components/VideoEditorPreview';
-import { TemplateConfig } from './Dashboard'; // we might need to copy/adjust this import
+import { TemplateConfig } from './Dashboard';
 
 const DEFAULT_CONFIG: TemplateConfig = {
   photo: { x: 120, y: 350, w: 840, h: 840 },
@@ -20,9 +20,28 @@ const DEFAULT_CONFIG: TemplateConfig = {
 export default function Landing() {
   const [templates, setTemplates] = useState<{id: string, name: string, backgroundUrl: string, config: TemplateConfig}[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [config, setConfig] = useState<TemplateConfig>(DEFAULT_CONFIG);
+  const [baseConfig, setBaseConfig] = useState<TemplateConfig>(DEFAULT_CONFIG);
   const [backgroundUrl, setBackgroundUrl] = useState<string>('');
   
+  // Coordinate & Size states
+  const [photoX, setPhotoX] = useState<number>(120);
+  const [photoY, setPhotoY] = useState<number>(350);
+  const [photoWidth, setPhotoWidth] = useState<number>(840);
+  const [photoHeight, setPhotoHeight] = useState<number>(840);
+  
+  const [tituloX, setTituloX] = useState<number | string>(100);
+  const [tituloY, setTituloY] = useState<number>(1300);
+  const [tituloSize, setTituloSize] = useState<number>(64);
+  
+  const [artistaX, setArtistaX] = useState<number | string>(100);
+  const [artistaY, setArtistaY] = useState<number>(1400);
+  const [artistaSize, setArtistaSize] = useState<number>(42);
+  
+  const [dedicatoriaX, setDedicatoriaX] = useState<number | string>(100);
+  const [dedicatoriaY, setDedicatoriaY] = useState<number>(1550);
+  const [dedicatoriaSize, setDedicatoriaSize] = useState<number>(36);
+
+  // User input states
   const [userPhotoUrl, setUserPhotoUrl] = useState<string>('');
   const [titulo, setTitulo] = useState('');
   const [artista, setArtista] = useState('');
@@ -45,21 +64,26 @@ export default function Landing() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const [previewScale, setPreviewScale] = useState(0.5);
   const previewContainerRef = useRef<HTMLDivElement>(null);
+
+  // Computed config for the preview & payload
+  const constructedConfig: TemplateConfig = {
+    photo: { x: Number(photoX), y: Number(photoY), w: Number(photoWidth), h: Number(photoHeight) },
+    titulo: { ...baseConfig.titulo, x: tituloX, y: Number(tituloY), fontSize: Number(tituloSize) },
+    artista: { ...baseConfig.artista, x: artistaX, y: Number(artistaY), fontSize: Number(artistaSize) },
+    dedicatoria: { ...baseConfig.dedicatoria, x: dedicatoriaX, y: Number(dedicatoriaY), fontSize: Number(dedicatoriaSize) }
+  };
 
   // Resize observer to maintain preview scale
   useEffect(() => {
     const updateScale = () => {
       if (previewContainerRef.current) {
-        // Base width for calculations is 1080
         const containerWidth = previewContainerRef.current.clientWidth;
         const newScale = containerWidth / 1080;
         setPreviewScale(newScale);
       }
     };
-
     updateScale();
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
@@ -88,7 +112,25 @@ export default function Landing() {
       if (template) {
         setBackgroundUrl(template.backgroundUrl);
         if (template.config) {
-          setConfig(template.config);
+          const cfg = template.config;
+          setBaseConfig(cfg);
+          
+          setPhotoX(cfg.photo?.x || 0);
+          setPhotoY(cfg.photo?.y || 0);
+          setPhotoWidth(cfg.photo?.w || 840);
+          setPhotoHeight(cfg.photo?.h || 840);
+
+          setTituloX(cfg.titulo?.x || 100);
+          setTituloY(cfg.titulo?.y || 1300);
+          setTituloSize(cfg.titulo?.fontSize || 64);
+
+          setArtistaX(cfg.artista?.x || 100);
+          setArtistaY(cfg.artista?.y || 1400);
+          setArtistaSize(cfg.artista?.fontSize || 42);
+
+          setDedicatoriaX(cfg.dedicatoria?.x || 100);
+          setDedicatoriaY(cfg.dedicatoria?.y || 1550);
+          setDedicatoriaSize(cfg.dedicatoria?.fontSize || 36);
         }
       }
     }
@@ -112,12 +154,8 @@ export default function Landing() {
         method: 'POST',
         body: formData,
       });
-      
       const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.statusMessage || 'Error subiendo archivo');
-      }
+      if (!res.ok) throw new Error(data.statusMessage || 'Error subiendo archivo');
 
       setUserPhotoUrl(data.url);
       toast.success('Foto de portada subida correctamente');
@@ -125,14 +163,8 @@ export default function Landing() {
       toast.error(error.message || 'Hubo un error al subir la imagen');
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
-
-  const removePhoto = () => {
-    setUserPhotoUrl('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,7 +192,7 @@ export default function Landing() {
           artista,
           dedicatoria,
           whatsappNumber,
-          config,
+          config: constructedConfig,
           paraQuien: finalParaQuien,
           ocasion: finalOcasion,
           estiloMusical: finalEstiloMusical,
@@ -172,12 +204,8 @@ export default function Landing() {
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.statusMessage || 'Error al registrar petición');
 
-      if (!res.ok) {
-        throw new Error(data.statusMessage || 'Error al registrar petición');
-      }
-
-      // Redirigir a WhatsApp
       const paymentNumber = import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || whatsappNumber.replace(/[^0-9]/g, '');
       const text = encodeURIComponent('Hola he llenado los campos requeridos para obtener mi canción personalizada, quisiera realizar el pago');
       window.location.href = `https://wa.me/${paymentNumber}?text=${text}`;
@@ -190,7 +218,6 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
-      
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-10">
         
         {/* FORM COLUMN */}
@@ -201,6 +228,114 @@ export default function Landing() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 flex-1">
+            
+            {/* SECCIÓN 1: Detalles para componer tu canción */}
+            <h3 className="text-lg font-semibold mt-2 mb-4 border-b pb-2">1. Detalles para componer tu canción</h3>
+            
+            <div className="space-y-3">
+              <Label>¿Para quién es la canción? <span className="text-red-500">*</span></Label>
+              <Select value={paraQuien} onValueChange={setParaQuien}>
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Selecciona una opción" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {['Esposo/a', 'Novio/a', 'Mi pareja', 'Mama', 'Papa', 'Hijo/a', 'Amigo/a', 'Abuelo/a', 'Nieto/a', 'Para mi', 'Otro'].map(opt => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {paraQuien === 'Otro' && (
+                <Input placeholder="Especifica para quién..." value={paraQuienOtro} onChange={e => setParaQuienOtro(e.target.value)} className="rounded-xl mt-2" />
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Label>¿Cuál es la ocasión? <span className="text-red-500">*</span></Label>
+              <Select value={ocasion} onValueChange={setOcasion}>
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Selecciona una opción" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {['Solo para sorprender', 'San Valentin', 'Declararse', 'Cumpleaños', 'Aniversario', 'Pedir matrimonio', 'Pedir perdon', 'Boda', 'Dia de la madre', 'Dia del padre', 'Para mi', 'Otro'].map(opt => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {ocasion === 'Otro' && (
+                <Input placeholder="Especifica la ocasión..." value={ocasionOtro} onChange={e => setOcasionOtro(e.target.value)} className="rounded-xl mt-2" />
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Label>¿Qué estilo musical? <span className="text-red-500">*</span></Label>
+              <Select value={estiloMusical} onValueChange={setEstiloMusical}>
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Selecciona un estilo" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {['Balada romantica', 'Pop latino', 'Reggaeton romantico', 'Cumbia', 'Bachata', 'Salsa', 'Vallenato', 'Huayno peruano', 'Musica cristiana', 'Rock', 'Trap', 'Otro'].map(opt => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {estiloMusical === 'Otro' && (
+                <Input placeholder="Especifica el estilo musical..." value={estiloMusicalOtro} onChange={e => setEstiloMusicalOtro(e.target.value)} className="rounded-xl mt-2" />
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Label>Voz masculina o femenina? <span className="text-red-500">*</span></Label>
+              <Select value={tipoVoz} onValueChange={setTipoVoz}>
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Selecciona el tipo de voz" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {['Masculino', 'Femenina'].map(opt => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>¿Cuál es el tono de la canción? <span className="text-red-500">*</span></Label>
+              <Select value={tono} onValueChange={setTono}>
+                <SelectTrigger className="rounded-xl border-gray-200">
+                  <SelectValue placeholder="Selecciona el tono" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {['Romantica', 'Animada', 'Emocionante', 'Divertida', 'Reflexiva'].map(opt => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>A quien se lo dedicas? (Nombre) <span className="text-red-500">*</span></Label>
+              <Input 
+                value={nombreDedicado} 
+                onChange={e => setNombreDedicado(e.target.value)} 
+                placeholder="Ej. María"
+                className="rounded-xl border-gray-200"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Cuéntanos la historia de ustedes: <span className="text-red-500">*</span></Label>
+              <Textarea 
+                value={historia} 
+                onChange={e => setHistoria(e.target.value)} 
+                placeholder="Escribe aquí su historia..."
+                className="rounded-xl border-gray-200 resize-none min-h-[140px]"
+              />
+              <p className="text-sm text-muted-foreground">
+                [💡 ideas de qué contar: ♥ Cómo y dónde se conocieron ♥ Apodos y la forma cariñosa en que se llaman ♥ Un momento que los marcó ♥ Lo que más amas de esa persona ♥ Fechas especiales ♥ Una canción, lugar u olor que los recuerda ♥ El mensaje que quieres dejarle]
+              </p>
+            </div>
+
+            {/* SECCIÓN 2: Detalles visuales del video */}
+            <h3 className="text-lg font-semibold mt-8 mb-4 border-b pb-2">2. Detalles visuales del video</h3>
             
             <div className="space-y-3">
               <Label htmlFor="template">Plantilla de Fondo <span className="text-red-500">*</span></Label>
@@ -255,7 +390,7 @@ export default function Landing() {
                   <img src={userPhotoUrl} alt="Portada" className="h-32 w-32 object-cover rounded-xl shadow-sm border border-gray-200" />
                   <button
                     type="button"
-                    onClick={removePhoto}
+                    onClick={() => setUserPhotoUrl('')}
                     className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 text-gray-500 hover:text-red-500 transition-colors"
                   >
                     <X className="h-4 w-4" />
@@ -303,6 +438,9 @@ export default function Landing() {
               </div>
             </div>
 
+            {/* SECCIÓN 3: Envío */}
+            <h3 className="text-lg font-semibold mt-8 mb-4 border-b pb-2">3. Envío</h3>
+
             <div className="space-y-3">
               <Label htmlFor="whatsapp">Número de WhatsApp (con prefijo) <span className="text-red-500">*</span></Label>
               <Input 
@@ -313,113 +451,6 @@ export default function Landing() {
                 className="rounded-xl border-gray-200"
                 type="tel"
               />
-            </div>
-
-            {/* CUESTIONARIO DE LA CANCIÓN */}
-            <div className="space-y-6 pt-6 mt-6 border-t border-gray-100">
-              <h3 className="font-semibold text-gray-800 text-lg">Detalles para componer tu canción</h3>
-
-              <div className="space-y-3">
-                <Label>¿Para quién es la canción? <span className="text-red-500">*</span></Label>
-                <Select value={paraQuien} onValueChange={setParaQuien}>
-                  <SelectTrigger className="rounded-xl border-gray-200">
-                    <SelectValue placeholder="Selecciona una opción" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {['Esposo/a', 'Novio/a', 'Mi pareja', 'Mama', 'Papa', 'Hijo/a', 'Amigo/a', 'Abuelo/a', 'Nieto/a', 'Para mi', 'Otro'].map(opt => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {paraQuien === 'Otro' && (
-                  <Input placeholder="Especifica para quién..." value={paraQuienOtro} onChange={e => setParaQuienOtro(e.target.value)} className="rounded-xl mt-2" />
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <Label>¿Cuál es la ocasión? <span className="text-red-500">*</span></Label>
-                <Select value={ocasion} onValueChange={setOcasion}>
-                  <SelectTrigger className="rounded-xl border-gray-200">
-                    <SelectValue placeholder="Selecciona una opción" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {['Solo para sorprender', 'San Valentin', 'Declararse', 'Cumpleaños', 'Aniversario', 'Pedir matrimonio', 'Pedir perdon', 'Boda', 'Dia de la madre', 'Dia del padre', 'Para mi', 'Otro'].map(opt => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {ocasion === 'Otro' && (
-                  <Input placeholder="Especifica la ocasión..." value={ocasionOtro} onChange={e => setOcasionOtro(e.target.value)} className="rounded-xl mt-2" />
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <Label>¿Qué estilo musical? <span className="text-red-500">*</span></Label>
-                <Select value={estiloMusical} onValueChange={setEstiloMusical}>
-                  <SelectTrigger className="rounded-xl border-gray-200">
-                    <SelectValue placeholder="Selecciona un estilo" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {['Balada romantica', 'Pop latino', 'Reggaeton romantico', 'Cumbia', 'Bachata', 'Salsa', 'Vallenato', 'Huayno peruano', 'Musica cristiana', 'Rock', 'Trap', 'Otro'].map(opt => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {estiloMusical === 'Otro' && (
-                  <Input placeholder="Especifica el estilo musical..." value={estiloMusicalOtro} onChange={e => setEstiloMusicalOtro(e.target.value)} className="rounded-xl mt-2" />
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <Label>Voz masculina o femenina? <span className="text-red-500">*</span></Label>
-                <Select value={tipoVoz} onValueChange={setTipoVoz}>
-                  <SelectTrigger className="rounded-xl border-gray-200">
-                    <SelectValue placeholder="Selecciona el tipo de voz" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {['Masculino', 'Femenina'].map(opt => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <Label>¿Cuál es el tono de la canción? <span className="text-red-500">*</span></Label>
-                <Select value={tono} onValueChange={setTono}>
-                  <SelectTrigger className="rounded-xl border-gray-200">
-                    <SelectValue placeholder="Selecciona el tono" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {['Romantica', 'Animada', 'Emocionante', 'Divertida', 'Reflexiva'].map(opt => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <Label>A quien se lo dedicas? (Nombre) <span className="text-red-500">*</span></Label>
-                <Input 
-                  value={nombreDedicado} 
-                  onChange={e => setNombreDedicado(e.target.value)} 
-                  placeholder="Ej. María"
-                  className="rounded-xl border-gray-200"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label>Cuéntanos la historia de ustedes: <span className="text-red-500">*</span></Label>
-                <Textarea 
-                  value={historia} 
-                  onChange={e => setHistoria(e.target.value)} 
-                  placeholder="Escribe aquí su historia..."
-                  className="rounded-xl border-gray-200 resize-none min-h-[140px]"
-                />
-                <p className="text-sm text-muted-foreground">
-                  [💡 ideas de qué contar: ♥ Cómo y dónde se conocieron ♥ Apodos y la forma cariñosa en que se llaman ♥ Un momento que los marcó ♥ Lo que más amas de esa persona ♥ Fechas especiales ♥ Una canción, lugar u olor que los recuerda ♥ El mensaje que quieres dejarle]
-                </p>
-              </div>
             </div>
             
             <div className="pt-6">
@@ -446,7 +477,7 @@ export default function Landing() {
           <div className="bg-gray-100 rounded-3xl p-6 shadow-inner w-full max-w-sm flex items-center justify-center">
              <div ref={previewContainerRef} className="w-full">
                 <VideoEditorPreview
-                  config={config}
+                  config={constructedConfig}
                   onUpdateConfig={() => {}} // Read-only for landing
                   backgroundUrl={backgroundUrl}
                   customBackground=""
@@ -454,6 +485,7 @@ export default function Landing() {
                   titulo={titulo}
                   artista={artista}
                   dedicatoria={dedicatoria}
+                  dedicatoriaSize={dedicatoriaSize}
                   scale={previewScale}
                 />
              </div>
