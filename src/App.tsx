@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Gifts from './pages/Gifts';
 import GiftBuilder from './pages/GiftBuilder';
 import PublicGift from './pages/PublicGift';
+import Landing from './pages/Landing';
 import MainLayout from './layouts/MainLayout';
 import { Toaster } from "@/components/ui/sonner"; // Assuming sonner is available or will create
 
@@ -21,6 +22,9 @@ export default function App() {
         
         {/* Public Gift Route */}
         <Route path="/p/:slug" element={<PublicGift />} />
+        
+        {/* Landing Page Route */}
+        <Route path="/landing" element={<Landing />} />
 
         {/* Private Routes wrapped in MainLayout */}
         <Route
