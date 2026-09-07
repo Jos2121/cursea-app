@@ -121,29 +121,44 @@ export default function Landing() {
 
   const handleTemplateChange = (val: string) => {
     setSelectedTemplateId(val);
-    const t = templates.find(temp => temp.id === val);
-    if (t?.config) {
-      const cfg = t.config as any;
-      if (cfg.backgroundUrl) setBackgroundUrl(String(cfg.backgroundUrl));
-      if (cfg.photoX !== undefined) setPhotoX(Number(cfg.photoX));
-      if (cfg.photoY !== undefined) setPhotoY(Number(cfg.photoY));
-      if (cfg.photoWidth !== undefined) setPhotoWidth(Number(cfg.photoWidth));
-      if (cfg.photoHeight !== undefined) setPhotoHeight(Number(cfg.photoHeight));
-      
-      if (cfg.tituloX !== undefined) setTituloX(Number(cfg.tituloX));
-      if (cfg.tituloY !== undefined) setTituloY(Number(cfg.tituloY));
-      if (cfg.tituloSize !== undefined) setTituloSize(Number(cfg.tituloSize));
-      
-      if (cfg.artistaX !== undefined) setArtistaX(Number(cfg.artistaX));
-      if (cfg.artistaY !== undefined) setArtistaY(Number(cfg.artistaY));
-      if (cfg.artistaSize !== undefined) setArtistaSize(Number(cfg.artistaSize));
-      
-      const dX = cfg.dedicatoriaX ?? cfg.dedicatoryX;
-      const dY = cfg.dedicatoriaY ?? cfg.dedicatoryY;
-      const dSize = cfg.dedicatoriaSize ?? cfg.dedicatorySize;
-      if (dX !== undefined) setDedicatoriaX(Number(dX));
-      if (dY !== undefined) setDedicatoriaY(Number(dY));
-      if (dSize !== undefined) setDedicatoriaSize(Number(dSize));
+    // Asegurar coincidencia de ID convirtiendo ambos a String
+    const t = templates.find(temp => String(temp.id) === String(val));
+    
+    if (t && t.config) {
+      try {
+        // Si el config viene como string (doble stringify en DB), lo parseamos
+        const config = typeof t.config === 'string' ? JSON.parse(t.config) : t.config;
+
+        if (config.backgroundUrl) setBackgroundUrl(String(config.backgroundUrl));
+        
+        // Coordenadas Foto
+        if (config.photoX !== undefined) setPhotoX(Number(config.photoX));
+        if (config.photoY !== undefined) setPhotoY(Number(config.photoY));
+        if (config.photoWidth !== undefined) setPhotoWidth(Number(config.photoWidth));
+        if (config.photoHeight !== undefined) setPhotoHeight(Number(config.photoHeight));
+
+        // Título
+        if (config.tituloX !== undefined) setTituloX(Number(config.tituloX));
+        if (config.tituloY !== undefined) setTituloY(Number(config.tituloY));
+        if (config.tituloSize !== undefined) setTituloSize(Number(config.tituloSize));
+
+        // Artista
+        if (config.artistaX !== undefined) setArtistaX(Number(config.artistaX));
+        if (config.artistaY !== undefined) setArtistaY(Number(config.artistaY));
+        if (config.artistaSize !== undefined) setArtistaSize(Number(config.artistaSize));
+
+        // Dedicatoria (soportando alias)
+        const dX = config.dedicatoriaX ?? config.dedicatoryX;
+        const dY = config.dedicatoriaY ?? config.dedicatoryY;
+        const dSize = config.dedicatoriaSize ?? config.dedicatorySize;
+        
+        if (dX !== undefined) setDedicatoriaX(Number(dX));
+        if (dY !== undefined) setDedicatoriaY(Number(dY));
+        if (dSize !== undefined) setDedicatoriaSize(Number(dSize));
+
+      } catch (error) {
+        console.error("Error al parsear el config de la plantilla:", error);
+      }
     }
   };
 
