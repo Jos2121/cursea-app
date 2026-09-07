@@ -106,35 +106,72 @@ export default function Landing() {
       });
   }, []);
 
-  useEffect(() => {
-    if (selectedTemplateId) {
-      const template = templates.find(t => t.id === selectedTemplateId);
-      if (template) {
-        setBackgroundUrl(template.backgroundUrl);
-        if (template.config) {
-          const cfg = template.config;
-          setBaseConfig(cfg);
-          
-          setPhotoX(cfg.photo?.x || 0);
-          setPhotoY(cfg.photo?.y || 0);
-          setPhotoWidth(cfg.photo?.w || 840);
-          setPhotoHeight(cfg.photo?.h || 840);
+  const handleTemplateChange = (val: string) => {
+    setSelectedTemplateId(val);
+    const template = templates.find(t => t.id === val);
+    
+    if (template) {
+      if (template.backgroundUrl) setBackgroundUrl(String(template.backgroundUrl));
+      
+      if (template.config) {
+        const cfg = template.config as any; // Allow extraction from both nested and flat layouts
 
-          setTituloX(cfg.titulo?.x || 100);
-          setTituloY(cfg.titulo?.y || 1300);
-          setTituloSize(cfg.titulo?.fontSize || 64);
+        // Parse Photo
+        if (cfg.photoX !== undefined) setPhotoX(Number(cfg.photoX));
+        else if (cfg.photo?.x !== undefined) setPhotoX(Number(cfg.photo.x));
 
-          setArtistaX(cfg.artista?.x || 100);
-          setArtistaY(cfg.artista?.y || 1400);
-          setArtistaSize(cfg.artista?.fontSize || 42);
+        if (cfg.photoY !== undefined) setPhotoY(Number(cfg.photoY));
+        else if (cfg.photo?.y !== undefined) setPhotoY(Number(cfg.photo.y));
 
-          setDedicatoriaX(cfg.dedicatoria?.x || 100);
-          setDedicatoriaY(cfg.dedicatoria?.y || 1550);
-          setDedicatoriaSize(cfg.dedicatoria?.fontSize || 36);
-        }
+        if (cfg.photoWidth !== undefined) setPhotoWidth(Number(cfg.photoWidth));
+        else if (cfg.photo?.w !== undefined) setPhotoWidth(Number(cfg.photo.w));
+
+        if (cfg.photoHeight !== undefined) setPhotoHeight(Number(cfg.photoHeight));
+        else if (cfg.photo?.h !== undefined) setPhotoHeight(Number(cfg.photo.h));
+
+        // Parse Titulo
+        if (cfg.tituloX !== undefined) setTituloX(cfg.tituloX);
+        else if (cfg.titulo?.x !== undefined) setTituloX(cfg.titulo.x);
+
+        if (cfg.tituloY !== undefined) setTituloY(Number(cfg.tituloY));
+        else if (cfg.titulo?.y !== undefined) setTituloY(Number(cfg.titulo.y));
+
+        if (cfg.tituloSize !== undefined) setTituloSize(Number(cfg.tituloSize));
+        else if (cfg.titulo?.fontSize !== undefined) setTituloSize(Number(cfg.titulo.fontSize));
+
+        // Parse Artista
+        if (cfg.artistaX !== undefined) setArtistaX(cfg.artistaX);
+        else if (cfg.artista?.x !== undefined) setArtistaX(cfg.artista.x);
+
+        if (cfg.artistaY !== undefined) setArtistaY(Number(cfg.artistaY));
+        else if (cfg.artista?.y !== undefined) setArtistaY(Number(cfg.artista.y));
+
+        if (cfg.artistaSize !== undefined) setArtistaSize(Number(cfg.artistaSize));
+        else if (cfg.artista?.fontSize !== undefined) setArtistaSize(Number(cfg.artista.fontSize));
+
+        // Parse Dedicatoria
+        if (cfg.dedicatoriaX !== undefined) setDedicatoriaX(cfg.dedicatoriaX);
+        else if (cfg.dedicatoryX !== undefined) setDedicatoriaX(cfg.dedicatoryX);
+        else if (cfg.dedicatoria?.x !== undefined) setDedicatoriaX(cfg.dedicatoria.x);
+
+        if (cfg.dedicatoriaY !== undefined) setDedicatoriaY(Number(cfg.dedicatoriaY));
+        else if (cfg.dedicatoryY !== undefined) setDedicatoriaY(Number(cfg.dedicatoryY));
+        else if (cfg.dedicatoria?.y !== undefined) setDedicatoriaY(Number(cfg.dedicatoria.y));
+
+        if (cfg.dedicatoriaSize !== undefined) setDedicatoriaSize(Number(cfg.dedicatoriaSize));
+        else if (cfg.dedicatorySize !== undefined) setDedicatoriaSize(Number(cfg.dedicatorySize));
+        else if (cfg.dedicatoria?.fontSize !== undefined) setDedicatoriaSize(Number(cfg.dedicatoria.fontSize));
+        
+        // Base structure
+        setBaseConfig({
+          photo: cfg.photo || baseConfig.photo,
+          titulo: cfg.titulo || baseConfig.titulo,
+          artista: cfg.artista || baseConfig.artista,
+          dedicatoria: cfg.dedicatoria || baseConfig.dedicatoria
+        });
       }
     }
-  }, [selectedTemplateId, templates]);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -339,7 +376,7 @@ export default function Landing() {
             
             <div className="space-y-3">
               <Label htmlFor="template">Plantilla de Fondo <span className="text-red-500">*</span></Label>
-              <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+              <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
                 <SelectTrigger id="template" className="rounded-xl border-gray-200">
                   <SelectValue placeholder="Selecciona una plantilla" />
                 </SelectTrigger>
@@ -485,7 +522,21 @@ export default function Landing() {
                   titulo={titulo}
                   artista={artista}
                   dedicatoria={dedicatoria}
+                  
+                  photoX={photoX}
+                  photoY={photoY}
+                  photoWidth={photoWidth}
+                  photoHeight={photoHeight}
+                  tituloX={tituloX}
+                  tituloY={tituloY}
+                  tituloSize={tituloSize}
+                  artistaX={artistaX}
+                  artistaY={artistaY}
+                  artistaSize={artistaSize}
+                  dedicatoriaX={dedicatoriaX}
+                  dedicatoriaY={dedicatoriaY}
                   dedicatoriaSize={dedicatoriaSize}
+                  
                   scale={previewScale}
                 />
              </div>

@@ -11,7 +11,22 @@ export interface VideoEditorPreviewProps {
   titulo: string;
   artista: string;
   dedicatoria: string;
+  
+  // Explicit coordinate overrides
+  photoX?: number;
+  photoY?: number;
+  photoWidth?: number;
+  photoHeight?: number;
+  tituloX?: number | string;
+  tituloY?: number;
+  tituloSize?: number;
+  artistaX?: number | string;
+  artistaY?: number;
+  artistaSize?: number;
+  dedicatoriaX?: number | string;
+  dedicatoriaY?: number;
   dedicatoriaSize?: number;
+
   scale: number;
 }
 
@@ -23,12 +38,46 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
   titulo,
   artista,
   dedicatoria,
-  dedicatoriaSize = 28,
+  
+  photoX,
+  photoY,
+  photoWidth,
+  photoHeight,
+  tituloX,
+  tituloY,
+  tituloSize,
+  artistaX,
+  artistaY,
+  artistaSize,
+  dedicatoriaX,
+  dedicatoriaY,
+  dedicatoriaSize,
+  
   scale
 }) => {
 
   const renderTextNode = (key: 'titulo' | 'artista' | 'dedicatoria', text: string, placeholder: string) => {
     const t = config[key];
+    
+    // Resolve dynamic positions/sizes
+    let activeX: number | string = t.x;
+    let activeY: number = t.y;
+    let activeSize: number = t.fontSize;
+
+    if (key === 'titulo') {
+      if (tituloX !== undefined) activeX = tituloX;
+      if (tituloY !== undefined) activeY = tituloY;
+      if (tituloSize !== undefined) activeSize = tituloSize;
+    } else if (key === 'artista') {
+      if (artistaX !== undefined) activeX = artistaX;
+      if (artistaY !== undefined) activeY = artistaY;
+      if (artistaSize !== undefined) activeSize = artistaSize;
+    } else if (key === 'dedicatoria') {
+      if (dedicatoriaX !== undefined) activeX = dedicatoriaX;
+      if (dedicatoriaY !== undefined) activeY = dedicatoriaY;
+      if (dedicatoriaSize !== undefined) activeSize = dedicatoriaSize;
+    }
+
     const isCenter = t.align === 'center';
 
     if (key === 'dedicatoria') {
@@ -36,11 +85,11 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
         <div
           className="absolute text-center break-words max-w-[75%] leading-relaxed drop-shadow-md"
           style={{
-            left: '50%',
-            top: `${(t.y / 1920) * 100}%`,
-            transform: 'translateX(-50%)',
+            left: activeX === 'center' ? '50%' : `${(Number(activeX) / 1080) * 100}%`,
+            top: `${(activeY / 1920) * 100}%`,
+            transform: activeX === 'center' ? 'translateX(-50%)' : 'none',
             width: 'max-content',
-            fontSize: `${(dedicatoriaSize * scale)}px`, // Dynamic size based on slider
+            fontSize: `${(activeSize * scale)}px`, 
             color: t.color,
           }}
         >
@@ -49,18 +98,17 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
       );
     }
 
-    // Calculamos la posición porcentual asumiendo un lienzo base de 1080x1920.
-    const leftPos = isCenter ? '10%' : `${(Number(t.x) / 1080) * 100}%`;
-    const widthVal = isCenter ? '80%' : `calc(90% - ${(Number(t.x) / 1080) * 100}%)`;
+    const leftPos = isCenter ? '10%' : `${(Number(activeX) / 1080) * 100}%`;
+    const widthVal = isCenter ? '80%' : `calc(90% - ${(Number(activeX) / 1080) * 100}%)`;
 
     return (
       <div
         className="absolute whitespace-pre-wrap break-words drop-shadow-md"
         style={{
           left: leftPos,
-          top: `${(t.y / 1920) * 100}%`,
+          top: `${(activeY / 1920) * 100}%`,
           width: widthVal,
-          fontSize: `${t.fontSize * scale}px`,
+          fontSize: `${activeSize * scale}px`,
           color: t.color,
           textAlign: t.align as any,
           lineHeight: '1.25'
@@ -70,6 +118,11 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
       </div>
     );
   };
+
+  const finalPhotoX = photoX !== undefined ? photoX : config.photo.x;
+  const finalPhotoY = photoY !== undefined ? photoY : config.photo.y;
+  const finalPhotoW = photoWidth !== undefined ? photoWidth : config.photo.w;
+  const finalPhotoH = photoHeight !== undefined ? photoHeight : config.photo.h;
 
   return (
     <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0 aspect-[9/16]">
@@ -86,10 +139,10 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
       <div
         className="absolute overflow-hidden"
         style={{
-          left: `${(config.photo.x / 1080) * 100}%`,
-          top: `${(config.photo.y / 1920) * 100}%`,
-          width: `${(config.photo.w / 1080) * 100}%`,
-          height: `${(config.photo.h / 1920) * 100}%`,
+          left: `${(finalPhotoX / 1080) * 100}%`,
+          top: `${(finalPhotoY / 1920) * 100}%`,
+          width: `${(finalPhotoW / 1080) * 100}%`,
+          height: `${(finalPhotoH / 1920) * 100}%`,
         }}
       >
         {userPhotoUrl ? (
