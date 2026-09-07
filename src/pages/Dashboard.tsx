@@ -776,14 +776,10 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            onClick={handleLogout}
-            className="rounded-xl border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:text-[#8B1F32] transition-all"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Cerrar Sesión
-          </Button>
+          <div className="bg-white px-4 py-2 rounded-2xl border border-neutral-100 shadow-sm flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">Sistema Activo</span>
+          </div>
         </div>
       </div>
 
