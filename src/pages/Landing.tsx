@@ -24,22 +24,22 @@ export default function Landing() {
   const [backgroundUrl, setBackgroundUrl] = useState<string>('');
   
   // Coordinate & Size states
-  const [photoX, setPhotoX] = useState<number>(120);
-  const [photoY, setPhotoY] = useState<number>(350);
-  const [photoWidth, setPhotoWidth] = useState<number>(840);
-  const [photoHeight, setPhotoHeight] = useState<number>(840);
+  const [photoX, setPhotoX] = useState<number>(130);
+  const [photoY, setPhotoY] = useState<number>(180);
+  const [photoWidth, setPhotoWidth] = useState<number>(820);
+  const [photoHeight, setPhotoHeight] = useState<number>(820);
   
-  const [tituloX, setTituloX] = useState<number | string>(100);
-  const [tituloY, setTituloY] = useState<number>(1300);
-  const [tituloSize, setTituloSize] = useState<number>(64);
+  const [tituloX, setTituloX] = useState<number | string>(130);
+  const [tituloY, setTituloY] = useState<number>(1040);
+  const [tituloSize, setTituloSize] = useState<number>(42);
   
-  const [artistaX, setArtistaX] = useState<number | string>(100);
-  const [artistaY, setArtistaY] = useState<number>(1400);
-  const [artistaSize, setArtistaSize] = useState<number>(42);
+  const [artistaX, setArtistaX] = useState<number | string>(130);
+  const [artistaY, setArtistaY] = useState<number>(1095);
+  const [artistaSize, setArtistaSize] = useState<number>(30);
   
-  const [dedicatoriaX, setDedicatoriaX] = useState<number | string>(100);
-  const [dedicatoriaY, setDedicatoriaY] = useState<number>(1550);
-  const [dedicatoriaSize, setDedicatoriaSize] = useState<number>(36);
+  const [dedicatoriaX, setDedicatoriaX] = useState<number | string>(540);
+  const [dedicatoriaY, setDedicatoriaY] = useState<number>(1620);
+  const [dedicatoriaSize, setDedicatoriaSize] = useState<number>(28);
 
   // User input states
   const [userPhotoUrl, setUserPhotoUrl] = useState<string>('');
@@ -108,68 +108,57 @@ export default function Landing() {
 
   const handleTemplateChange = (val: string) => {
     setSelectedTemplateId(val);
-    const template = templates.find(t => t.id === val);
+    const t = templates.find(temp => temp.id === val);
     
-    if (template) {
-      if (template.backgroundUrl) setBackgroundUrl(String(template.backgroundUrl));
+    if (t?.config) {
+      const cfg = t.config as any;
+
+      if (cfg.backgroundUrl) setBackgroundUrl(String(cfg.backgroundUrl));
       
-      if (template.config) {
-        const cfg = template.config as any; // Allow extraction from both nested and flat layouts
+      if (cfg.photoX !== undefined) setPhotoX(Number(cfg.photoX));
+      else if (cfg.photo?.x !== undefined) setPhotoX(Number(cfg.photo.x));
 
-        // Parse Photo
-        if (cfg.photoX !== undefined) setPhotoX(Number(cfg.photoX));
-        else if (cfg.photo?.x !== undefined) setPhotoX(Number(cfg.photo.x));
+      if (cfg.photoY !== undefined) setPhotoY(Number(cfg.photoY));
+      else if (cfg.photo?.y !== undefined) setPhotoY(Number(cfg.photo.y));
 
-        if (cfg.photoY !== undefined) setPhotoY(Number(cfg.photoY));
-        else if (cfg.photo?.y !== undefined) setPhotoY(Number(cfg.photo.y));
+      if (cfg.photoWidth !== undefined) setPhotoWidth(Number(cfg.photoWidth));
+      else if (cfg.photo?.w !== undefined) setPhotoWidth(Number(cfg.photo.w));
 
-        if (cfg.photoWidth !== undefined) setPhotoWidth(Number(cfg.photoWidth));
-        else if (cfg.photo?.w !== undefined) setPhotoWidth(Number(cfg.photo.w));
+      if (cfg.photoHeight !== undefined) setPhotoHeight(Number(cfg.photoHeight));
+      else if (cfg.photo?.h !== undefined) setPhotoHeight(Number(cfg.photo.h));
 
-        if (cfg.photoHeight !== undefined) setPhotoHeight(Number(cfg.photoHeight));
-        else if (cfg.photo?.h !== undefined) setPhotoHeight(Number(cfg.photo.h));
+      if (cfg.tituloX !== undefined) setTituloX(cfg.tituloX);
+      else if (cfg.titulo?.x !== undefined) setTituloX(cfg.titulo.x);
 
-        // Parse Titulo
-        if (cfg.tituloX !== undefined) setTituloX(cfg.tituloX);
-        else if (cfg.titulo?.x !== undefined) setTituloX(cfg.titulo.x);
+      if (cfg.tituloY !== undefined) setTituloY(Number(cfg.tituloY));
+      else if (cfg.titulo?.y !== undefined) setTituloY(Number(cfg.titulo.y));
 
-        if (cfg.tituloY !== undefined) setTituloY(Number(cfg.tituloY));
-        else if (cfg.titulo?.y !== undefined) setTituloY(Number(cfg.titulo.y));
+      if (cfg.tituloSize !== undefined) setTituloSize(Number(cfg.tituloSize));
+      else if (cfg.titulo?.fontSize !== undefined) setTituloSize(Number(cfg.titulo.fontSize));
 
-        if (cfg.tituloSize !== undefined) setTituloSize(Number(cfg.tituloSize));
-        else if (cfg.titulo?.fontSize !== undefined) setTituloSize(Number(cfg.titulo.fontSize));
+      if (cfg.artistaX !== undefined) setArtistaX(cfg.artistaX);
+      else if (cfg.artista?.x !== undefined) setArtistaX(cfg.artista.x);
 
-        // Parse Artista
-        if (cfg.artistaX !== undefined) setArtistaX(cfg.artistaX);
-        else if (cfg.artista?.x !== undefined) setArtistaX(cfg.artista.x);
+      if (cfg.artistaY !== undefined) setArtistaY(Number(cfg.artistaY));
+      else if (cfg.artista?.y !== undefined) setArtistaY(Number(cfg.artista.y));
 
-        if (cfg.artistaY !== undefined) setArtistaY(Number(cfg.artistaY));
-        else if (cfg.artista?.y !== undefined) setArtistaY(Number(cfg.artista.y));
+      if (cfg.artistaSize !== undefined) setArtistaSize(Number(cfg.artistaSize));
+      else if (cfg.artista?.fontSize !== undefined) setArtistaSize(Number(cfg.artista.fontSize));
 
-        if (cfg.artistaSize !== undefined) setArtistaSize(Number(cfg.artistaSize));
-        else if (cfg.artista?.fontSize !== undefined) setArtistaSize(Number(cfg.artista.fontSize));
+      const dX = cfg.dedicatoriaX ?? cfg.dedicatoryX ?? cfg.dedicatoria?.x;
+      const dY = cfg.dedicatoriaY ?? cfg.dedicatoryY ?? cfg.dedicatoria?.y;
+      const dSize = cfg.dedicatoriaSize ?? cfg.dedicatorySize ?? cfg.dedicatoria?.fontSize;
+      
+      if (dX !== undefined) setDedicatoriaX(dX);
+      if (dY !== undefined) setDedicatoriaY(Number(dY));
+      if (dSize !== undefined) setDedicatoriaSize(Number(dSize));
 
-        // Parse Dedicatoria
-        if (cfg.dedicatoriaX !== undefined) setDedicatoriaX(cfg.dedicatoriaX);
-        else if (cfg.dedicatoryX !== undefined) setDedicatoriaX(cfg.dedicatoryX);
-        else if (cfg.dedicatoria?.x !== undefined) setDedicatoriaX(cfg.dedicatoria.x);
-
-        if (cfg.dedicatoriaY !== undefined) setDedicatoriaY(Number(cfg.dedicatoriaY));
-        else if (cfg.dedicatoryY !== undefined) setDedicatoriaY(Number(cfg.dedicatoryY));
-        else if (cfg.dedicatoria?.y !== undefined) setDedicatoriaY(Number(cfg.dedicatoria.y));
-
-        if (cfg.dedicatoriaSize !== undefined) setDedicatoriaSize(Number(cfg.dedicatoriaSize));
-        else if (cfg.dedicatorySize !== undefined) setDedicatoriaSize(Number(cfg.dedicatorySize));
-        else if (cfg.dedicatoria?.fontSize !== undefined) setDedicatoriaSize(Number(cfg.dedicatoria.fontSize));
-        
-        // Base structure
-        setBaseConfig({
-          photo: cfg.photo || baseConfig.photo,
-          titulo: cfg.titulo || baseConfig.titulo,
-          artista: cfg.artista || baseConfig.artista,
-          dedicatoria: cfg.dedicatoria || baseConfig.dedicatoria
-        });
-      }
+      setBaseConfig({
+        photo: cfg.photo || baseConfig.photo,
+        titulo: cfg.titulo || baseConfig.titulo,
+        artista: cfg.artista || baseConfig.artista,
+        dedicatoria: cfg.dedicatoria || baseConfig.dedicatoria
+      });
     }
   };
 
