@@ -1,9 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Play, Settings, RefreshCw, Trash2, CheckCircle2, Clock, AlertCircle, Video, Music, Send, ChevronsUpDown, Check, ImagePlus, ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  LogOut,
+  Play,
+  Settings,
+  RefreshCw,
+  Trash2,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  Video,
+  Music,
+  Send,
+  ChevronsUpDown,
+  Check,
+  ImagePlus,
+  ChevronDown,
+  LayoutDashboard,
+  Mic2,
+  Sparkles,
+  Headphones
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VideoEditorPreview } from '../components/VideoEditorPreview';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 type JobStatus = 'pending' | 'pendiente' | 'audio_ready' | 'video_ready' | 'sent' | 'error';
 
@@ -49,12 +74,12 @@ export const DEFAULT_TEMPLATE: TemplateConfig = {
 };
 
 const statusColors: Record<JobStatus, string> = {
-  pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-  pendiente: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-  audio_ready: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  video_ready: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
-  sent: 'bg-green-500/10 text-green-500 border-green-500/20',
-  error: 'bg-red-500/10 text-red-500 border-red-500/20',
+  pending: 'bg-amber-100 text-amber-700 border-amber-200',
+  pendiente: 'bg-amber-100 text-amber-700 border-amber-200',
+  audio_ready: 'bg-blue-100 text-blue-700 border-blue-200',
+  video_ready: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  sent: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  error: 'bg-rose-100 text-rose-700 border-rose-200',
 };
 
 const statusIcons: Record<JobStatus, React.ReactNode> = {
@@ -84,7 +109,7 @@ export default function Dashboard() {
   const [regenerateTitulo, setRegenerateTitulo] = useState('');
   const [regenerateArtista, setRegenerateArtista] = useState('');
   const [regenerateDedicatoria, setRegenerateDedicatoria] = useState('');
-  const [regenerateDedicatoriaSize, setRegenerateDedicatoriaSize] = useState(28); // New stat
+  const [regenerateDedicatoriaSize, setRegenerateDedicatoriaSize] = useState(28); 
   const [regenerateTemplateConfig, setRegenerateTemplateConfig] = useState<TemplateConfig>(DEFAULT_TEMPLATE);
   const [isRegenerating, setIsRegenerating] = useState(false);
   
@@ -112,7 +137,7 @@ export default function Dashboard() {
   const [titulo, setTitulo] = useState('');
   const [artista, setArtista] = useState('');
   const [dedicatoria, setDedicatoria] = useState('');
-  const [dedicatoriaSize, setDedicatoriaSize] = useState(28); // New stat
+  const [dedicatoriaSize, setDedicatoriaSize] = useState(28); 
   const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>({ ...DEFAULT_TEMPLATE, id: '' });
   
   // Custom Templates from DB
@@ -155,7 +180,6 @@ export default function Dashboard() {
         dedicatoriaY: Number(config.dedicatoria.y),
         dedicatoriaSize: Number(dedicatoriaSz),
         ...(mode === 'completa' ? { backgroundUrl: bgUrl, bgUrl: bgUrl } : {}),
-        // Anidados requeridos por el componente visual
         photo: { ...config.photo, x: Number(config.photo.x), y: Number(config.photo.y), w: Number(config.photo.w), h: Number(config.photo.h) },
         titulo: { ...config.titulo, x: Number(config.titulo.x), y: Number(config.titulo.y), fontSize: Number(config.titulo.fontSize) },
         artista: { ...config.artista, x: Number(config.artista.x), y: Number(config.artista.y), fontSize: Number(config.artista.fontSize) },
@@ -172,19 +196,19 @@ export default function Dashboard() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        alert('Plantilla guardada!');
+        toast.success('Plantilla guardada!');
         loadTemplates();
       } else {
-        alert(`Error al guardar plantilla: ${data.statusMessage || data.message || 'Error desconocido'}`);
+        toast.error(`Error al guardar plantilla: ${data.statusMessage || data.message || 'Error desconocido'}`);
       }
     } catch (e: any) {
       console.error(e);
-      alert(`Error al guardar: ${e.message || 'Error de red'}`);
+      toast.error(`Error al guardar: ${e.message || 'Error de red'}`);
     }
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!templateId) return alert("Error: ID inválido");
+    if (!templateId) return toast.error("Error: ID inválido");
     
     try {
       const res = await fetch('/api/templates/delete', {
@@ -212,10 +236,10 @@ export default function Dashboard() {
         setRegenerateCustomBg('');
       }
       
-      alert("Éxito: Plantilla eliminada permanentemente.");
+      toast.success("Éxito: Plantilla eliminada permanentemente.");
     } catch (error: any) {
       console.error("Error UI:", error);
-      alert(`Error al eliminar: ${error.message}`);
+      toast.error(`Error al eliminar: ${error.message}`);
     }
   };
   
@@ -227,7 +251,7 @@ export default function Dashboard() {
 
   // Load Studio State from LocalStorage
   useEffect(() => {
-    const saved = localStorage.getItem('videoFlowStudioState');
+    const saved = localStorage.getItem('curseaDigitalStudioState');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -267,7 +291,7 @@ export default function Dashboard() {
       studioAudioUrl,
       studioVideoUrl,
     };
-    localStorage.setItem('videoFlowStudioState', JSON.stringify(stateToSave));
+    localStorage.setItem('curseaDigitalStudioState', JSON.stringify(stateToSave));
   }, [
     studioStep, studioJobId, prompt, backgroundUrl, customBackground,
     userPhotoUrl, titulo, artista, dedicatoria, dedicatoriaSize, phone, studioAudioUrl, studioVideoUrl
@@ -338,12 +362,13 @@ export default function Dashboard() {
       if (res.ok) {
         setIsRegenerateModalOpen(false);
         fetchJobs();
+        toast.success('Video generado correctamente');
       } else {
-        alert(`Failed to generate video: ${data.statusMessage || data.message || 'Unknown error'}`);
+        toast.error(`Failed to generate video: ${data.statusMessage || data.message || 'Unknown error'}`);
       }
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message || 'Network error occurred'}`);
+      toast.error(`Error: ${err.message || 'Network error occurred'}`);
     } finally {
       setIsRegenerating(false);
     }
@@ -360,13 +385,14 @@ export default function Dashboard() {
       
       if (res.ok) {
         fetchJobs();
+        toast.success('Audio generado correctamente');
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(`Error al generar audio: ${data.statusMessage || data.message || 'Error desconocido'}`);
+        toast.error(`Error al generar audio: ${data.statusMessage || data.message || 'Error desconocido'}`);
       }
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message || 'Error de red'}`);
+      toast.error(`Error: ${err.message || 'Error de red'}`);
     } finally {
       setGeneratingAudioId(null);
     }
@@ -387,9 +413,11 @@ export default function Dashboard() {
         setStudioJobId(data.job.id);
         setStudioAudioUrl(data.job.audioUrl);
         setStudioStep(2);
+        toast.success('Audio generado');
       }
     } catch (err) {
       console.error(err);
+      toast.error('Error al generar audio');
     } finally {
       setIsProcessing(false);
     }
@@ -419,12 +447,13 @@ export default function Dashboard() {
       if (res.ok && data.job) {
         setStudioVideoUrl(data.job.videoUrl);
         setStudioStep(3);
+        toast.success('Video generado');
       } else {
-        alert(`Error generating video: ${data.statusMessage || data.message || 'Unknown error'}`);
+        toast.error(`Error al generar video: ${data.statusMessage || data.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error(err);
-      alert('Error: Network error occurred');
+      toast.error('Error: Network error occurred');
     } finally {
       setIsProcessing(false);
     }
@@ -442,14 +471,14 @@ export default function Dashboard() {
       
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        alert('Sent successfully!');
+        toast.success('Enviado correctamente');
         handleResetStudio();
       } else {
-        alert(`Failed to send WhatsApp: ${data.statusMessage || data.message || 'Unknown error'}`);
+        toast.error(`Error al enviar: ${data.statusMessage || data.message || 'Unknown error'}`);
       }
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message || 'Network error occurred'}`);
+      toast.error(`Error: ${err.message || 'Network error occurred'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -470,13 +499,13 @@ export default function Dashboard() {
         setIsWhatsappModalOpen(false);
         setWhatsappModalPhone('');
         fetchJobs();
-        alert('Sent successfully!');
+        toast.success('Enviado correctamente');
       } else {
-        alert(`Failed to send WhatsApp: ${data.statusMessage || data.message || 'Unknown error'}`);
+        toast.error(`Error al enviar: ${data.statusMessage || data.message || 'Unknown error'}`);
       }
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message || 'Network error occurred'}`);
+      toast.error(`Error: ${err.message || 'Network error occurred'}`);
     } finally {
       setIsSendingWhatsapp(false);
     }
@@ -496,7 +525,7 @@ export default function Dashboard() {
     setStudioAudioUrl(null);
     setStudioVideoUrl(null);
     setStudioTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
-    localStorage.removeItem('videoFlowStudioState');
+    localStorage.removeItem('curseaDigitalStudioState');
   };
 
   const renderTemplateSelector = (
@@ -520,10 +549,11 @@ export default function Dashboard() {
 
     const handleSelect = (t: any) => {
       const parsedConfig = (t as any).config || t;
-      const isCoords = parsedConfig.type === 'coordenadas';
+      const configData = typeof parsedConfig === 'string' ? JSON.parse(parsedConfig) : parsedConfig;
+      const isCoords = configData.type === 'coordenadas';
       
       if (!isCoords) {
-        const bg = parsedConfig.backgroundUrl || parsedConfig.bgUrl || t.bgUrl;
+        const bg = configData.backgroundUrl || configData.bgUrl || t.bgUrl;
         if (bg !== undefined) {
           const trimmedBg = String(bg).trim();
           setBg(trimmedBg);
@@ -531,11 +561,11 @@ export default function Dashboard() {
         }
       }
       
-      if (parsedConfig.photoUrl !== undefined) {
-        setPhotoUrl(String(parsedConfig.photoUrl).trim());
+      if (configData.photoUrl !== undefined) {
+        setPhotoUrl(String(configData.photoUrl).trim());
       }
       
-      const nextConfig = { ...JSON.parse(JSON.stringify(parsedConfig)), id: t.id };
+      const nextConfig = { ...JSON.parse(JSON.stringify(configData)), id: t.id };
       
       if (nextConfig.photoUrl !== undefined) {
         nextConfig.photoUrl = String(nextConfig.photoUrl).trim();
@@ -551,15 +581,15 @@ export default function Dashboard() {
         nextConfig.dedicatoria = { ...DEFAULT_TEMPLATE.dedicatoria };
       }
       
-      if (parsedConfig.dedicatoriaX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoriaX);
-      else if (parsedConfig.dedicatoryX !== undefined) nextConfig.dedicatoria.x = Number(parsedConfig.dedicatoryX);
+      if (configData.dedicatoriaX !== undefined) nextConfig.dedicatoria.x = Number(configData.dedicatoriaX);
+      else if (configData.dedicatoryX !== undefined) nextConfig.dedicatoria.x = Number(configData.dedicatoryX);
 
-      if (parsedConfig.dedicatoriaY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoriaY);
-      else if (parsedConfig.dedicatoryY !== undefined) nextConfig.dedicatoria.y = Number(parsedConfig.dedicatoryY);
+      if (configData.dedicatoriaY !== undefined) nextConfig.dedicatoria.y = Number(configData.dedicatoriaY);
+      else if (configData.dedicatoryY !== undefined) nextConfig.dedicatoria.y = Number(configData.dedicatoryY);
 
       let dedicatoriaSz = nextConfig.dedicatoria.fontSize;
-      if (parsedConfig.dedicatoriaSize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatoriaSize);
-      else if (parsedConfig.dedicatorySize !== undefined) dedicatoriaSz = Number(parsedConfig.dedicatorySize);
+      if (configData.dedicatoriaSize !== undefined) dedicatoriaSz = Number(configData.dedicatoriaSize);
+      else if (configData.dedicatorySize !== undefined) dedicatoriaSz = Number(configData.dedicatorySize);
       
       nextConfig.dedicatoria.fontSize = dedicatoriaSz;
       
@@ -573,38 +603,38 @@ export default function Dashboard() {
     return (
       <div className="flex gap-2 mb-3">
         <DropdownMenu>
-          <DropdownMenuTrigger disabled={isProcessing} className="flex items-center justify-between w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 text-left h-12">
+          <DropdownMenuTrigger disabled={isProcessing} className="flex items-center justify-between w-full px-4 py-3 bg-white border border-neutral-200 rounded-xl text-neutral-900 focus:outline-none focus:ring-1 focus:ring-[#8B1F32] focus:border-[#8B1F32] disabled:opacity-50 text-left h-12 shadow-sm">
             <span className="truncate">
               {currentConfigId
                 ? dbTemplates.find(x => x.id === currentConfigId)?.name || 'Plantilla seleccionada'
                 : "Seleccionar plantilla..."}
             </span>
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-neutral-400" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[320px] bg-[#1F2937] border-gray-700 max-h-64 overflow-y-auto">
+          <DropdownMenuContent className="w-[320px] bg-white border-neutral-200 max-h-64 overflow-y-auto rounded-xl">
             {dbTemplates.length === 0 ? (
-              <div className="p-4 text-sm text-gray-400 text-center">No hay plantillas.</div>
+              <div className="p-4 text-sm text-neutral-500 text-center">No hay plantillas.</div>
             ) : (
               <>
                 {templatesWithBg.length > 0 && (
                   <>
-                    <DropdownMenuLabel className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                      Plantillas de Fondo de reproductor (Fondo + Posiciones)
+                    <DropdownMenuLabel className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider px-3 py-2">
+                      Fondo + Posiciones
                     </DropdownMenuLabel>
                     {templatesWithBg.map(t => (
                       <DropdownMenuItem
                         key={t.id}
                         onClick={() => handleSelect(t)}
-                        className="flex items-center justify-between cursor-pointer py-2 px-3 text-white hover:bg-[#374151] focus:bg-[#374151] focus:text-white"
+                        className="flex items-center justify-between cursor-pointer py-2.5 px-3 text-neutral-800 hover:bg-[#F5EADC]/40 focus:bg-[#F5EADC]/40"
                       >
                         <div className="flex items-center truncate mr-2 w-full">
-                          <Check className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
-                          <span className="truncate text-indigo-300">{t.name}</span>
+                          <Check className={`mr-2 h-4 w-4 shrink-0 text-[#8B1F32] ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
+                          <span className="truncate">{t.name}</span>
                         </div>
                         <button
                           type="button"
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTemplate(t.id); }}
-                          className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
+                          className="p-1.5 hover:bg-rose-100 text-neutral-400 hover:text-rose-600 rounded-md transition-colors shrink-0 z-10"
                           title="Eliminar plantilla"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -615,28 +645,28 @@ export default function Dashboard() {
                 )}
                 
                 {templatesWithBg.length > 0 && templatesWithoutBg.length > 0 && (
-                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuSeparator className="bg-neutral-100" />
                 )}
 
                 {templatesWithoutBg.length > 0 && (
                   <>
-                    <DropdownMenuLabel className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                      Plantillas de posición (Solo Posiciones)
+                    <DropdownMenuLabel className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider px-3 py-2">
+                      Solo Posiciones
                     </DropdownMenuLabel>
                     {templatesWithoutBg.map(t => (
                       <DropdownMenuItem
                         key={t.id}
                         onClick={() => handleSelect(t)}
-                        className="flex items-center justify-between cursor-pointer py-2 px-3 text-white hover:bg-[#374151] focus:bg-[#374151] focus:text-white"
+                        className="flex items-center justify-between cursor-pointer py-2.5 px-3 text-neutral-800 hover:bg-[#F5EADC]/40 focus:bg-[#F5EADC]/40"
                       >
                         <div className="flex items-center truncate mr-2 w-full">
-                          <Check className={`mr-2 h-4 w-4 shrink-0 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
-                          <span className="truncate text-purple-300">{t.name}</span>
+                          <Check className={`mr-2 h-4 w-4 shrink-0 text-[#8B1F32]/70 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
+                          <span className="truncate">{t.name}</span>
                         </div>
                         <button
                           type="button"
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTemplate(t.id); }}
-                          className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-md transition-colors shrink-0 z-10"
+                          className="p-1.5 hover:bg-rose-100 text-neutral-400 hover:text-rose-600 rounded-md transition-colors shrink-0 z-10"
                           title="Eliminar plantilla"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -656,26 +686,26 @@ export default function Dashboard() {
   const renderConfigControls = (config: TemplateConfig, setConfig: any, key: 'titulo'|'artista'|'dedicatoria', extSizeState?: number, setExtSizeState?: any) => (
     <div className="flex gap-2 mt-2">
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500">X:</span>
+        <span className="text-[10px] text-neutral-400 uppercase font-bold">X:</span>
         <input
           type="number"
           value={config[key].x === 'center' ? '' : config[key].x}
           onChange={(e) => setConfig({...config, [key]: {...config[key], x: Number(e.target.value), align: 'left'}})}
-          className="w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-16 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#8B1F32]"
           placeholder="Ctr"
         />
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500">Y:</span>
+        <span className="text-[10px] text-neutral-400 uppercase font-bold">Y:</span>
         <input
           type="number"
           value={config[key].y}
           onChange={(e) => setConfig({...config, [key]: {...config[key], y: Number(e.target.value)}})}
-          className="w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-16 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#8B1F32]"
         />
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500">Size:</span>
+        <span className="text-[10px] text-neutral-400 uppercase font-bold">Size:</span>
         <input
           type="number"
           value={extSizeState !== undefined ? extSizeState : config[key].fontSize}
@@ -684,7 +714,7 @@ export default function Dashboard() {
             setConfig({...config, [key]: {...config[key], fontSize: val}});
             if (setExtSizeState) setExtSizeState(val);
           }}
-          className="w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-16 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#8B1F32]"
         />
       </div>
     </div>
@@ -693,66 +723,89 @@ export default function Dashboard() {
   const renderPhotoControls = (config: TemplateConfig, setConfig: any) => (
     <div className="flex gap-2 mt-2">
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500">X:</span>
+        <span className="text-[10px] text-neutral-400 uppercase font-bold">X:</span>
         <input
           type="number"
           value={config.photo.x}
           onChange={(e) => setConfig({...config, photo: {...config.photo, x: Number(e.target.value)}})}
-          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-14 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#8B1F32]"
         />
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500">Y:</span>
+        <span className="text-[10px] text-neutral-400 uppercase font-bold">Y:</span>
         <input
           type="number"
           value={config.photo.y}
           onChange={(e) => setConfig({...config, photo: {...config.photo, y: Number(e.target.value)}})}
-          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-14 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#8B1F32]"
         />
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500">W:</span>
+        <span className="text-[10px] text-neutral-400 uppercase font-bold">W:</span>
         <input
           type="number"
           value={config.photo.w}
           onChange={(e) => setConfig({...config, photo: {...config.photo, w: Number(e.target.value)}})}
-          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-14 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#8B1F32]"
         />
       </div>
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-500">H:</span>
+        <span className="text-[10px] text-neutral-400 uppercase font-bold">H:</span>
         <input
           type="number"
           value={config.photo.h}
           onChange={(e) => setConfig({...config, photo: {...config.photo, h: Number(e.target.value)}})}
-          className="w-14 md:w-16 px-2 py-1 bg-[#1A2333] border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-14 px-2 py-1 bg-neutral-50 border border-neutral-200 rounded text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-[#8B1F32]"
         />
       </div>
     </div>
   );
 
   return (
-    <div className="bg-[#0B0F19] text-gray-200 p-8">
-      {/* Content */}
+    <div className="min-h-screen bg-[#F5EADC] p-4 sm:p-8 font-sans selection:bg-[#8B1F32]/20 text-neutral-900">
+      
+      {/* Header */}
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-[#8B1F32] mb-1">
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase tracking-widest">Platform Admin</span>
+          </div>
+          <h1 className="text-3xl font-serif font-bold tracking-tight">Cursea Digital</h1>
+          <p className="text-sm text-neutral-600">Gestión y control de producción musical.</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+            className="rounded-xl border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:text-[#8B1F32] transition-all"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Cerrar Sesión
+          </Button>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto">
         {/* Tabs */}
-        <div className="flex space-x-1 bg-[#1F2937] p-1 rounded-xl w-fit mb-8 border border-gray-800">
+        <div className="flex space-x-2 bg-white/50 p-1.5 rounded-2xl w-fit mb-10 border border-[#8B1F32]/10 shadow-sm">
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            className={`px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
               activeTab === 'history' 
-                ? 'bg-indigo-600 text-white shadow-sm' 
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                ? 'bg-[#8B1F32] text-white shadow-lg shadow-[#8B1F32]/20' 
+                : 'text-neutral-500 hover:text-neutral-900 hover:bg-white/60'
             }`}
           >
             History & Control
           </button>
           <button
             onClick={() => setActiveTab('studio')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            className={`px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
               activeTab === 'studio' 
-                ? 'bg-indigo-600 text-white shadow-sm' 
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                ? 'bg-[#8B1F32] text-white shadow-lg shadow-[#8B1F32]/20' 
+                : 'text-neutral-500 hover:text-neutral-900 hover:bg-white/60'
             }`}
           >
             Manual Studio
@@ -761,12 +814,15 @@ export default function Dashboard() {
 
         {/* Content */}
         {activeTab === 'history' && (
-          <div className="bg-[#111827] rounded-2xl border border-gray-800 overflow-hidden shadow-xl">
-            <div className="p-5 border-b border-gray-800 flex justify-between items-center bg-[#171F2E]">
-              <h2 className="text-lg font-semibold text-white">Media Jobs</h2>
+          <div className="bg-white rounded-3xl border border-[#8B1F32]/10 overflow-hidden shadow-xl">
+            <div className="p-6 border-b border-neutral-50 flex justify-between items-center bg-white">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-[#8B1F32]" />
+                <h2 className="text-lg font-bold">Media Jobs Historial</h2>
+              </div>
               <button 
                 onClick={fetchJobs}
-                className="p-2 text-gray-400 hover:text-indigo-400 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2.5 text-neutral-400 hover:text-[#8B1F32] bg-neutral-50 hover:bg-[#F5EADC]/40 rounded-xl transition-all shadow-sm"
                 title="Refresh"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -775,69 +831,69 @@ export default function Dashboard() {
             
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-[#171F2E] text-gray-400 border-b border-gray-800">
+                <thead className="bg-neutral-50 text-neutral-400 border-b border-neutral-100">
                   <tr>
-                    <th className="px-6 py-4 font-medium">Date</th>
-                    <th className="px-6 py-4 font-medium">Source</th>
-                    <th className="px-6 py-4 font-medium">Prompt / Info</th>
-                    <th className="px-6 py-4 font-medium">Status</th>
-                    <th className="px-6 py-4 font-medium">Media</th>
-                    <th className="px-6 py-4 font-medium text-right">Actions</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Date</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Source</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Prompt / Info</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Media</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800/50">
+                <tbody className="divide-y divide-neutral-50">
                   {jobs.length === 0 && !loading && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                        No jobs found.
+                      <td colSpan={6} className="px-6 py-16 text-center text-neutral-400 italic">
+                        No se encontraron registros.
                       </td>
                     </tr>
                   )}
                   {jobs.map((job) => (
-                    <tr key={job.id} className="hover:bg-[#1A2333] transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-400">
+                    <tr key={job.id} className="hover:bg-[#F5EADC]/10 transition-colors group">
+                      <td className="px-6 py-5 whitespace-nowrap text-neutral-500 text-xs">
                         {new Date(job.createdAt).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${
-                          job.source === 'n8n' ? 'bg-purple-500/10 text-purple-400' : 'bg-blue-500/10 text-blue-400'
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-tighter ${
+                          job.source === 'landing' ? 'bg-[#8B1F32]/10 text-[#8B1F32]' : 'bg-blue-100 text-blue-700'
                         }`}>
-                          {job.source.toUpperCase()}
+                          {job.source === 'landing' ? 'LANDING' : 'STUDIO'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 max-w-xs truncate text-gray-300" title={job.prompt}>
+                      <td className="px-6 py-5 max-w-xs truncate text-neutral-800 font-medium" title={job.prompt}>
                         {job.prompt}
-                        {job.recipient && <div className="text-xs text-gray-500 mt-1">To: {job.recipient}</div>}
+                        {job.recipient && <div className="text-[10px] text-neutral-400 mt-1.5 flex items-center gap-1.5 font-bold uppercase"><Send className="w-3 h-3" /> To: {job.recipient}</div>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[job.status]}`}>
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusColors[job.status]}`}>
                           {statusIcons[job.status]}
-                          {job.status.replace('_', ' ').toUpperCase()}
+                          {job.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <div className="flex flex-col gap-2 min-w-[200px]">
                           {job.audioUrl && (
-                            <div className="flex items-center text-xs">
-                              <span className="w-12 text-gray-500">Audio:</span>
-                              <audio controls className="h-8 max-w-[150px] opacity-80" src={job.audioUrl}></audio>
+                            <div className="flex items-center gap-2 p-1.5 bg-neutral-50 rounded-xl border border-neutral-100">
+                              <Music className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                              <audio controls className="h-7 w-full opacity-80" src={job.audioUrl}></audio>
                             </div>
                           )}
                           {job.videoUrl && (
-                            <div className="flex items-center text-xs">
-                              <span className="w-12 text-gray-500">Video:</span>
-                              <video controls className="h-12 w-20 bg-black rounded" src={job.videoUrl}></video>
+                            <div className="flex items-center gap-2 p-1.5 bg-neutral-50 rounded-xl border border-neutral-100">
+                              <Video className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                              <video className="h-10 w-16 bg-black rounded-lg object-cover" src={job.videoUrl}></video>
+                              <button onClick={() => window.open(job.videoUrl || '', '_blank')} className="text-[10px] text-[#8B1F32] font-bold uppercase hover:underline">Ver Video</button>
                             </div>
                           )}
-                          {!job.audioUrl && !job.videoUrl && <span className="text-gray-600 italic">None</span>}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                      <td className="px-6 py-5 whitespace-nowrap text-right space-x-2">
                         {job.prompt && !job.audioUrl && (
                           <button
                             onClick={() => handleGenerateAudioFromHistory(job)}
                             disabled={generatingAudioId === job.id}
-                            className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors inline-block disabled:opacity-50"
+                            className="p-2.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all shadow-sm disabled:opacity-50 border border-transparent hover:border-blue-100"
                             title="Generate Audio"
                           >
                             {generatingAudioId === job.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
@@ -847,8 +903,6 @@ export default function Dashboard() {
                           <button
                             onClick={() => {
                               setRegenerateJobId(job.id);
-                              
-                              // Pre-fill fields from DB
                               const bg = job.backgroundUrl || '';
                               setRegenerateBgUrl(bg);
                               setRegenerateCustomBg(bg);
@@ -861,18 +915,13 @@ export default function Dashboard() {
                               if (job.config) {
                                 try {
                                   parsedConfig = typeof job.config === 'string' ? JSON.parse(job.config) : job.config;
-                                  if (typeof parsedConfig === 'string') {
-                                    parsedConfig = JSON.parse(parsedConfig);
-                                  }
-                                } catch(e) {
-                                  console.error("Error parsing config", e);
-                                }
+                                  if (typeof parsedConfig === 'string') parsedConfig = JSON.parse(parsedConfig);
+                                } catch(e) { console.error(e); }
                               }
 
                               if (parsedConfig) {
                                 const dedSize = parsedConfig.dedicatoriaSize ?? parsedConfig.dedicatorySize ?? parsedConfig.dedicatoria?.fontSize ?? 28;
                                 setRegenerateDedicatoriaSize(Number(dedSize));
-                                
                                 const newConfig: TemplateConfig = {
                                   ...DEFAULT_TEMPLATE,
                                   id: parsedConfig.id || '',
@@ -908,11 +957,10 @@ export default function Dashboard() {
                                 setRegenerateTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
                                 setRegenerateDedicatoriaSize(28);
                               }
-
                               setIsRegenerateModalOpen(true);
                             }}
-                            className="p-2 text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors inline-block"
-                            title="Generate or Regenerate Video"
+                            className="p-2.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-indigo-100"
+                            title="Generate Video"
                           >
                             <Video className="w-4 h-4" />
                           </button>
@@ -924,7 +972,7 @@ export default function Dashboard() {
                               setWhatsappModalPhone(job.whatsappNumber || job.recipient || '');
                               setIsWhatsappModalOpen(true);
                             }}
-                            className="p-2 text-gray-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors inline-block"
+                            className="p-2.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-emerald-100"
                             title="Send via WhatsApp"
                           >
                             <Send className="w-4 h-4" />
@@ -932,8 +980,8 @@ export default function Dashboard() {
                         )}
                         <button
                           onClick={() => handleDelete(job.id)}
-                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors inline-block"
-                          title="Delete physically and from DB"
+                          className="p-2.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-rose-100"
+                          title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -947,72 +995,78 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'studio' && (
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-[#111827] rounded-2xl border border-gray-800 p-8 shadow-xl">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">Manual Studio</h2>
+          <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* Steps Column */}
+            <div className="bg-white rounded-3xl border border-[#8B1F32]/10 p-8 shadow-xl space-y-10">
+              <div className="flex justify-between items-center pb-6 border-b border-neutral-50">
+                <div>
+                  <h2 className="text-xl font-bold">Manual Studio</h2>
+                  <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider mt-1">Producción Paso a Paso</p>
+                </div>
                 {studioJobId && (
-                  <button 
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
                     onClick={handleResetStudio}
-                    className="text-sm text-gray-400 hover:text-red-400 transition-colors"
+                    className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-[#8B1F32]"
                   >
-                    Clear and start new job
-                  </button>
+                    Reset & New Job
+                  </Button>
                 )}
               </div>
               
               {/* Step 1 */}
-              <div className={`relative pl-8 pb-8 ${studioStep === 1 ? 'opacity-100' : 'opacity-60'}`}>
-                <div className={`absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  studioStep >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400'
-                }`}>
-                  1
+              <div className={`space-y-4 relative ${studioStep === 1 ? 'opacity-100 scale-100' : 'opacity-40 scale-[0.98] pointer-events-none'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
+                    studioStep >= 1 ? 'bg-[#8B1F32] text-white shadow-lg shadow-[#8B1F32]/20' : 'bg-neutral-100 text-neutral-400'
+                  }`}>
+                    1
+                  </div>
+                  <h3 className="text-md font-bold text-neutral-800">Generación de Audio</h3>
                 </div>
-                {studioStep > 1 && <div className="absolute left-3 top-6 bottom-0 w-px bg-indigo-600/50"></div>}
                 
-                <h3 className="text-lg font-medium text-white mb-4">Generate Audio (Lyria)</h3>
-                <div className="space-y-4">
-                  <textarea
+                <div className="space-y-4 pl-11">
+                  <Textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     disabled={studioStep !== 1 || isProcessing}
-                    placeholder="Enter prompt for audio generation..."
-                    className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px] resize-none disabled:opacity-50"
+                    placeholder="Describe el estilo y letra para generar la canción..."
+                    className="w-full rounded-2xl border-neutral-200 focus:ring-[#8B1F32] min-h-[120px] text-sm resize-none"
                   />
                   {studioStep === 1 && (
-                    <button
+                    <Button
                       onClick={handleGenerateAudio}
                       disabled={!prompt || isProcessing}
-                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
+                      className="w-full h-12 bg-[#8B1F32] hover:bg-[#731929] text-white rounded-xl shadow-lg shadow-[#8B1F32]/20 transition-all font-bold text-sm"
                     >
-                      {isProcessing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Music className="w-4 h-4 mr-2" />}
-                      Generate Audio
-                    </button>
+                      {isProcessing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Mic2 className="w-4 h-4 mr-2" />}
+                      Generar Audio
+                    </Button>
                   )}
                   {studioAudioUrl && (
-                    <div className="mt-4 p-4 bg-[#171F2E] rounded-xl border border-gray-800">
-                      <p className="text-sm text-gray-400 mb-2">Generated Audio:</p>
-                      <audio controls className="w-full h-10" src={studioAudioUrl}></audio>
+                    <div className="mt-4 p-4 bg-[#F5EADC]/20 rounded-2xl border border-[#8B1F32]/10">
+                      <p className="text-[10px] font-bold uppercase text-[#8B1F32] tracking-widest mb-3">Audio Pre-Producido:</p>
+                      <audio controls className="w-full h-8 opacity-90" src={studioAudioUrl}></audio>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Step 2 */}
-              <div className={`relative pl-8 pb-8 ${studioStep === 2 ? 'opacity-100' : 'opacity-60'}`}>
-                <div className={`absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  studioStep >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400'
-                }`}>
-                  2
+              <div className={`space-y-6 relative ${studioStep === 2 ? 'opacity-100 scale-100' : 'opacity-40 scale-[0.98] pointer-events-none'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
+                    studioStep >= 2 ? 'bg-[#8B1F32] text-white shadow-lg shadow-[#8B1F32]/20' : 'bg-neutral-100 text-neutral-400'
+                  }`}>
+                    2
+                  </div>
+                  <h3 className="text-md font-bold text-neutral-800">Renderizado de Video</h3>
                 </div>
-                {studioStep > 2 && <div className="absolute left-3 top-6 bottom-0 w-px bg-indigo-600/50"></div>}
                 
-                <h3 className="text-lg font-medium text-white mb-4">Generate Video (9:16 Player)</h3>
-                <div className="space-y-5">
-                  
-                  {/* Selector de Fondo */}
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Plantilla (Selecciona un diseño o posiciones)</label>
+                <div className="space-y-5 pl-11">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Plantilla Visual</Label>
                     {renderTemplateSelector(
                       studioTemplateConfig.id,
                       setStudioTemplateConfig,
@@ -1024,10 +1078,9 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* URL de Fondo Manual */}
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Link de fondo de reproductor (URL)</label>
-                    <input
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">URL Fondo Reproductor</Label>
+                    <Input
                       type="url"
                       value={backgroundUrl === 'custom' ? customBackground : backgroundUrl}
                       onChange={(e) => {
@@ -1035,265 +1088,266 @@ export default function Dashboard() {
                         setCustomBackground(e.target.value);
                       }}
                       disabled={studioStep !== 2 || isProcessing}
-                      placeholder="https://ejemplo.com/fondo.jpg"
-                      className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                      placeholder="https://..."
+                      className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] text-xs h-10"
                     />
                   </div>
 
-                  {/* URL de Foto de Usuario */}
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Foto de Portada (URL)</label>
-                    <input
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Portada Imagen</Label>
+                    <Input
                       type="url"
                       value={userPhotoUrl}
                       onChange={(e) => setUserPhotoUrl(e.target.value)}
                       disabled={studioStep !== 2 || isProcessing}
-                      placeholder="https://ejemplo.com/foto.jpg"
-                      className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                      placeholder="https://..."
+                      className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] text-xs h-10"
                     />
                     {renderPhotoControls(studioTemplateConfig, setStudioTemplateConfig)}
                   </div>
 
-                  {/* Datos de la canción */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1">Título de la Canción</label>
-                      <input
-                        type="text"
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Título</Label>
+                      <Input
                         value={titulo}
                         onChange={(e) => setTitulo(e.target.value)}
                         disabled={studioStep !== 2 || isProcessing}
-                        placeholder="Nombre de la canción"
-                        className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                        placeholder="Canción..."
+                        className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] text-xs h-10"
                       />
                       {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'titulo')}
                     </div>
-                    <div>
-                      <label className="block text-sm text-gray-400 mb-1">Artista</label>
-                      <input
-                        type="text"
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Artista</Label>
+                      <Input
                         value={artista}
                         onChange={(e) => setArtista(e.target.value)}
                         disabled={studioStep !== 2 || isProcessing}
-                        placeholder="Nombre del artista"
-                        className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                        placeholder="Nombre..."
+                        className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] text-xs h-10"
                       />
                       {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'artista')}
                     </div>
                   </div>
 
-                  {/* Dedicatoria */}
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Dedicatoria (opcional)</label>
-                    <textarea
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Dedicatoria Final</Label>
+                    <Textarea
                       value={dedicatoria}
                       onChange={(e) => setDedicatoria(e.target.value)}
                       disabled={studioStep !== 2 || isProcessing}
-                      placeholder="Escribe un mensaje corto..."
+                      placeholder="Mensaje corto..."
                       rows={2}
-                      className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
+                      className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] text-xs resize-none"
                     />
                     {renderConfigControls(studioTemplateConfig, setStudioTemplateConfig, 'dedicatoria', dedicatoriaSize, setDedicatoriaSize)}
                   </div>
 
-                  {/* Live Preview */}
-                  <div className="mt-6 flex flex-col items-center">
-                    <p className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">Live Preview Editor</p>
-                    <div className="w-[280px] h-[497.77px]">
-                      <VideoEditorPreview
-                        config={studioTemplateConfig}
-                        onUpdateConfig={setStudioTemplateConfig}
-                        backgroundUrl={backgroundUrl}
-                        customBackground={customBackground}
-                        userPhotoUrl={userPhotoUrl}
-                        titulo={titulo}
-                        artista={artista}
-                        dedicatoria={dedicatoria}
-                        dedicatoriaSize={dedicatoriaSize}
-                        scale={0.259259}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Live Preview Save Button */}
                   {studioStep === 2 && (
-                    <div className="flex flex-col items-center gap-2 mt-4 bg-gray-800/30 p-3 rounded-lg border border-gray-700/50">
-                      <span className="text-xs text-gray-400 font-medium">Guardar Diseño Actual:</span>
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'completa')}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 underline"
-                        >
-                          Fondo + Posiciones
-                        </button>
-                        <span className="text-gray-600">|</span>
-                        <button
-                          onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'coordenadas')}
-                          className="text-xs text-purple-400 hover:text-purple-300 underline"
-                        >
-                          Solo Posiciones
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {studioStep === 2 && (
-                    <button
+                    <Button
                       onClick={handleGenerateVideo}
                       disabled={(!userPhotoUrl || !titulo || !artista || (backgroundUrl === 'custom' && !customBackground)) || isProcessing}
-                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
+                      className="w-full h-12 bg-[#8B1F32] hover:bg-[#731929] text-white rounded-xl shadow-lg shadow-[#8B1F32]/20 transition-all font-bold text-sm"
                     >
                       {isProcessing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
-                      Generate Video
-                    </button>
-                  )}
-                  {studioVideoUrl && (
-                    <div className="mt-4 p-4 bg-[#171F2E] rounded-xl border border-gray-800 flex justify-center">
-                      <div className="w-full max-w-[280px]">
-                        <p className="text-sm text-gray-400 mb-2">Generated Video:</p>
-                        <video controls className="w-full bg-black rounded-lg aspect-[9/16]" src={studioVideoUrl}></video>
-                      </div>
-                    </div>
+                      Generar Video
+                    </Button>
                   )}
                 </div>
               </div>
 
               {/* Step 3 */}
-              <div className={`relative pl-8 ${studioStep === 3 ? 'opacity-100' : 'opacity-50'}`}>
-                <div className={`absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  studioStep === 3 ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400'
-                }`}>
-                  3
+              <div className={`space-y-4 relative ${studioStep === 3 ? 'opacity-100 scale-100' : 'opacity-40 scale-[0.98] pointer-events-none'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
+                    studioStep === 3 ? 'bg-[#8B1F32] text-white shadow-lg shadow-[#8B1F32]/20' : 'bg-neutral-100 text-neutral-400'
+                  }`}>
+                    3
+                  </div>
+                  <h3 className="text-md font-bold text-neutral-800">Envío WhatsApp</h3>
                 </div>
                 
-                <h3 className="text-lg font-medium text-white mb-4">Send via WhatsApp (YCloud)</h3>
-                <div className="space-y-4">
-                  <input
+                <div className="space-y-4 pl-11">
+                  <Input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={studioStep !== 3 || isProcessing}
-                    placeholder="Enter phone number (e.g. +1234567890)"
-                    className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    placeholder="+34600000000"
+                    className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] text-sm h-12 font-mono"
                   />
                   {studioStep === 3 && (
-                    <button
+                    <Button
                       onClick={handleSendWhatsapp}
                       disabled={!phone || isProcessing}
-                      className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
+                      className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-500/20 transition-all font-bold text-sm"
                     >
-                      {isProcessing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                      Send via WhatsApp
-                    </button>
+                      {isProcessing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                      Enviar Producto Final
+                    </Button>
                   )}
                 </div>
               </div>
+            </div>
 
+            {/* Preview Column */}
+            <div className="space-y-8 flex flex-col items-center">
+              <div className="w-full max-w-[320px] bg-white p-3 rounded-[40px] shadow-2xl border border-neutral-100 relative group">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-50 mb-3">
+                  <div className="flex items-center gap-2">
+                    <Headphones className="w-4 h-4 text-[#8B1F32]" />
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-400">Preview Studio</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-500">Live</span>
+                  </div>
+                </div>
+
+                <div className="rounded-[32px] overflow-hidden bg-neutral-950 aspect-[9/16] shadow-inner relative">
+                  <VideoEditorPreview
+                    config={studioTemplateConfig}
+                    onUpdateConfig={setStudioTemplateConfig}
+                    backgroundUrl={backgroundUrl}
+                    customBackground={customBackground}
+                    userPhotoUrl={userPhotoUrl}
+                    titulo={titulo}
+                    artista={artista}
+                    dedicatoria={dedicatoria}
+                    dedicatoriaSize={dedicatoriaSize}
+                    scale={0.296}
+                  />
+                  <div className="absolute inset-0 pointer-events-none border-[12px] border-white/5 rounded-[32px]" />
+                </div>
+              </div>
+
+              {/* Template Save Actions */}
+              {studioStep === 2 && (
+                <div className="bg-white/60 p-5 rounded-3xl border border-[#8B1F32]/10 shadow-sm w-full max-w-[320px] text-center space-y-3">
+                  <span className="text-[10px] font-bold uppercase text-neutral-400 tracking-[0.2em] block">Guardar Configuración</span>
+                  <div className="flex items-center justify-center gap-4">
+                    <button
+                      onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'completa')}
+                      className="text-xs font-bold text-[#8B1F32] hover:underline"
+                    >
+                      Diseño Completo
+                    </button>
+                    <span className="w-1 h-1 rounded-full bg-neutral-300" />
+                    <button
+                      onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'coordenadas')}
+                      className="text-xs font-bold text-neutral-600 hover:text-neutral-900 hover:underline"
+                    >
+                      Solo Coords
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* Regenerate Video Modal */}
         <Dialog open={isRegenerateModalOpen} onOpenChange={setIsRegenerateModalOpen}>
-          <DialogContent className="bg-[#111827] border-gray-800 text-white max-w-3xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Generate/Regenerate Video</DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col md:flex-row gap-8 py-4">
-              
-              {/* Form Col */}
-              <div className="flex-1 space-y-4">
-                <p className="text-sm text-gray-400">Provide the 9:16 player metadata to combine with the existing audio track.</p>
-                
-                {/* Selector de Fondo */}
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Plantilla (Selecciona un diseño o posiciones)</label>
-                  {renderTemplateSelector(
-                    regenerateTemplateConfig.id,
-                    setRegenerateTemplateConfig,
-                    setRegenerateBgUrl,
-                    setRegenerateCustomBg,
-                    setRegenerateUserPhotoUrl,
-                    isRegenerating,
-                    setRegenerateDedicatoriaSize
-                  )}
-                </div>
+          <DialogContent className="bg-[#F5EADC] border-none text-neutral-900 max-w-4xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl p-0">
+            <div className="flex flex-col md:flex-row h-full">
+              {/* Form Side */}
+              <div className="flex-1 p-8 space-y-6">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-serif font-bold text-neutral-900 flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-[#8B1F32]" />
+                    Renderizado Especial
+                  </DialogTitle>
+                </DialogHeader>
 
-                {/* URL de Fondo Manual */}
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Link de fondo de reproductor (URL)</label>
-                  <input
-                    type="url"
-                    value={regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl}
-                    onChange={(e) => {
-                      setRegenerateBgUrl('custom');
-                      setRegenerateCustomBg(e.target.value);
-                    }}
-                    disabled={isRegenerating}
-                    placeholder="https://ejemplo.com/fondo.jpg"
-                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  />
-                </div>
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Plantilla Base</Label>
+                    {renderTemplateSelector(
+                      regenerateTemplateConfig.id,
+                      setRegenerateTemplateConfig,
+                      setRegenerateBgUrl,
+                      setRegenerateCustomBg,
+                      setRegenerateUserPhotoUrl,
+                      isRegenerating,
+                      setRegenerateDedicatoriaSize
+                    )}
+                  </div>
 
-                {/* URL de Foto de Usuario */}
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Foto de Portada (URL)</label>
-                  <input
-                    type="url"
-                    value={regenerateUserPhotoUrl}
-                    onChange={(e) => setRegenerateUserPhotoUrl(e.target.value)}
-                    disabled={isRegenerating}
-                    placeholder="https://ejemplo.com/foto.jpg"
-                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Fondo (URL)</Label>
+                      <Input
+                        value={regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl}
+                        onChange={(e) => { setRegenerateBgUrl('custom'); setRegenerateCustomBg(e.target.value); }}
+                        placeholder="https://..."
+                        className="rounded-xl border-neutral-200 text-xs h-10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Portada (URL)</Label>
+                      <Input
+                        value={regenerateUserPhotoUrl}
+                        onChange={(e) => setRegenerateUserPhotoUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="rounded-xl border-neutral-200 text-xs h-10"
+                      />
+                    </div>
+                  </div>
                   {renderPhotoControls(regenerateTemplateConfig, setRegenerateTemplateConfig)}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Título</Label>
+                      <Input
+                        value={regenerateTitulo}
+                        onChange={(e) => setRegenerateTitulo(e.target.value)}
+                        placeholder="Nombre..."
+                        className="rounded-xl border-neutral-200 text-xs h-10"
+                      />
+                      {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'titulo')}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Artista</Label>
+                      <Input
+                        value={regenerateArtista}
+                        onChange={(e) => setRegenerateArtista(e.target.value)}
+                        placeholder="Artista..."
+                        className="rounded-xl border-neutral-200 text-xs h-10"
+                      />
+                      {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'artista')}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Dedicatoria</Label>
+                    <Textarea
+                      value={regenerateDedicatoria}
+                      onChange={(e) => setRegenerateDedicatoria(e.target.value)}
+                      placeholder="Mensaje..."
+                      rows={2}
+                      className="rounded-xl border-neutral-200 text-xs resize-none"
+                    />
+                    {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'dedicatoria', regenerateDedicatoriaSize, setRegenerateDedicatoriaSize)}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Título</label>
-                    <input
-                      type="text"
-                      value={regenerateTitulo}
-                      onChange={(e) => setRegenerateTitulo(e.target.value)}
-                      disabled={isRegenerating}
-                      placeholder="Nombre de la canción"
-                      className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                    />
-                    {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'titulo')}
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Artista</label>
-                    <input
-                      type="text"
-                      value={regenerateArtista}
-                      onChange={(e) => setRegenerateArtista(e.target.value)}
-                      disabled={isRegenerating}
-                      placeholder="Nombre del artista"
-                      className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                    />
-                    {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'artista')}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Dedicatoria (opcional)</label>
-                  <textarea
-                    value={regenerateDedicatoria}
-                    onChange={(e) => setRegenerateDedicatoria(e.target.value)}
+                <DialogFooter className="pt-6 border-t border-neutral-100 sm:justify-between">
+                  <Button variant="ghost" onClick={() => setIsRegenerateModalOpen(false)} className="rounded-xl text-neutral-500 font-bold uppercase text-[10px] tracking-widest">Cancelar</Button>
+                  <Button 
+                    onClick={handleRegenerateVideo} 
                     disabled={isRegenerating}
-                    placeholder="Escribe un mensaje corto..."
-                    rows={2}
-                    className="w-full px-3 py-2 text-sm bg-[#1F2937] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none disabled:opacity-50"
-                  />
-                  {renderConfigControls(regenerateTemplateConfig, setRegenerateTemplateConfig, 'dedicatoria', regenerateDedicatoriaSize, setRegenerateDedicatoriaSize)}
-                </div>
+                    className="rounded-xl bg-[#8B1F32] hover:bg-[#731929] text-white px-8 font-bold text-sm shadow-lg shadow-[#8B1F32]/20"
+                  >
+                    {isRegenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
+                    Comenzar Render
+                  </Button>
+                </DialogFooter>
               </div>
 
-              {/* Live Preview Col */}
-              <div className="shrink-0 flex flex-col items-center justify-center">
-                <p className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wider">Live Preview Editor</p>
-                <div className="w-[220px] h-[391.11px]">
+              {/* Preview Side */}
+              <div className="bg-white p-8 flex flex-col items-center justify-center border-l border-neutral-50 w-full md:w-[320px]">
+                <div className="w-[200px] h-[355px] rounded-[32px] overflow-hidden bg-neutral-950 shadow-2xl relative">
                   <VideoEditorPreview
                     config={regenerateTemplateConfig}
                     onUpdateConfig={setRegenerateTemplateConfig}
@@ -1304,161 +1358,52 @@ export default function Dashboard() {
                     artista={regenerateArtista}
                     dedicatoria={regenerateDedicatoria}
                     dedicatoriaSize={regenerateDedicatoriaSize}
-                    scale={0.2037}
+                    scale={0.185}
                   />
                 </div>
-                <div className="flex flex-col items-center gap-2 mt-4 bg-gray-800/30 p-3 rounded-lg border border-gray-700/50">
-                  <span className="text-xs text-gray-400 font-medium">Guardar Diseño Actual:</span>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'completa')}
-                      className="text-xs text-indigo-400 hover:text-indigo-300 underline"
-                    >
-                      Fondo + Posiciones
-                    </button>
-                    <span className="text-gray-600">|</span>
-                    <button
-                      onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'coordenadas')}
-                      className="text-xs text-purple-400 hover:text-purple-300 underline"
-                    >
-                      Solo Posiciones
-                    </button>
+                <div className="mt-8 text-center space-y-4">
+                  <span className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Guardar Plantilla</span>
+                  <div className="flex gap-4">
+                    <button onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'completa')} className="text-[10px] font-bold text-[#8B1F32] hover:underline uppercase">Completa</button>
+                    <button onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'coordenadas')} className="text-[10px] font-bold text-neutral-400 hover:text-neutral-900 hover:underline uppercase">Solo Coords</button>
                   </div>
                 </div>
               </div>
             </div>
-            
-            <DialogFooter>
-              <button
-                onClick={() => setIsRegenerateModalOpen(false)}
-                disabled={isRegenerating}
-                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRegenerateVideo}
-                disabled={(!regenerateUserPhotoUrl || !regenerateTitulo || !regenerateArtista || (regenerateBgUrl === 'custom' && !regenerateCustomBg)) || isRegenerating}
-                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
-              >
-                {isRegenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Video className="w-4 h-4 mr-2" />}
-                Generate
-              </button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* Send WhatsApp Modal */}
         <Dialog open={isWhatsappModalOpen} onOpenChange={setIsWhatsappModalOpen}>
-          <DialogContent className="bg-[#111827] border-gray-800 text-white">
-            <DialogHeader>
-              <DialogTitle>Send via WhatsApp</DialogTitle>
+          <DialogContent className="bg-white border-none rounded-[32px] shadow-2xl p-8 max-w-sm text-neutral-900">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Send className="w-5 h-5 text-emerald-500" />
+                Enviar Producto
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <p className="text-sm text-gray-400">Enter the recipient's phone number including the country code.</p>
-              <input
-                type="tel"
-                value={whatsappModalPhone}
-                onChange={(e) => setWhatsappModalPhone(e.target.value)}
-                disabled={isSendingWhatsapp}
-                placeholder="e.g. +1234567890"
-                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-              />
-            </div>
-            <DialogFooter>
-              <button
-                onClick={() => setIsWhatsappModalOpen(false)}
-                disabled={isSendingWhatsapp}
-                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">WhatsApp del Cliente</Label>
+                <Input
+                  type="tel"
+                  value={whatsappModalPhone}
+                  onChange={(e) => setWhatsappModalPhone(e.target.value)}
+                  disabled={isSendingWhatsapp}
+                  placeholder="+34..."
+                  className="rounded-xl border-neutral-200 h-12 font-mono text-center"
+                />
+              </div>
+              <Button
                 onClick={handleSendWhatsappFromModal}
                 disabled={!whatsappModalPhone || isSendingWhatsapp}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-500/20 font-bold transition-all"
               >
                 {isSendingWhatsapp ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                Send
-              </button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        {/* Add Studio Custom Bg Modal */}
-        <Dialog open={isStudioAddBgModalOpen} onOpenChange={setIsStudioAddBgModalOpen}>
-          <DialogContent className="bg-[#111827] border-gray-800 text-white">
-            <DialogHeader>
-              <DialogTitle>Añadir Fondo de Reproductor</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <label className="block text-sm text-gray-400 mb-2">URL del fondo</label>
-              <input
-                type="url"
-                value={studioNewBgUrl}
-                onChange={(e) => setStudioNewBgUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+                Confirmar Envío
+              </Button>
+              <Button variant="ghost" className="w-full text-neutral-400 font-bold uppercase text-[10px]" onClick={() => setIsWhatsappModalOpen(false)}>Cancelar</Button>
             </div>
-            <DialogFooter>
-              <button
-                onClick={() => setIsStudioAddBgModalOpen(false)}
-                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  setBackgroundUrl('custom');
-                  setCustomBackground(studioNewBgUrl);
-                  setIsStudioAddBgModalOpen(false);
-                  setStudioNewBgUrl('');
-                }}
-                disabled={!studioNewBgUrl}
-                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-              >
-                Confirmar
-              </button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Add Regen Custom Bg Modal */}
-        <Dialog open={isRegenAddBgModalOpen} onOpenChange={setIsRegenAddBgModalOpen}>
-          <DialogContent className="bg-[#111827] border-gray-800 text-white">
-            <DialogHeader>
-              <DialogTitle>Añadir Fondo de Reproductor</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <label className="block text-sm text-gray-400 mb-2">URL del fondo</label>
-              <input
-                type="url"
-                value={regenNewBgUrl}
-                onChange={(e) => setRegenNewBgUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full px-4 py-3 bg-[#1F2937] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <DialogFooter>
-              <button
-                onClick={() => setIsRegenAddBgModalOpen(false)}
-                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  setRegenerateBgUrl('custom');
-                  setRegenerateCustomBg(regenNewBgUrl);
-                  setIsRegenAddBgModalOpen(false);
-                  setRegenNewBgUrl('');
-                }}
-                disabled={!regenNewBgUrl}
-                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-              >
-                Confirmar
-              </button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 

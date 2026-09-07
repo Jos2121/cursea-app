@@ -730,7 +730,7 @@ export default function Landing() {
       {/* FOOTER BRanding */}
       <footer className="py-12 border-t border-[#8B1F32]/10 bg-white/50 text-center">
         <p className="text-neutral-400 text-xs font-semibold uppercase tracking-[0.3em]">
-          VideoFlow • Canciones con Alma
+          Cursea Digital • Canciones con Alma
         </p>
       </footer>
     </div>

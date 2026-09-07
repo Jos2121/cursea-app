@@ -80,7 +80,7 @@ async function processJob(job: any) {
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
           "HTTP-Referer": referer,
-          "X-Title": "VideoFlow"
+          "X-Title": "Cursea Digital"
         },
         body: JSON.stringify({
           model: model,
