@@ -15,8 +15,10 @@ import {
   MessageSquareText, 
   Send,
   Headphones,
-  PlayCircle
+  PlayCircle,
+  Eye
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +39,7 @@ const DEFAULT_CONFIG: TemplateConfig = {
 };
 
 export default function Landing() {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [templates, setTemplates] = useState<{id: string, name: string, backgroundUrl: string, config: TemplateConfig}[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [baseConfig, setBaseConfig] = useState<TemplateConfig>(DEFAULT_CONFIG);
@@ -110,16 +113,26 @@ export default function Landing() {
   // Resize observer to maintain preview scale
   useEffect(() => {
     const updateScale = () => {
-      if (previewContainerRef.current) {
-        const containerWidth = previewContainerRef.current.clientWidth;
-        const newScale = containerWidth / 1080;
-        setPreviewScale(newScale);
+      // If we are on mobile and the drawer is open, we can try to guess a good scale
+      // but the best is to just use a standard calculation based on the available width
+      const viewportWidth = window.innerWidth;
+      let targetWidth = 360; // default for desktop sticky
+
+      if (viewportWidth < 1024) {
+        // On mobile, the drawer is 90% width max 400px, and we have padding
+        targetWidth = Math.min(viewportWidth * 0.9, 400) - 48; // -padding
+      } else if (previewContainerRef.current) {
+        const clientW = previewContainerRef.current.clientWidth;
+        if (clientW > 0) targetWidth = clientW;
       }
+      
+      const newScale = targetWidth / 1080;
+      setPreviewScale(newScale);
     };
     updateScale();
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
-  }, []);
+  }, [isPreviewOpen]); // Re-run when drawer opens/closes to ensure correct scale
 
   useEffect(() => {
     fetch('/api/templates')
@@ -660,8 +673,8 @@ export default function Landing() {
             </div>
           </form>
 
-          {/* PREVIEW COLUMN (ATRIL DE ESTUDIO) */}
-          <div className="lg:sticky lg:top-12 flex flex-col items-center">
+          {/* PREVIEW COLUMN (ATRIL DE ESTUDIO) - DESKTOP ONLY */}
+          <div className="hidden lg:sticky lg:top-12 lg:flex flex-col items-center">
             <div className="w-full max-w-[360px] bg-white p-3 rounded-[40px] shadow-2xl border border-neutral-100 relative group">
               
               {/* STATUS HEADER */}
@@ -733,6 +746,115 @@ export default function Landing() {
           Cursea Digital • Canciones con Alma
         </p>
       </footer>
+
+      {/* MOBILE PREVIEW TOGGLE TAB */}
+      <div className="lg:hidden fixed right-0 top-1/2 -translate-y-1/2 z-50">
+        <button
+          onClick={() => setIsPreviewOpen(true)}
+          className="bg-[#8B1F32] text-white py-6 px-3 rounded-l-[24px] shadow-2xl flex flex-col items-center gap-3 [writing-mode:vertical-lr] font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-[#731929] transition-all transform hover:-translate-x-1 active:scale-95 border-l border-y border-white/20"
+        >
+          <div className="flex items-center gap-2 rotate-180">
+            <Eye className="w-4 h-4" />
+            <span>Ver vista Previa</span>
+          </div>
+        </button>
+      </div>
+
+      {/* MOBILE PREVIEW DRAWER */}
+      <AnimatePresence>
+        {isPreviewOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsPreviewOpen(false)}
+              className="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-[60] lg:hidden"
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-[90%] max-w-[400px] bg-[#F5EADC] z-[70] shadow-2xl lg:hidden flex flex-col border-l border-[#8B1F32]/10"
+            >
+              <div className="flex justify-between items-center px-6 py-6 border-b border-[#8B1F32]/10 bg-white/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#8B1F32]/10 flex items-center justify-center">
+                    <Headphones className="w-4 h-4 text-[#8B1F32]" />
+                  </div>
+                  <h3 className="font-serif font-bold text-xl text-neutral-900">Vista Previa</h3>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsPreviewOpen(false)}
+                  className="rounded-full text-neutral-400 hover:text-[#8B1F32] hover:bg-rose-50"
+                >
+                  <X className="w-6 h-6" />
+                </Button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center space-y-8">
+                <div className="w-full max-w-[320px] bg-white p-3 rounded-[40px] shadow-xl border border-neutral-100 relative">
+                  {/* PREVIEW CONTAINER REUSE */}
+                  <div className="rounded-[32px] overflow-hidden bg-neutral-950 aspect-[9/16] shadow-inner relative">
+                    <VideoEditorPreview
+                      config={constructedConfig}
+                      onUpdateConfig={() => {}}
+                      backgroundUrl={backgroundUrl}
+                      customBackground=""
+                      userPhotoUrl={userPhotoUrl}
+                      titulo={titulo}
+                      artista={artista}
+                      dedicatoria={dedicatoria}
+                      
+                      photoX={photoX}
+                      photoY={photoY}
+                      photoWidth={photoWidth}
+                      photoHeight={photoHeight}
+                      tituloX={tituloX}
+                      tituloY={tituloY}
+                      tituloSize={tituloSize}
+                      artistaX={artistaX}
+                      artistaY={artistaY}
+                      artistaSize={artistaSize}
+                      dedicatoriaX={dedicatoriaX}
+                      dedicatoriaY={dedicatoriaY}
+                      dedicatoriaSize={dedicatoriaSize}
+                      
+                      scale={previewScale * 1.1} // Slightly larger for the drawer
+                    />
+                    <div className="absolute inset-0 pointer-events-none border-[12px] border-white/5 rounded-[32px]" />
+                  </div>
+                </div>
+
+                <div className="bg-white/60 p-6 rounded-3xl border border-[#8B1F32]/5 text-center space-y-4 w-full">
+                  <p className="text-[11px] text-neutral-500 font-bold uppercase tracking-[0.2em]">Configuración Actual</p>
+                  <div className="grid grid-cols-2 gap-4 text-left">
+                    <div className="bg-white p-3 rounded-xl border border-neutral-100">
+                      <p className="text-[9px] text-neutral-400 uppercase font-bold">Título</p>
+                      <p className="text-xs font-bold text-neutral-800 truncate">{titulo || 'Sin título'}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-neutral-100">
+                      <p className="text-[9px] text-neutral-400 uppercase font-bold">Artista</p>
+                      <p className="text-xs font-bold text-neutral-800 truncate">{artista || 'Sin artista'}</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => setIsPreviewOpen(false)}
+                    className="w-full h-12 rounded-xl bg-[#8B1F32] hover:bg-[#731929] text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-[#8B1F32]/20"
+                  >
+                    Seguir Editando
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
