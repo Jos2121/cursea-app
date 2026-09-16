@@ -525,13 +525,26 @@ export default function Landing() {
             </div>
 
             {/* BLOQUE 2: DISEÑO VISUAL */}
-            <div className="bg-white p-8 rounded-3xl border border-[#8B1F32]/15 shadow-md space-y-6">
+            <div className="bg-white p-8 rounded-3xl border border-[#8B1F32]/15 shadow-md space-y-6 relative overflow-hidden group">
+              {/* GIFT RIBBON DECORATION */}
+              <div className="absolute -top-1 -right-1 w-24 h-24 pointer-events-none z-10">
+                <div className="absolute top-[20px] right-[-28px] w-[130px] py-1 bg-[#8B1F32] text-white text-[9px] font-bold uppercase tracking-[0.2em] text-center rotate-45 shadow-lg shadow-[#8B1F32]/20 border-y border-white/20">
+                  Special Gift
+                </div>
+              </div>
+              
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#8B1F32] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-[#8B1F32]/20 shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#8B1F32] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-[#8B1F32]/20 shrink-0 relative">
                   2
+                  <div className="absolute -top-1 -left-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm border border-neutral-100">
+                    <Sparkles className="w-2.5 h-2.5 text-[#8B1F32]" />
+                  </div>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-neutral-900">Personaliza tu Video</h2>
+                  <h2 className="text-xl font-bold text-neutral-900 flex items-center gap-2">
+                    Personaliza tu Video
+                    <Heart className="w-4 h-4 text-[#8B1F32] fill-[#8B1F32]/10" />
+                  </h2>
                   <p className="text-sm text-neutral-500">Elige la estética visual de tu regalo.</p>
                 </div>
               </div>
