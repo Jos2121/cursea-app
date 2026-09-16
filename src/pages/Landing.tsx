@@ -529,7 +529,7 @@ export default function Landing() {
               {/* GIFT RIBBON DECORATION */}
               <div className="absolute -top-1 -right-1 w-24 h-24 pointer-events-none z-10">
                 <div className="absolute top-[20px] right-[-28px] w-[130px] py-1 bg-[#8B1F32] text-white text-[9px] font-bold uppercase tracking-[0.2em] text-center rotate-45 shadow-lg shadow-[#8B1F32]/20 border-y border-white/20">
-                  Special Gift
+                  Regalo
                 </div>
               </div>
               
