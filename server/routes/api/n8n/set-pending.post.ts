@@ -52,13 +52,11 @@ export default defineHandler(async (event) => {
   // Preparar datos para notificación
   const customerName = nombre || job.artista || "Cliente";
   const customerPhone = phone || job.whatsappNumber || "No especificado";
-  const titulo = job.titulo || "Sin título";
-  const dedicatoria = job.dedicatoria || job.prompt || "Personalizada";
 
   // URL base para el botón interactivo
-  const baseUrl = process.env.PUBLIC_APP_URL || 
-                   process.env.NEXT_PUBLIC_APP_URL || 
-                   process.env.NITRO_APP_URL || 
+  const baseUrl = process.env.PUBLIC_APP_URL ||
+                   process.env.NEXT_PUBLIC_APP_URL ||
+                   process.env.NITRO_APP_URL ||
                    "https://sings.inspiramkt.agency";
   const confirmUrl = `${baseUrl.replace(/\/$/, "")}/api/n8n/confirm-payment?jobId=${encodeURIComponent(targetJobId)}`;
 
@@ -67,7 +65,7 @@ export default defineHandler(async (event) => {
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (botToken && chatId) {
-    const messageText = 
+    const messageText =
 `🔔 <b>Nuevo Pago Pendiente de Verificación</b>
 
 🆔 <b>ID de Orden:</b> <code>${targetJobId}</code>
@@ -75,8 +73,6 @@ export default defineHandler(async (event) => {
 📱 <b>WhatsApp:</b> ${customerPhone}
 💰 <b>Monto:</b> ${monto}
 💳 <b>Método:</b> ${metodo}
-🎵 <b>Título:</b> ${titulo}
-📝 <b>Dedicatoria / Info:</b> <i>${dedicatoria.slice(0, 100)}</i>
 
 <i>Haz clic abajo para confirmar el pago y comenzar la generación automática del audio y video.</i>`;
 
