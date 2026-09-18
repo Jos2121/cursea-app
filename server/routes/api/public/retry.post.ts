@@ -362,7 +362,7 @@ async function processJob(job: any) {
     payload.from = process.env.YCLOUD_FROM;
   }
 
-  const ycloudRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/sendDirectly", {
+  const ycloudRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
