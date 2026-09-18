@@ -6,10 +6,13 @@ export default defineHandler(async (event) => {
   const body = await readBody(event) || {};
 
   const jobIdInput = body.jobId;
-  const whatsappNumber = body.whatsappNumber || body.wa_id || body.whatsapp;
-  const metodo = body.metodo || "Desconocido";
-  const nombre = body.nombre || body.customerName || body.cliente;
-  const monto = body.monto || body.amount || body.precio || "$5.00 USD";
+  const whatsappNumber = body.whatsappNumber;
+  const wa_id = body.wa_id;
+  const phone = whatsappNumber || wa_id;
+  
+  const metodo = body.metodo || body.pay_metod || "Desconocido";
+  const nombre = body.nombre || body.pay_name || body.customerName || body.cliente;
+  const monto = body.monto || body.pay_mont || body.amount || body.precio || "$5.00 USD";
 
   let targetJobId = jobIdInput;
   let job: any = null;
@@ -19,11 +22,14 @@ export default defineHandler(async (event) => {
     if (jobResult.rows.length > 0) {
       job = jobResult.rows[0];
     }
-  } else if (whatsappNumber) {
-    const jobResult = await pool.query(
-      'SELECT * FROM "MediaJob" WHERE "whatsappNumber" = $1 ORDER BY "createdAt" DESC LIMIT 1',
-      [whatsappNumber]
-    );
+  } else if (phone) {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const query = `
+      SELECT * FROM "MediaJob" 
+      WHERE REPLACE(REPLACE("whatsappNumber", '+', ''), ' ', '') LIKE $1 
+      ORDER BY "createdAt" DESC LIMIT 1
+    `;
+    const jobResult = await pool.query(query, [`%${cleanPhone}%`]);
     if (jobResult.rows.length > 0) {
       job = jobResult.rows[0];
       targetJobId = job.id;
@@ -31,21 +37,21 @@ export default defineHandler(async (event) => {
   }
 
   if (!targetJobId || !job) {
-    throw createError({ statusCode: 404, statusMessage: "No se encontró un trabajo para este identificador o número" });
+    throw createError({ 
+      statusCode: 404, 
+      statusMessage: "No se encontró un registro asociado a este número o jobId" 
+    });
   }
 
   // Actualizar estado a 'Pendiente'
   await pool.query(
-    `UPDATE "MediaJob" 
-     SET pago = 'Pendiente', 
-         "updatedAt" = NOW() 
-     WHERE id = $1`,
+    `UPDATE "MediaJob" SET pago = 'Pendiente', "updatedAt" = NOW() WHERE id = $1`,
     [targetJobId]
   );
 
   // Preparar datos para notificación
   const customerName = nombre || job.artista || "Cliente";
-  const customerPhone = whatsappNumber || job.whatsappNumber || "No especificado";
+  const customerPhone = phone || job.whatsappNumber || "No especificado";
   const titulo = job.titulo || "Sin título";
   const dedicatoria = job.dedicatoria || job.prompt || "Personalizada";
 
@@ -110,7 +116,7 @@ export default defineHandler(async (event) => {
 
   return {
     ok: true,
-    message: "Estado actualizado a Pendiente",
+    message: "Estado cambiado a Pendiente",
     jobId: targetJobId
   };
 });
