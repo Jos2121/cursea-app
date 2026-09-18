@@ -280,7 +280,8 @@ export default function Landing() {
 
       const envNumber = import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || '';
       const cleanNumber = envNumber.replace(/\D/g, '');
-      window.location.href = `https://wa.me/${cleanNumber}?text=He+llenado+el+formulario+para+el+segundo+intento`;
+      const text = encodeURIComponent('Hola he llenado los campos requeridos para obtener mi canción personalizada, quisiera realizar el pago');
+      window.location.href = `https://wa.me/${cleanNumber}?text=${text}`;
       
     } catch (error: any) {
       toast.error(error.message || 'Error al procesar tu solicitud. Intenta de nuevo.');
