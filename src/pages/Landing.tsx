@@ -278,9 +278,9 @@ export default function Landing() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.statusMessage || 'Error al registrar petición');
 
-      const paymentNumber = import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || whatsappNumber.replace(/[^0-9]/g, '');
-      const text = encodeURIComponent('Hola he llenado los campos requeridos para obtener mi canción personalizada, quisiera realizar el pago');
-      window.location.href = `https://wa.me/${paymentNumber}?text=${text}`;
+      const envNumber = import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || '';
+      const cleanNumber = envNumber.replace(/\D/g, '');
+      window.location.href = `https://wa.me/${cleanNumber}?text=He+llenado+el+formulario+para+el+segundo+intento`;
       
     } catch (error: any) {
       toast.error(error.message || 'Error al procesar tu solicitud. Intenta de nuevo.');
