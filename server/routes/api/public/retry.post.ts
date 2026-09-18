@@ -377,7 +377,7 @@ async function processJob(job: any) {
   }
 
   await pool.query(
-    \`UPDATE "MediaJob" SET status = 'sent', "updatedAt" = NOW() WHERE id = $1\`,
+    'UPDATE "MediaJob" SET status = \'sent\', "updatedAt" = NOW() WHERE id = $1',
     [jobId]
   );
 }
