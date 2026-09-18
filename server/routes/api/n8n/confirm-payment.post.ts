@@ -1,5 +1,5 @@
 import { defineHandler } from "nitro";
-import { readBody, setResponseStatus, createError } from "nitro/h3";
+import { readBody, getQuery, setResponseStatus, createError } from "nitro/h3";
 import { pool } from "../../../utils/db";
 import fs from "fs";
 import path from "path";
@@ -9,15 +9,25 @@ import { promisify } from "util";
 const execPromise = promisify(exec);
 
 export default defineHandler(async (event) => {
-  const body = await readBody(event);
+  let jobId: string | undefined;
 
-  if (!body || !body.jobId) {
+  try {
+    const body = await readBody(event);
+    jobId = body?.jobId;
+  } catch (e) {
+    // ignore json read error if query param is used
+  }
+
+  if (!jobId) {
+    const query = getQuery(event);
+    jobId = query?.jobId as string;
+  }
+
+  if (!jobId) {
     throw createError({ statusCode: 400, statusMessage: "jobId es requerido" });
   }
 
-  const jobId = body.jobId;
-
-  // 1. SELECT a "MediaJob" validando la existencia
+  // 1. SELECT a "MediaJob" validando existencia
   const jobResult = await pool.query('SELECT * FROM "MediaJob" WHERE id = $1', [jobId]);
 
   if (jobResult.rows.length === 0) {
@@ -27,25 +37,29 @@ export default defineHandler(async (event) => {
   const job = jobResult.rows[0];
   const currentGeneraciones = Number(job.generaciones || 0);
 
-  // Validación de límite de generaciones
+  // Validación de límite de generaciones (máximo 2)
   if (currentGeneraciones >= 2) {
     throw createError({ statusCode: 403, statusMessage: "Límite de generaciones alcanzado" });
   }
 
-  // 2. Responder INMEDIATAMENTE a n8n con HTTP 202
+  // 2. Responder INMEDIATAMENTE con HTTP 202
   setResponseStatus(event, 202);
-  const immediateResponse = { status: "processing", message: "Pago confirmado" };
+  const immediateResponse = { 
+    status: "processing", 
+    message: "Pago verificado, generando producto" 
+  };
 
   // 3. EJECUCIÓN EN SEGUNDO PLANO
   Promise.resolve().then(async () => {
     try {
       console.log(`[ConfirmPayment] Iniciando procesamiento en segundo plano para job ${jobId}`);
 
-      // a) Actualizar tabla: pago = 'Realizado', generaciones = generaciones + 1
+      // a) Ejecuta el UPDATE: SET pago = 'Pagado', generaciones = COALESCE(generaciones, 0) + 1
       await pool.query(
         `UPDATE "MediaJob" 
-         SET pago = 'Realizado', 
+         SET pago = 'Pagado', 
              generaciones = COALESCE(generaciones, 0) + 1,
+             status = 'generating_audio',
              "updatedAt" = NOW() 
          WHERE id = $1`,
         [jobId]
@@ -56,7 +70,7 @@ export default defineHandler(async (event) => {
         fs.mkdirSync(mediaDir, { recursive: true });
       }
 
-      // b) Cadena de creación: Audio con Lyria
+      // b) Cadena de creación: Audio con Lyria en OpenRouter
       const apiKey = process.env.OPENROUTER_API_KEY;
       if (!apiKey) {
         throw new Error("OPENROUTER_API_KEY no está configurada");
@@ -141,7 +155,7 @@ export default defineHandler(async (event) => {
                 fullBase64Audio += audioData;
               }
             } catch (e) {
-              // ignore parse errors for partial chunks
+              // Ignorar fragmentos parciales
             }
           }
         }
@@ -150,7 +164,7 @@ export default defineHandler(async (event) => {
       }
 
       if (!fullBase64Audio) {
-        throw new Error("El stream finalizó sin datos de audio");
+        throw new Error("El stream de audio finalizó sin datos");
       }
 
       const audioBuffer = Buffer.from(fullBase64Audio, "base64");
@@ -174,7 +188,7 @@ export default defineHandler(async (event) => {
       let tempImagePath = "";
       let tempBgPath = "";
 
-      // Descargar o verificar imagen del usuario
+      // Descargar o verificar foto de usuario
       if (targetImage && targetImage.startsWith("http")) {
         const imgRes = await fetch(targetImage);
         if (!imgRes.ok) throw new Error(`Fallo al descargar imagen: ${targetImage}`);
@@ -190,9 +204,9 @@ export default defineHandler(async (event) => {
         }
       }
 
-      // Si no hay imagen, usar fallback
+      // Si no existe foto, generar placeholder
       if (!finalImagePath || !fs.existsSync(finalImagePath)) {
-        console.warn(`[ConfirmPayment] Imagen no encontrada o vacía (${targetImage}), creando placeholder`);
+        console.warn(`[ConfirmPayment] Imagen no encontrada (${targetImage}), creando placeholder`);
         tempImagePath = path.join(mediaDir, `temp_placeholder_${Date.now()}.png`);
         await execPromise(`ffmpeg -y -f lavfi -i color=c=gray:s=820x820 -vframes 1 "${tempImagePath}"`);
         finalImagePath = tempImagePath;
@@ -216,7 +230,7 @@ export default defineHandler(async (event) => {
         }
       }
 
-      // Configuración de coordenadas
+      // Configuración y textos
       let parsedConfig = job.config;
       if (typeof parsedConfig === "string") {
         try {
@@ -309,7 +323,7 @@ export default defineHandler(async (event) => {
 
       const ffmpegCommand = `ffmpeg -y -loop 1 -framerate 1 -i "${finalImagePath}" ${bgInput} -i "${audioFilePath}" -filter_complex "${filter}" -map "[${lastV}]" -map 2:a -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
 
-      console.log(`[ConfirmPayment] Ejecutando FFmpeg para renderizar video final...`);
+      console.log(`[ConfirmPayment] Ejecutando FFmpeg para fusionar audio y video...`);
       await execPromise(ffmpegCommand);
 
       const relativeVideoUrl = `/media/${videoFileName}`;
@@ -326,7 +340,7 @@ export default defineHandler(async (event) => {
 
       console.log(`[ConfirmPayment] Proceso completado exitosamente para job ${jobId}. Video: ${relativeVideoUrl}`);
 
-      // Limpieza de temporales
+      // Limpieza de archivos temporales
       if (tempImagePath && fs.existsSync(tempImagePath) && tempImagePath.includes("temp_")) {
         try { fs.unlinkSync(tempImagePath); } catch (e) {}
       }

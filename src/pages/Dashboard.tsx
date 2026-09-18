@@ -846,7 +846,7 @@ export default function Dashboard() {
                     <th className="px-3 py-3.5 font-bold text-[10px] uppercase tracking-wider">Origen</th>
                     <th className="px-3.5 py-3.5 font-bold text-[10px] uppercase tracking-wider">Prompt / Info</th>
                     <th className="px-3 py-3.5 font-bold text-[10px] uppercase tracking-wider text-center">Pago</th>
-                    <th className="px-2.5 py-3.5 font-bold text-[10px] uppercase tracking-wider text-center">Gen</th>
+                    <th className="px-2.5 py-3.5 font-bold text-[10px] uppercase tracking-wider text-center">Generaciones</th>
                     <th className="px-3 py-3.5 font-bold text-[10px] uppercase tracking-wider">Estado</th>
                     <th className="px-3.5 py-3.5 font-bold text-[10px] uppercase tracking-wider">Media</th>
                     <th className="px-3.5 py-3.5 font-bold text-[10px] uppercase tracking-wider text-right">Acciones</th>
@@ -891,9 +891,11 @@ export default function Dashboard() {
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap text-center">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${
-                          job.pago === 'Realizado' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
+                          (job.pago === 'Pagado' || job.pago === 'Realizado')
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : 'bg-amber-100 text-amber-800 border-amber-200'
                         }`}>
-                          {job.pago === 'Realizado' ? 'Realizado' : 'Pendiente'}
+                          {(job.pago === 'Pagado' || job.pago === 'Realizado') ? 'Pagado' : 'Pendiente'}
                         </span>
                       </td>
                       <td className="px-2.5 py-3 whitespace-nowrap text-xs font-bold text-neutral-600 text-center">

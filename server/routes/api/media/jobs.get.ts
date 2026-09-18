@@ -11,8 +11,8 @@ export default defineHandler(async (event) => {
     recipient: row.whatsappNumber, // Frontend expects recipient
     imageUrl: row.imageUrl || null,
     errorLog: row.errorLog || null,
-    pago: row.pago,
-    generaciones: row.generaciones
+    pago: row.pago || 'Pendiente',
+    generaciones: Number(row.generaciones ?? 0)
   }));
   
   return jobs;

@@ -12,6 +12,13 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Prompt is required" });
   }
 
+  if (body.jobId) {
+    const existing = await pool.query('SELECT generaciones FROM "MediaJob" WHERE id = $1', [body.jobId]);
+    if (existing.rows.length > 0 && Number(existing.rows[0].generaciones || 0) >= 2) {
+      throw createError({ statusCode: 403, statusMessage: "Límite de generaciones alcanzado" });
+    }
+  }
+
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw createError({ statusCode: 500, statusMessage: "OPENROUTER_API_KEY is not configured" });

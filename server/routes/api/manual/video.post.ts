@@ -39,6 +39,10 @@ export default defineHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Job not found or missing audioUrl" });
   }
 
+  if (Number(job.generaciones || 0) >= 2) {
+    throw createError({ statusCode: 403, statusMessage: "Límite de generaciones alcanzado" });
+  }
+
   // 2. Localizar archivos y descargar imagen
   const mediaDir = path.resolve(process.cwd(), "public/media");
   if (!fs.existsSync(mediaDir)) {
@@ -192,7 +196,7 @@ export default defineHandler(async (event) => {
     // 4. Actualizar base de datos
     const relativeVideoUrl = `/media/${videoFileName}`;
     await pool.query(
-      'UPDATE "MediaJob" SET "videoUrl" = $1, "status" = $2, "backgroundUrl" = $3, "userPhotoUrl" = $4, "titulo" = $5, "artista" = $6, "dedicatoria" = $7 WHERE id = $8',
+      'UPDATE "MediaJob" SET "videoUrl" = $1, "status" = $2, "backgroundUrl" = $3, "userPhotoUrl" = $4, "titulo" = $5, "artista" = $6, "dedicatoria" = $7, "generaciones" = COALESCE("generaciones", 0) + 1 WHERE id = $8',
       [relativeVideoUrl, 'completed', backgroundUrl, userPhotoUrl, titulo, artista, dedicatoria, jobId]
     );
 
