@@ -223,15 +223,15 @@ export default defineHandler(async (event) => {
 const ycloudKey = process.env.YCLOUD_API_KEY;
 
 if (ycloudKey && phoneNumber) {
-  // 1. Enviar el AUDIO de forma independiente
   try {
+    console.log("[ConfirmPayment GET] Iniciando envío de AUDIO...");
     const audioPayload = {
       to: phoneNumber,
       type: "audio",
       audio: { link: audioUrl }
     };
     
-    await fetch("https://api.ycloud.com/v2/whatsapp/messages/send", {
+    const audioRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -239,20 +239,21 @@ if (ycloudKey && phoneNumber) {
       },
       body: JSON.stringify(audioPayload)
     });
-    console.log("[ConfirmPayment GET] Audio enviado con éxito a", phoneNumber);
-  } catch (audioError) {
-    console.error("[ConfirmPayment GET] Error enviando audio por YCloud:", audioError);
-  }
+    
+    const audioData = await audioRes.json().catch(() => ({}));
+    console.log("[ConfirmPayment GET] Respuesta de YCloud (Audio):", audioData);
 
-  // 2. Enviar el VIDEO de forma independiente
-  try {
+    // Pausa estratégica de 2 segundos para evitar bloqueo antispam de WhatsApp
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    console.log("[ConfirmPayment GET] Iniciando envío de VIDEO...");
     const videoPayload = {
       to: phoneNumber,
       type: "video",
       video: { link: videoUrl }
     };
     
-    await fetch("https://api.ycloud.com/v2/whatsapp/messages/send", {
+    const videoRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -260,9 +261,12 @@ if (ycloudKey && phoneNumber) {
       },
       body: JSON.stringify(videoPayload)
     });
-    console.log("[ConfirmPayment GET] Video enviado con éxito a", phoneNumber);
-  } catch (videoError) {
-    console.error("[ConfirmPayment GET] Error enviando video por YCloud:", videoError);
+    
+    const videoData = await videoRes.json().catch(() => ({}));
+    console.log("[ConfirmPayment GET] Respuesta de YCloud (Video):", videoData);
+
+  } catch (error) {
+    console.error("[ConfirmPayment GET] Error crítico en el bloque de envíos a YCloud:", error);
   }
 } else {
   console.error("[ConfirmPayment GET] Faltan credenciales de YCloud o número de teléfono.");
