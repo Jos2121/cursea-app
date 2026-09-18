@@ -215,21 +215,30 @@ export default defineHandler(async (event) => {
 
         // DOBLE PETICIÓN YCLOUD: Envío de Audio y Video
         const phoneNumber = job.whatsappNumber;
-        const baseUrl = process.env.PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sings.inspiramkt.agency";
+        
+        const host = event.node.req.headers.host || "sings.inspiramkt.agency";
+        const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
+        const baseUrl = process.env.PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+        
         const audioUrl = `${baseUrl.replace(/\/$/, "")}${relativeAudioUrl}`;
         const videoUrl = `${baseUrl.replace(/\/$/, "")}/media/${vName}`;
 
 // --- INICIO CÓDIGO DE ENVÍO A YCLOUD ---
 const ycloudKey = process.env.YCLOUD_API_KEY;
+const ycloudFrom = process.env.YCLOUD_FROM || process.env.YCLOUD_SENDER_NUMBER;
 
 if (ycloudKey && phoneNumber) {
   try {
     console.log("[ConfirmPayment GET] Iniciando envío de AUDIO...");
-    const audioPayload = {
+    const audioPayload: any = {
       to: phoneNumber,
       type: "audio",
       audio: { link: audioUrl }
     };
+    
+    if (ycloudFrom) {
+      audioPayload.from = ycloudFrom;
+    }
     
     const audioRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/send", {
       method: "POST",
@@ -247,11 +256,15 @@ if (ycloudKey && phoneNumber) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     console.log("[ConfirmPayment GET] Iniciando envío de VIDEO...");
-    const videoPayload = {
+    const videoPayload: any = {
       to: phoneNumber,
       type: "video",
       video: { link: videoUrl }
     };
+    
+    if (ycloudFrom) {
+      videoPayload.from = ycloudFrom;
+    }
     
     const videoRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/send", {
       method: "POST",
