@@ -24,6 +24,7 @@ export default defineHandler(async (event) => {
   // 2. Construir URL pública
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://sings.inspiramkt.agency").replace(/\/$/, "");
   const fullVideoUrl = `${appUrl}${job.videoUrl}`;
+  const fullAudioUrl = job.audioUrl ? `${appUrl}${job.audioUrl}` : "";
 
   // 3. Petición a YCloud
   const apiKey = process.env.YCLOUD_API_KEY;
@@ -39,7 +40,7 @@ export default defineHandler(async (event) => {
     type: "video",
     video: {
       link: fullVideoUrl,
-      caption: "¡Aquí tienes tu video generado!"
+      caption: `¡Aquí tienes tu video personalizado! 🎵\n\nPuedes escuchar y descargar tu canción original desde este enlace:\n${fullAudioUrl}`
     }
   };
 

@@ -279,6 +279,8 @@ async function processJob(job: any) {
   // 4. SEND via YCloud
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://sings.inspiramkt.agency").replace(/\/$/, "");
   const fullVideoUrl = `${appUrl}${relativeVideoUrl}`;
+  // Reutilizamos la URL relativa de audio que se guardó en BD antes en esta misma función (const relativeAudioUrl = `/media/${audioFileName}`;)
+  const fullAudioUrl = `${appUrl}/media/${audioFileName}`;
   const target = job.whatsappNumber.trim();
   const ycloudApiKey = process.env.YCLOUD_API_KEY;
   
@@ -292,7 +294,7 @@ async function processJob(job: any) {
     type: "video",
     video: {
       link: fullVideoUrl,
-      caption: "¡Aquí tienes tu canción personalizada en video!"
+      caption: `¡Aquí tienes tu video personalizado! 🎵\n\nPuedes escuchar y descargar tu canción original desde este enlace:\n${fullAudioUrl}`
     }
   };
 
