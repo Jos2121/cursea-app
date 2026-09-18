@@ -863,7 +863,7 @@ export default function Dashboard() {
                   {jobs.map((job) => {
                     const isLimitReached = (job.generaciones || 0) >= 2;
                     return (
-                    <tr key={job.id} className="hover:bg-[#F5EADC]/10 transition-colors group">
+                      <tr key={job.id} className="hover:bg-[#F5EADC]/10 transition-colors group">
                       <td className="px-3.5 py-3 whitespace-nowrap">
                         <div className="font-semibold text-neutral-700 text-[11px] leading-tight">
                           {new Date(job.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
@@ -1029,7 +1029,7 @@ export default function Dashboard() {
                         </button>
                       </td>
                     </tr>
-                    );
+                  );
                   })}
                 </tbody>
               </table>
