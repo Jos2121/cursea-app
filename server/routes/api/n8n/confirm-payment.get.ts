@@ -231,6 +231,7 @@ if (ycloudKey && phoneNumber) {
     console.log("[ConfirmPayment GET] Iniciando envío de VIDEO con enlace de audio en la descripción...");
     
     const videoPayload = {
+      from: process.env.YCLOUD_FROM,
       to: phoneNumber,
       type: "video",
       video: {

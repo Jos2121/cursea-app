@@ -350,6 +350,7 @@ async function processJob(job: any) {
   const destinationKey = isUsername ? "recipient" : "to";
   
   const payload: any = {
+    from: process.env.YCLOUD_FROM,
     [destinationKey]: target,
     type: "video",
     video: {
@@ -357,10 +358,6 @@ async function processJob(job: any) {
       caption: `¡Aquí tienes tu video del segundo intento! 🎵\n\nPuedes escuchar y descargar tu canción original desde este enlace:\n${fullAudioUrl}`
     }
   };
-
-  if (process.env.YCLOUD_FROM) {
-    payload.from = process.env.YCLOUD_FROM;
-  }
 
   const ycloudRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/sendDirectly", {
     method: "POST",

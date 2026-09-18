@@ -36,6 +36,7 @@ export default defineHandler(async (event) => {
   const destinationKey = isUsername ? "recipient" : "to";
   
   const payload: any = {
+    from: process.env.YCLOUD_FROM,
     [destinationKey]: target,
     type: "video",
     video: {
@@ -43,10 +44,6 @@ export default defineHandler(async (event) => {
       caption: `¡Aquí tienes tu video personalizado! 🎵\n\nPuedes escuchar y descargar tu canción original desde este enlace:\n${fullAudioUrl}`
     }
   };
-
-  if (process.env.YCLOUD_FROM) {
-    payload.from = process.env.YCLOUD_FROM;
-  }
 
   try {
     const ycloudRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/sendDirectly", {
