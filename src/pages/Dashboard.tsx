@@ -842,7 +842,7 @@ export default function Dashboard() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-neutral-50 text-neutral-400 border-b border-neutral-100">
                   <tr>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Date</th>
+                    <th className="px-4 py-4 font-bold text-[10px] uppercase tracking-widest w-24">Date</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Source</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Prompt / Info</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Pago</th>
@@ -864,8 +864,13 @@ export default function Dashboard() {
                     const isLimitReached = (job.generaciones || 0) >= 2;
                     return (
                     <tr key={job.id} className="hover:bg-[#F5EADC]/10 transition-colors group">
-                      <td className="px-6 py-5 whitespace-nowrap text-neutral-500 text-xs">
-                        {new Date(job.createdAt).toLocaleString()}
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="font-semibold text-neutral-700 text-[11px] leading-tight">
+                          {new Date(job.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                        </div>
+                        <div className="text-[10px] text-neutral-400 font-mono mt-0.5">
+                          {new Date(job.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap">
                         <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-tighter ${
