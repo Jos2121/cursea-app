@@ -1030,31 +1030,6 @@ export default function Dashboard() {
                     );
                   })}
                 </tbody>
-                        {job.videoUrl && (
-                          <button
-                            onClick={() => {
-                              setWhatsappJobId(job.id);
-                              setWhatsappModalPhone(job.whatsappNumber || job.recipient || '');
-                              setIsWhatsappModalOpen(true);
-                            }}
-                            className="p-2.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-emerald-100"
-                            title="Send via WhatsApp"
-                          >
-                            <Send className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(job.id)}
-                          className="p-2.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-rose-100"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
               </table>
             </div>
           </div>
