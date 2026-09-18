@@ -839,17 +839,17 @@ export default function Dashboard() {
             </div>
             
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-xs">
                 <thead className="bg-neutral-50 text-neutral-400 border-b border-neutral-100">
                   <tr>
-                    <th className="px-4 py-4 font-bold text-[10px] uppercase tracking-widest w-24">Date</th>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Source</th>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Prompt / Info</th>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Pago</th>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Generaciones</th>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Media</th>
-                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
+                    <th className="px-3.5 py-3.5 font-bold text-[10px] uppercase tracking-wider">Fecha</th>
+                    <th className="px-3 py-3.5 font-bold text-[10px] uppercase tracking-wider">Origen</th>
+                    <th className="px-3.5 py-3.5 font-bold text-[10px] uppercase tracking-wider">Prompt / Info</th>
+                    <th className="px-3 py-3.5 font-bold text-[10px] uppercase tracking-wider text-center">Pago</th>
+                    <th className="px-2.5 py-3.5 font-bold text-[10px] uppercase tracking-wider text-center">Gen</th>
+                    <th className="px-3 py-3.5 font-bold text-[10px] uppercase tracking-wider">Estado</th>
+                    <th className="px-3.5 py-3.5 font-bold text-[10px] uppercase tracking-wider">Media</th>
+                    <th className="px-3.5 py-3.5 font-bold text-[10px] uppercase tracking-wider text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-50">
@@ -864,7 +864,7 @@ export default function Dashboard() {
                     const isLimitReached = (job.generaciones || 0) >= 2;
                     return (
                     <tr key={job.id} className="hover:bg-[#F5EADC]/10 transition-colors group">
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      <td className="px-3.5 py-3 whitespace-nowrap">
                         <div className="font-semibold text-neutral-700 text-[11px] leading-tight">
                           {new Date(job.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                         </div>
@@ -872,59 +872,69 @@ export default function Dashboard() {
                           {new Date(job.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </td>
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-tighter ${
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-tight ${
                           job.source === 'landing' ? 'bg-[#8B1F32]/10 text-[#8B1F32]' : 'bg-blue-100 text-blue-700'
                         }`}>
                           {job.source === 'landing' ? 'LANDING' : 'STUDIO'}
                         </span>
                       </td>
-                      <td className="px-6 py-5 max-w-xs truncate text-neutral-800 font-medium" title={job.prompt}>
-                        {job.prompt}
-                        {job.recipient && <div className="text-[10px] text-neutral-400 mt-1.5 flex items-center gap-1.5 font-bold uppercase"><Send className="w-3 h-3" /> To: {job.recipient}</div>}
+                      <td className="px-3.5 py-3 whitespace-nowrap">
+                        <div className="max-w-[150px] truncate font-medium text-neutral-800" title={job.prompt}>
+                          {job.prompt}
+                        </div>
+                        {job.recipient && (
+                          <div className="text-[9px] text-neutral-400 mt-0.5 flex items-center gap-1 font-bold uppercase max-w-[150px] truncate" title={`To: ${job.recipient}`}>
+                            <Send className="w-2.5 h-2.5 shrink-0" /> {job.recipient}
+                          </div>
+                        )}
                       </td>
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                      <td className="px-3 py-3 whitespace-nowrap text-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${
                           job.pago === 'Realizado' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
                         }`}>
                           {job.pago === 'Realizado' ? 'Realizado' : 'Pendiente'}
                         </span>
                       </td>
-                      <td className="px-6 py-5 whitespace-nowrap text-xs font-bold text-neutral-600">
+                      <td className="px-2.5 py-3 whitespace-nowrap text-xs font-bold text-neutral-600 text-center">
                         {job.generaciones || 0} / 2
                       </td>
-                      <td className="px-6 py-5 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusColors[job.status]}`}>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${statusColors[job.status]}`}>
                           {statusIcons[job.status]}
                           {job.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-5">
-                        <div className="flex flex-col gap-2 min-w-[200px]">
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
                           {job.audioUrl && (
-                            <div className="flex items-center gap-2 p-1.5 bg-neutral-50 rounded-xl border border-neutral-100">
-                              <Music className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                              <audio controls className="h-7 w-full opacity-80" src={job.audioUrl}></audio>
+                            <div className="w-24 overflow-hidden rounded-md shrink-0 bg-neutral-100/70 flex items-center">
+                              <audio controls className="h-6 w-32 -ml-1 scale-90 origin-left" src={job.audioUrl}></audio>
                             </div>
                           )}
                           {job.videoUrl && (
-                            <div className="flex items-center gap-2 p-1.5 bg-neutral-50 rounded-xl border border-neutral-100">
-                              <Video className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                              <video className="h-10 w-16 bg-black rounded-lg object-cover" src={job.videoUrl}></video>
-                              <button onClick={() => window.open(job.videoUrl || '', '_blank')} className="text-[10px] text-[#8B1F32] font-bold uppercase hover:underline">Ver Video</button>
-                            </div>
+                            <button
+                              onClick={() => window.open(job.videoUrl || '', '_blank')}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-[#8B1F32]/10 hover:bg-[#8B1F32] text-[#8B1F32] hover:text-white rounded-lg text-[10px] font-bold uppercase transition-all shrink-0 shadow-sm"
+                              title="Ver video"
+                            >
+                              <Video className="w-3 h-3" /> Ver
+                            </button>
+                          )}
+                          {!job.audioUrl && !job.videoUrl && (
+                            <span className="text-[10px] text-neutral-400 italic">-</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-5 whitespace-nowrap text-right space-x-2">
+                      <td className="px-3.5 py-3 whitespace-nowrap text-right space-x-1">
                         {job.prompt && !job.audioUrl && (
                           <button
                             onClick={() => handleGenerateAudioFromHistory(job)}
                             disabled={generatingAudioId === job.id || isLimitReached}
-                            className="p-2.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all shadow-sm disabled:opacity-50 border border-transparent hover:border-blue-100 disabled:cursor-not-allowed"
+                            className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all shadow-sm disabled:opacity-40 border border-transparent hover:border-blue-100 disabled:cursor-not-allowed"
                             title={isLimitReached ? "Límite de generaciones alcanzado" : "Generate Audio"}
                           >
-                            {generatingAudioId === job.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
+                            {generatingAudioId === job.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Music className="w-3.5 h-3.5" />}
                           </button>
                         )}
                         {job.audioUrl && (
@@ -989,12 +999,37 @@ export default function Dashboard() {
                               }
                               setIsRegenerateModalOpen(true);
                             }}
-                            className="p-2.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-1.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-all shadow-sm border border-transparent hover:border-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed"
                             title={isLimitReached ? "Límite de generaciones alcanzado" : "Generate Video"}
                           >
-                            <Video className="w-4 h-4" />
+                            <Video className="w-3.5 h-3.5" />
                           </button>
                         )}
+                        {job.videoUrl && (
+                          <button
+                            onClick={() => {
+                              setWhatsappJobId(job.id);
+                              setWhatsappModalPhone(job.whatsappNumber || job.recipient || '');
+                              setIsWhatsappModalOpen(true);
+                            }}
+                            className="p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all shadow-sm border border-transparent hover:border-emerald-100"
+                            title="Send via WhatsApp"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(job.id)}
+                          className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all shadow-sm border border-transparent hover:border-rose-100"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                    );
+                  })}
+                </tbody>
                         {job.videoUrl && (
                           <button
                             onClick={() => {
