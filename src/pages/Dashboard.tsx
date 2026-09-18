@@ -893,9 +893,15 @@ export default function Dashboard() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${
                           (job.pago === 'Pagado' || job.pago === 'Realizado')
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : job.pago === 'Esperando'
+                            ? 'bg-neutral-100 text-neutral-600 border-neutral-200'
                             : 'bg-amber-100 text-amber-800 border-amber-200'
                         }`}>
-                          {(job.pago === 'Pagado' || job.pago === 'Realizado') ? 'Pagado' : 'Pendiente'}
+                          {(job.pago === 'Pagado' || job.pago === 'Realizado')
+                            ? 'Pagado'
+                            : job.pago === 'Esperando'
+                            ? 'Esperando'
+                            : 'Pendiente'}
                         </span>
                       </td>
                       <td className="px-2.5 py-3 whitespace-nowrap text-xs font-bold text-neutral-600 text-center">
