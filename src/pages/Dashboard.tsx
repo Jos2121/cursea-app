@@ -339,6 +339,12 @@ export default function Dashboard() {
 
   // History action: Regenerate Video
   const handleRegenerateVideo = async () => {
+    const job = jobs.find(j => j.id === regenerateJobId);
+    if (job && (job.generaciones || 0) >= 2) {
+      toast.error("Límite de generaciones alcanzado (2/2)");
+      return;
+    }
+
     const finalBg = regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl;
     if (!regenerateJobId || !regenerateUserPhotoUrl || !regenerateTitulo || !regenerateArtista || (regenerateBgUrl === 'custom' && !regenerateCustomBg)) return;
     setIsRegenerating(true);
@@ -377,6 +383,11 @@ export default function Dashboard() {
   };
 
   const handleGenerateAudioFromHistory = async (job: MediaJob) => {
+    if ((job.generaciones || 0) >= 2) {
+      toast.error("Límite de generaciones alcanzado (2/2)");
+      return;
+    }
+
     setGeneratingAudioId(job.id);
     try {
       const res = await fetch('/api/manual/audio', {
