@@ -238,7 +238,7 @@ export default defineHandler(async (event) => {
               });
               
               if (audioRes.ok) {
-                console.log(`[ConfirmPayment GET] Audio enviado a ${phoneNumber}`);
+                console.log(`[ConfirmPayment GET] Audio enviado con éxito a ${phoneNumber}`);
               } else {
                 const audioErr = await audioRes.text();
                 console.error("[ConfirmPayment GET] Error YCloud al enviar Audio:", audioErr);
@@ -259,7 +259,7 @@ export default defineHandler(async (event) => {
               });
               
               if (videoRes.ok) {
-                console.log(`[ConfirmPayment GET] Video enviado a ${phoneNumber}`);
+                console.log(`[ConfirmPayment GET] Video enviado con éxito a ${phoneNumber}`);
               } else {
                 const videoErr = await videoRes.text();
                 console.error("[ConfirmPayment GET] Error YCloud al enviar Video:", videoErr);
