@@ -239,7 +239,7 @@ if (ycloudKey && phoneNumber) {
       }
     };
     
-    const videoRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+    const videoRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/sendDirectly", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

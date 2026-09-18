@@ -49,7 +49,7 @@ export default defineHandler(async (event) => {
   }
 
   try {
-    const ycloudRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+    const ycloudRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages/sendDirectly", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
