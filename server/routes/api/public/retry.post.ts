@@ -292,13 +292,13 @@ async function processJob(job: any) {
 
   const bgInput = tempBgPath ? `-loop 1 -framerate 1 -i "${tempBgPath}"` : `-f lavfi -i color=c=black:s=1080x1920:r=1`;
 
-  let filter = \`[1:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[bg_base];\`;
+  let filter = `[1:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2[bg_base];`;
   
   if (tempPhotoPath) {
-    filter += \`[0:v]scale=w=\${photoW}:h=\${photoH}:force_original_aspect_ratio=increase,crop=\${photoW}:\${photoH}:(in_w-\${photoW})/2:(in_h-\${photoH})/2[photo];\`;
-    filter += \`[bg_base][photo]overlay=x=\${photoX}:y=\${photoY}[v1]\`;
+    filter += `[0:v]scale=w=${photoW}:h=${photoH}:force_original_aspect_ratio=increase,crop=${photoW}:${photoH}:(in_w-${photoW})/2:(in_h-${photoH})/2[photo];`;
+    filter += `[bg_base][photo]overlay=x=${photoX}:y=${photoY}[v1]`;
   } else {
-    filter += \`[bg_base]copy[v1]\`;
+    filter += `[bg_base]copy[v1]`;
   }
 
   let lastV = 'v1';
@@ -306,41 +306,41 @@ async function processJob(job: any) {
   
   if (safeTitulo) {
     const xPos = t.titulo.align === 'center' ? '(w-text_w)/2' : t.titulo.x;
-    filter += \`;[\${lastV}]drawtext=text='\${safeTitulo}':fontcolor=\${t.titulo.color}:fontsize=\${t.titulo.fontSize}:x=\${xPos}:y=\${t.titulo.y}[v\${vIndex}]\`;
-    lastV = \`v\${vIndex}\`;
+    filter += `;[${lastV}]drawtext=text='${safeTitulo}':fontcolor=${t.titulo.color}:fontsize=${t.titulo.fontSize}:x=${xPos}:y=${t.titulo.y}[v${vIndex}]`;
+    lastV = `v${vIndex}`;
     vIndex++;
   }
   
   if (safeArtista) {
     const xPos = t.artista.align === 'center' ? '(w-text_w)/2' : t.artista.x;
-    filter += \`;[\${lastV}]drawtext=text='\${safeArtista}':fontcolor=\${t.artista.color}:fontsize=\${t.artista.fontSize}:x=\${xPos}:y=\${t.artista.y}[v\${vIndex}]\`;
-    lastV = \`v\${vIndex}\`;
+    filter += `;[${lastV}]drawtext=text='${safeArtista}':fontcolor=${t.artista.color}:fontsize=${t.artista.fontSize}:x=${xPos}:y=${t.artista.y}[v${vIndex}]`;
+    lastV = `v${vIndex}`;
     vIndex++;
   }
   
   if (escapedDedicatoria) {
-    filter += \`;[\${lastV}]drawtext=text='\${escapedDedicatoria}':fontcolor=\${dedicatoriaColor}:fontsize=\${dedicatoriaSize}:x=(w-text_w)/2:y=\${dedicatoriaY}:line_spacing=\${Math.round(dedicatoriaSize * 0.4)}[v\${vIndex}]\`;
-    lastV = \`v\${vIndex}\`;
+    filter += `;[${lastV}]drawtext=text='${escapedDedicatoria}':fontcolor=${dedicatoriaColor}:fontsize=${dedicatoriaSize}:x=(w-text_w)/2:y=${dedicatoriaY}:line_spacing=${Math.round(dedicatoriaSize * 0.4)}[v${vIndex}]`;
+    lastV = `v${vIndex}`;
     vIndex++;
   }
 
-  const inputs = tempPhotoPath ? \`-i "\${tempPhotoPath}" \${bgInput}\` : \`-f lavfi -i color=c=black:s=1x1 \${bgInput}\`;
+  const inputs = tempPhotoPath ? `-i "${tempPhotoPath}" ${bgInput}` : `-f lavfi -i color=c=black:s=1x1 ${bgInput}`;
   
-  const ffmpegCommand = \`ffmpeg -y -loop 1 -framerate 1 \${inputs} -i "\${audioPath}" -filter_complex "\${filter}" -map "[\${lastV}]" -map 2:a -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "\${videoPath}"\`;
+  const ffmpegCommand = `ffmpeg -y -loop 1 -framerate 1 ${inputs} -i "${audioPath}" -filter_complex "${filter}" -map "[${lastV}]" -map 2:a -c:v libx264 -preset ultrafast -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${videoPath}"`;
 
   await execPromise(ffmpegCommand);
 
-  const relativeVideoUrl = \`/media/\${videoFileName}\`;
+  const relativeVideoUrl = `/media/${videoFileName}`;
   
   await pool.query(
-    \`UPDATE "MediaJob" SET "videoUrl" = $1, status = 'video_ready', "updatedAt" = NOW() WHERE id = $2\`,
+    `UPDATE "MediaJob" SET "videoUrl" = $1, status = 'video_ready', "updatedAt" = NOW() WHERE id = $2`,
     [relativeVideoUrl, jobId]
   );
 
   // 4. SEND via YCloud
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://sings.inspiramkt.agency").replace(/\\/$/, "");
-  const fullVideoUrl = \`\${appUrl}\${relativeVideoUrl}\`;
-  const fullAudioUrl = \`\${appUrl}/media/\${audioFileName}\`;
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://sings.inspiramkt.agency").replace(/\/$/, "");
+  const fullVideoUrl = `${appUrl}${relativeVideoUrl}`;
+  const fullAudioUrl = `${appUrl}/media/${audioFileName}`;
   const target = job.whatsappNumber.trim();
   const ycloudApiKey = process.env.YCLOUD_API_KEY;
   
@@ -354,7 +354,7 @@ async function processJob(job: any) {
     type: "video",
     video: {
       link: fullVideoUrl,
-      caption: \`¡Aquí tienes tu video del segundo intento! 🎵\\n\\nPuedes escuchar y descargar tu canción original desde este enlace:\\n\${fullAudioUrl}\`
+      caption: `¡Aquí tienes tu video del segundo intento! 🎵\n\nPuedes escuchar y descargar tu canción original desde este enlace:\n${fullAudioUrl}`
     }
   };
 
