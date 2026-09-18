@@ -31,10 +31,6 @@ export default defineHandler(async (event) => {
     // Ignore schema errors, might already exist or lack permissions
     console.error("Migration warning in request.post.ts:", e);
   }
-
-  const id = randomUUID();
-  const status = 'pendiente';
-  const source = 'landing';
   
   // Create prompt from questionnaire answers
   const promptGenerado = `Actúa como un productor musical de talla mundial y un letrista galardonado. Tu objetivo es componer y producir una pista de calidad de estudio basada en los siguientes metadatos.
@@ -64,31 +60,78 @@ export default defineHandler(async (event) => {
 [Chorus]
 [Outro] (Cierre musical gradual)`;
   
+  const cleanPhone = (whatsappNumber || '').replace(/\+/g, '').replace(/\s/g, '');
+
   try {
-    await pool.query(
-      `INSERT INTO "MediaJob" (
-        id, status, source, "backgroundUrl", "userPhotoUrl", titulo, artista, dedicatoria, "whatsappNumber", config, prompt, pago, generaciones, "createdAt", "updatedAt"
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Esperando', 0, NOW(), NOW()
-      )`,
-      [
-        id,
-        status,
-        source,
-        backgroundUrl || null,
-        userPhotoUrl || null,
-        titulo || null,
-        artista || null,
-        dedicatoria || null,
-        whatsappNumber || null,
-        config ? JSON.stringify(config) : null,
-        promptGenerado, // prompt maestro guardado directamente
-      ]
+    // 2. VERIFICACIÓN (SELECT)
+    const searchResult = await pool.query(
+      `SELECT id FROM "MediaJob" WHERE REPLACE(REPLACE("whatsappNumber", '+', ''), ' ', '') LIKE $1 ORDER BY "createdAt" DESC LIMIT 1`,
+      [`%${cleanPhone}%`]
     );
 
-    return { ok: true, id };
+    if (searchResult.rows.length > 0) {
+      // 3. LÓGICA CONDICIONAL: SI EXISTE (UPDATE)
+      const existingId = searchResult.rows[0].id;
+      
+      await pool.query(
+        `UPDATE "MediaJob" 
+         SET 
+           "backgroundUrl" = $1,
+           "userPhotoUrl" = $2,
+           titulo = $3,
+           artista = $4,
+           dedicatoria = $5,
+           config = $6,
+           prompt = $7,
+           status = 'pendiente',
+           pago = 'Esperando',
+           generaciones = 0,
+           "updatedAt" = NOW()
+         WHERE id = $8`,
+        [
+          backgroundUrl || null,
+          userPhotoUrl || null,
+          titulo || null,
+          artista || null,
+          dedicatoria || null,
+          config ? JSON.stringify(config) : null,
+          promptGenerado,
+          existingId
+        ]
+      );
+
+      return { ok: true, id: existingId };
+    } else {
+      // 3. LÓGICA CONDICIONAL: SI NO EXISTE (INSERT)
+      const id = randomUUID();
+      const status = 'pendiente';
+      const source = 'landing';
+
+      await pool.query(
+        `INSERT INTO "MediaJob" (
+          id, status, source, "backgroundUrl", "userPhotoUrl", titulo, artista, dedicatoria, "whatsappNumber", config, prompt, pago, generaciones, "createdAt", "updatedAt"
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Esperando', 0, NOW(), NOW()
+        )`,
+        [
+          id,
+          status,
+          source,
+          backgroundUrl || null,
+          userPhotoUrl || null,
+          titulo || null,
+          artista || null,
+          dedicatoria || null,
+          whatsappNumber || null,
+          config ? JSON.stringify(config) : null,
+          promptGenerado
+        ]
+      );
+
+      return { ok: true, id };
+    }
   } catch (error: any) {
-    console.error("Error inserting MediaJob:", error);
-    throw createError({ statusCode: 500, statusMessage: "Error saving request" });
+    console.error("Error procesando MediaJob:", error);
+    throw createError({ statusCode: 500, statusMessage: "Error al guardar la solicitud" });
   }
 });
