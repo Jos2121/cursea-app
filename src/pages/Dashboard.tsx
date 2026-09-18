@@ -50,6 +50,8 @@ interface MediaJob {
   dedicatoria?: string;
   config?: any;
   whatsappNumber?: string;
+  pago?: string;
+  generaciones?: number;
 }
 
 export interface TemplateConfig {
@@ -832,6 +834,8 @@ export default function Dashboard() {
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Date</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Source</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Prompt / Info</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Pago</th>
+                    <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Generaciones</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Status</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">Media</th>
                     <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
@@ -840,12 +844,14 @@ export default function Dashboard() {
                 <tbody className="divide-y divide-neutral-50">
                   {jobs.length === 0 && !loading && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-16 text-center text-neutral-400 italic">
+                      <td colSpan={8} className="px-6 py-16 text-center text-neutral-400 italic">
                         No se encontraron registros.
                       </td>
                     </tr>
                   )}
-                  {jobs.map((job) => (
+                  {jobs.map((job) => {
+                    const isLimitReached = (job.generaciones || 0) >= 2;
+                    return (
                     <tr key={job.id} className="hover:bg-[#F5EADC]/10 transition-colors group">
                       <td className="px-6 py-5 whitespace-nowrap text-neutral-500 text-xs">
                         {new Date(job.createdAt).toLocaleString()}
@@ -860,6 +866,16 @@ export default function Dashboard() {
                       <td className="px-6 py-5 max-w-xs truncate text-neutral-800 font-medium" title={job.prompt}>
                         {job.prompt}
                         {job.recipient && <div className="text-[10px] text-neutral-400 mt-1.5 flex items-center gap-1.5 font-bold uppercase"><Send className="w-3 h-3" /> To: {job.recipient}</div>}
+                      </td>
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                          job.pago === 'Realizado' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'
+                        }`}>
+                          {job.pago === 'Realizado' ? 'Realizado' : 'Pendiente'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 whitespace-nowrap text-xs font-bold text-neutral-600">
+                        {job.generaciones || 0} / 2
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusColors[job.status]}`}>
@@ -888,16 +904,18 @@ export default function Dashboard() {
                         {job.prompt && !job.audioUrl && (
                           <button
                             onClick={() => handleGenerateAudioFromHistory(job)}
-                            disabled={generatingAudioId === job.id}
-                            className="p-2.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all shadow-sm disabled:opacity-50 border border-transparent hover:border-blue-100"
-                            title="Generate Audio"
+                            disabled={generatingAudioId === job.id || isLimitReached}
+                            className="p-2.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all shadow-sm disabled:opacity-50 border border-transparent hover:border-blue-100 disabled:cursor-not-allowed"
+                            title={isLimitReached ? "Límite de generaciones alcanzado" : "Generate Audio"}
                           >
                             {generatingAudioId === job.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
                           </button>
                         )}
                         {job.audioUrl && (
                           <button
+                            disabled={isLimitReached}
                             onClick={() => {
+                              if (isLimitReached) return;
                               setRegenerateJobId(job.id);
                               const bg = job.backgroundUrl || '';
                               setRegenerateBgUrl(bg);
@@ -955,8 +973,8 @@ export default function Dashboard() {
                               }
                               setIsRegenerateModalOpen(true);
                             }}
-                            className="p-2.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-indigo-100"
-                            title="Generate Video"
+                            className="p-2.5 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all shadow-sm border border-transparent hover:border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={isLimitReached ? "Límite de generaciones alcanzado" : "Generate Video"}
                           >
                             <Video className="w-4 h-4" />
                           </button>

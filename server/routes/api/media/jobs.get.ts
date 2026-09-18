@@ -10,7 +10,9 @@ export default defineHandler(async (event) => {
     source: row.source || 'manual', // Frontend expects source
     recipient: row.whatsappNumber, // Frontend expects recipient
     imageUrl: row.imageUrl || null,
-    errorLog: row.errorLog || null
+    errorLog: row.errorLog || null,
+    pago: row.pago,
+    generaciones: row.generaciones
   }));
   
   return jobs;
