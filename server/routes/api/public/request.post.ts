@@ -69,7 +69,7 @@ export default defineHandler(async (event) => {
       `INSERT INTO "MediaJob" (
         id, status, source, "backgroundUrl", "userPhotoUrl", titulo, artista, dedicatoria, "whatsappNumber", config, prompt, pago, generaciones, "createdAt", "updatedAt"
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Pendiente', 0, NOW(), NOW()
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Esperando', 0, NOW(), NOW()
       )`,
       [
         id,
