@@ -213,6 +213,65 @@ export default defineHandler(async (event) => {
         await pool.query(`UPDATE "MediaJob" SET "videoUrl" = $1, status = 'video_ready', "updatedAt" = NOW() WHERE id = $2`, [`/media/${vName}`, jobId]);
         console.log(`[ConfirmPayment GET] Proceso finalizado. Video en ${vName}`);
 
+        // DOBLE PETICIÓN YCLOUD: Envío de Audio y Video
+        const phoneNumber = job.whatsappNumber;
+        if (phoneNumber) {
+          try {
+            const baseUrl = process.env.PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://sings.inspiramkt.agency";
+            const absoluteAudioUrl = `${baseUrl.replace(/\/$/, "")}${relativeAudioUrl}`;
+            const absoluteVideoUrl = `${baseUrl.replace(/\/$/, "")}/media/${vName}`;
+            const ycloudApiKey = process.env.YCLOUD_API_KEY;
+
+            if (ycloudApiKey) {
+              // 1. Enviar Audio
+              const audioRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+                method: "POST",
+                headers: {
+                  "X-API-Key": ycloudApiKey,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  to: phoneNumber,
+                  type: "audio",
+                  audio: { link: absoluteAudioUrl }
+                })
+              });
+              
+              if (audioRes.ok) {
+                console.log(`[ConfirmPayment GET] Audio enviado a ${phoneNumber}`);
+              } else {
+                const audioErr = await audioRes.text();
+                console.error("[ConfirmPayment GET] Error YCloud al enviar Audio:", audioErr);
+              }
+
+              // 2. Enviar Video
+              const videoRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+                method: "POST",
+                headers: {
+                  "X-API-Key": ycloudApiKey,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  to: phoneNumber,
+                  type: "video",
+                  video: { link: absoluteVideoUrl }
+                })
+              });
+              
+              if (videoRes.ok) {
+                console.log(`[ConfirmPayment GET] Video enviado a ${phoneNumber}`);
+              } else {
+                const videoErr = await videoRes.text();
+                console.error("[ConfirmPayment GET] Error YCloud al enviar Video:", videoErr);
+              }
+            } else {
+              console.warn("[ConfirmPayment GET] YCLOUD_API_KEY no configurada. Saltando envío.");
+            }
+          } catch (ycloudErr) {
+            console.error("[ConfirmPayment GET] Error de conexión con YCloud:", ycloudErr);
+          }
+        }
+
       } catch (e: any) {
         console.error(`[ConfirmPayment GET Background Error] ${jobId}:`, e);
         pool.query(`UPDATE "MediaJob" SET status = 'error', "errorLog" = $1, "updatedAt" = NOW() WHERE id = $2`, [e?.message || "Error en background", jobId]).catch(() => {});
