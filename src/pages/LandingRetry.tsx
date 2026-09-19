@@ -434,7 +434,7 @@ export default function LandingRetry() {
                         <SelectValue placeholder="Selecciona..." />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
-                        {['Solo para sorprender', 'San Valentin', 'Declararse', 'Cumpleaños', 'Aniversario', 'Pedir matrimonio', 'Pedir perdon', 'Boda', 'Dia de la madre', 'Dia del padre', 'Para mi', 'Otro'].map(opt => (
+                        {['Solo para sorprender', 'San Valentin', 'Dia de las flores amarillas', 'Declararse', 'Cumpleaños', 'Aniversario', 'Pedir matrimonio', 'Pedir perdon', 'Boda', 'Dia de la madre', 'Dia del padre', 'Para mi', 'Otro'].map(opt => (
                           <SelectItem key={opt} value={opt}>{opt}</SelectItem>
                         ))}
                       </SelectContent>
