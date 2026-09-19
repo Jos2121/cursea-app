@@ -7,7 +7,6 @@ import GiftBuilder from './pages/GiftBuilder';
 import PublicGift from './pages/PublicGift';
 import Landing from './pages/Landing';
 import LandingRetry from './pages/LandingRetry';
-import TemplateManager from './pages/TemplateManager';
 import MainLayout from './layouts/MainLayout';
 import { Toaster } from "@/components/ui/sonner"; // Assuming sonner is available or will create
 
@@ -43,14 +42,6 @@ export default function App() {
           element={
             <PrivateRoute>
               <Gifts />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/templates"
-          element={
-            <PrivateRoute>
-              <TemplateManager />
             </PrivateRoute>
           }
         />

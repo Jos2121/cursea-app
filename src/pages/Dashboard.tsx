@@ -142,7 +142,7 @@ export default function Dashboard() {
   const [dedicatoriaSize, setDedicatoriaSize] = useState(28); 
   const [studioTemplateConfig, setStudioTemplateConfig] = useState<TemplateConfig>({ ...DEFAULT_TEMPLATE, id: '' });
   
-  // Load Custom Templates from DB
+  // Custom Templates from DB
   const [dbTemplates, setDbTemplates] = useState<TemplateConfig[]>([]);
 
   const loadTemplates = async () => {
@@ -160,6 +160,91 @@ export default function Dashboard() {
     loadTemplates();
   }, []);
 
+  const handleSaveTemplate = async (config: TemplateConfig, bgUrl: string, dedicatoriaSz: number, mode: 'completa' | 'coordenadas') => {
+    const promptedName = window.prompt(`Nombre de la nueva plantilla (${mode}):`);
+    if (promptedName === null) return;
+    const templateName = promptedName.trim() || 'Mi Plantilla Personalizada';
+    
+    try {
+      let payloadConfig: any = {
+        type: mode,
+        photoX: Number(config.photo.x),
+        photoY: Number(config.photo.y),
+        photoWidth: Number(config.photo.w),
+        photoHeight: Number(config.photo.h),
+        tituloX: Number(config.titulo.x),
+        tituloY: Number(config.titulo.y),
+        tituloSize: Number(config.titulo.fontSize),
+        artistaX: Number(config.artista.x),
+        artistaY: Number(config.artista.y),
+        artistaSize: Number(config.artista.fontSize),
+        dedicatoriaX: Number(config.dedicatoria.x),
+        dedicatoriaY: Number(config.dedicatoria.y),
+        dedicatoriaSize: Number(dedicatoriaSz),
+        ...(mode === 'completa' ? { backgroundUrl: bgUrl, bgUrl: bgUrl } : {}),
+        photo: { ...config.photo, x: Number(config.photo.x), y: Number(config.photo.y), w: Number(config.photo.w), h: Number(config.photo.h) },
+        titulo: { ...config.titulo, x: Number(config.titulo.x), y: Number(config.titulo.y), fontSize: Number(config.titulo.fontSize) },
+        artista: { ...config.artista, x: Number(config.artista.x), y: Number(config.artista.y), fontSize: Number(config.artista.fontSize) },
+        dedicatoria: { ...config.dedicatoria, x: Number(config.dedicatoria.x), y: Number(config.dedicatoria.y), fontSize: Number(dedicatoriaSz) }
+      };
+
+      const res = await fetch('/api/templates/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: templateName,
+          config: payloadConfig
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success('Plantilla guardada!');
+        loadTemplates();
+      } else {
+        toast.error(`Error al guardar plantilla: ${data.statusMessage || data.message || 'Error desconocido'}`);
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Error al guardar: ${e.message || 'Error de red'}`);
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!templateId) return toast.error("Error: ID inválido");
+    
+    try {
+      const res = await fetch('/api/templates/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: templateId })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.statusMessage || "Error desconocido al eliminar");
+      }
+
+      setDbTemplates(prev => prev.filter(t => t.id !== templateId));
+      
+      if (studioTemplateConfig.id === templateId) {
+        setStudioTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
+        setBackgroundUrl('');
+        setCustomBackground('');
+      }
+      
+      if (regenerateTemplateConfig.id === templateId) {
+        setRegenerateTemplateConfig({ ...DEFAULT_TEMPLATE, id: '' });
+        setRegenerateBgUrl('');
+        setRegenerateCustomBg('');
+      }
+      
+      toast.success("Éxito: Plantilla eliminada permanentemente.");
+    } catch (error: any) {
+      console.error("Error UI:", error);
+      toast.error(`Error al eliminar: ${error.message}`);
+    }
+  };
+  
   // Studio Step 3
   const [phone, setPhone] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -559,6 +644,14 @@ export default function Dashboard() {
                           <Check className={`mr-2 h-4 w-4 shrink-0 text-[#8B1F32] ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
                           <span className="truncate">{t.name}</span>
                         </div>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTemplate(t.id); }}
+                          className="p-1.5 hover:bg-rose-100 text-neutral-400 hover:text-rose-600 rounded-md transition-colors shrink-0 z-10"
+                          title="Eliminar plantilla"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </DropdownMenuItem>
                     ))}
                   </>
@@ -583,6 +676,14 @@ export default function Dashboard() {
                           <Check className={`mr-2 h-4 w-4 shrink-0 text-[#8B1F32]/70 ${currentConfigId === t.id ? "opacity-100" : "opacity-0"}`} />
                           <span className="truncate">{t.name}</span>
                         </div>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTemplate(t.id); }}
+                          className="p-1.5 hover:bg-rose-100 text-neutral-400 hover:text-rose-600 rounded-md transition-colors shrink-0 z-10"
+                          title="Eliminar plantilla"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </DropdownMenuItem>
                     ))}
                   </>
@@ -1169,6 +1270,28 @@ export default function Dashboard() {
                   <div className="absolute inset-0 pointer-events-none border-[12px] border-white/5 rounded-[32px]" />
                 </div>
               </div>
+
+              {/* Template Save Actions */}
+              {studioStep === 2 && (
+                <div className="bg-white/60 p-5 rounded-3xl border border-[#8B1F32]/10 shadow-sm w-full max-w-[320px] text-center space-y-3">
+                  <span className="text-[10px] font-bold uppercase text-neutral-400 tracking-[0.2em] block">Guardar Configuración</span>
+                  <div className="flex items-center justify-center gap-4">
+                    <button
+                      onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'completa')}
+                      className="text-xs font-bold text-[#8B1F32] hover:underline"
+                    >
+                      Diseño Completo
+                    </button>
+                    <span className="w-1 h-1 rounded-full bg-neutral-300" />
+                    <button
+                      onClick={() => handleSaveTemplate(studioTemplateConfig, backgroundUrl === 'custom' ? customBackground : backgroundUrl, dedicatoriaSize, 'coordenadas')}
+                      className="text-xs font-bold text-neutral-600 hover:text-neutral-900 hover:underline"
+                    >
+                      Solo Coords
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1288,7 +1411,11 @@ export default function Dashboard() {
                   />
                 </div>
                 <div className="mt-8 text-center space-y-4">
-                  
+                  <span className="text-[10px] font-bold uppercase text-neutral-400 tracking-widest">Guardar Plantilla</span>
+                  <div className="flex gap-4">
+                    <button onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'completa')} className="text-[10px] font-bold text-[#8B1F32] hover:underline uppercase">Completa</button>
+                    <button onClick={() => handleSaveTemplate(regenerateTemplateConfig, regenerateBgUrl === 'custom' ? regenerateCustomBg : regenerateBgUrl, regenerateDedicatoriaSize, 'coordenadas')} className="text-[10px] font-bold text-neutral-400 hover:text-neutral-900 hover:underline uppercase">Solo Coords</button>
+                  </div>
                 </div>
               </div>
             </div>
