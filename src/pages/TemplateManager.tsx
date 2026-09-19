@@ -318,7 +318,10 @@ export default function TemplateManager() {
 
           {/* Preview */}
           <div className="w-1/2 p-6 flex flex-col items-center justify-center bg-neutral-50/50">
-            <div className="rounded-[32px] overflow-hidden bg-neutral-950 shadow-2xl relative border-8 border-neutral-900">
+            <div
+              className="rounded-[32px] overflow-hidden bg-neutral-950 shadow-2xl relative border-8 border-neutral-900 shrink-0"
+              style={{ width: `${1080 * scale}px`, height: `${1920 * scale}px` }}
+            >
               <VideoEditorPreview
                 config={activeTemplate}
                 onUpdateConfig={setActiveTemplate}
