@@ -18,7 +18,7 @@ export default defineHandler(async () => {
       id: `db_${row.id}`,
       name: row.name,
       bgUrl: row.bgUrl,
-      ...row.config
+      config: row.config
     }));
   } catch (error) {
     console.error(error);

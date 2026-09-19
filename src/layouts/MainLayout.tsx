@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Gift, LogOut, Music, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Gift, Image as ImageIcon, LogOut, Music, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   const navItems = [
     { name: 'Estudio Multimedia', path: '/', icon: LayoutDashboard },
+    { name: 'Plantillas Visuales', path: '/templates', icon: ImageIcon },
     { name: 'Regalos Personalizados', path: '/gifts', icon: Gift },
   ];
 
