@@ -173,14 +173,30 @@ export default function TemplateManager() {
               }`}
             >
               <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-semibold text-sm">{t.name}</h3>
-                  <p className="text-xs text-neutral-500 mt-1">
-                    {t.config?.type === 'coordenadas' ? 'Solo Posiciones' : 'Completa (Fondo + Posiciones)'}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200">
+                    <img
+                      src={
+                        (t.bgUrl || t.config?.backgroundUrl || t.config?.bgUrl)
+                          ? ((t.bgUrl || t.config?.backgroundUrl || t.config?.bgUrl).startsWith('http') || (t.bgUrl || t.config?.backgroundUrl || t.config?.bgUrl).startsWith('blob:') || (t.bgUrl || t.config?.backgroundUrl || t.config?.bgUrl).startsWith('data:') || (t.bgUrl || t.config?.backgroundUrl || t.config?.bgUrl).startsWith('/media/'))
+                            ? (t.bgUrl || t.config?.backgroundUrl || t.config?.bgUrl)
+                            : `/media/${t.bgUrl || t.config?.backgroundUrl || t.config?.bgUrl}`
+                          : '/placeholder.svg'
+                      }
+                      alt={t.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">{t.name}</h3>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      {t.config?.type === 'coordenadas' ? 'Solo Posiciones' : 'Completa (Fondo + Posiciones)'}
+                    </p>
+                  </div>
                 </div>
-                <Button 
-                  size="icon" 
+                <Button
+                  size="icon"
                   variant="ghost" 
                   className="h-8 w-8 text-neutral-400 hover:text-red-500 hover:bg-red-50"
                   onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(t.id); }}
