@@ -280,7 +280,7 @@ export default function Landing() {
 
       const envNumber = import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || '';
       const cleanNumber = envNumber.replace(/\D/g, '');
-      const text = encodeURIComponent('Hola he llenado los campos requeridos para obtener mi canción personalizada, quisiera realizar el pago');
+      const text = encodeURIComponent(`Listo! he llenado el formulario para crear mi cancion personalizada, brindame los metodos de pago\n\nMi numero de peticion es: ${whatsappNumber}`);
       window.location.href = `https://wa.me/${cleanNumber}?text=${text}`;
       
     } catch (error: any) {
