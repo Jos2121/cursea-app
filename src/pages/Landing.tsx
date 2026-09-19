@@ -654,11 +654,11 @@ export default function Landing() {
 
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Número de WhatsApp (con prefijo)</Label>
-                  <Input 
-                    value={whatsappNumber} 
-                    onChange={e => setWhatsappNumber(e.target.value)} 
-                    placeholder="Ej. +34600000000"
+                  <Label className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Número de WhatsApp</Label>
+                  <Input
+                    value={whatsappNumber}
+                    onChange={e => setWhatsappNumber(e.target.value)}
+                    placeholder="Ej. 600000000"
                     className="rounded-xl border-neutral-200 focus:ring-[#8B1F32] transition-all"
                     type="tel"
                   />
