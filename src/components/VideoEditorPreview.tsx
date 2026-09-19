@@ -128,11 +128,31 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
     <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0 aspect-[9/16]">
       {/* Background */}
       {backgroundUrl === 'custom' && customBackground ? (
-        <img src={customBackground.trim()} className="absolute inset-0 w-full h-full object-cover object-center" />
+        <>
+          <img
+            src={customBackground.startsWith('http') || customBackground.startsWith('blob:') || customBackground.startsWith('data:') || customBackground.startsWith('/media/') ? customBackground.trim() : `/media/${customBackground.trim()}`}
+            className="absolute inset-0 w-full h-full object-cover object-center z-0"
+            onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+          />
+          <div className="hidden absolute inset-0 w-full h-full bg-neutral-900 flex items-center justify-center z-0">
+            <ImageIcon className="w-16 h-16 text-neutral-800" />
+          </div>
+        </>
       ) : backgroundUrl ? (
-        <img src={backgroundUrl.startsWith('http') || backgroundUrl.startsWith('blob:') || backgroundUrl.startsWith('data:') ? backgroundUrl.trim() : `/media/${backgroundUrl.trim()}`} className="absolute inset-0 w-full h-full object-cover object-center" />
+        <>
+          <img
+            src={backgroundUrl.startsWith('http') || backgroundUrl.startsWith('blob:') || backgroundUrl.startsWith('data:') || backgroundUrl.startsWith('/media/') ? backgroundUrl.trim() : `/media/${backgroundUrl.trim()}`}
+            className="absolute inset-0 w-full h-full object-cover object-center z-0"
+            onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+          />
+          <div className="hidden absolute inset-0 w-full h-full bg-neutral-900 flex items-center justify-center z-0">
+            <ImageIcon className="w-16 h-16 text-neutral-800" />
+          </div>
+        </>
       ) : (
-        <div className="absolute inset-0 w-full h-full bg-gray-900" />
+        <div className="absolute inset-0 w-full h-full bg-neutral-900 flex items-center justify-center z-0">
+          <ImageIcon className="w-16 h-16 text-neutral-800" />
+        </div>
       )}
 
       {/* Cover Photo */}
@@ -146,7 +166,17 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
         }}
       >
         {userPhotoUrl ? (
-          <img src={userPhotoUrl.trim()} className="w-full h-full object-cover rounded-md shadow-2xl" />
+          <>
+            <img
+              src={userPhotoUrl.startsWith('http') || userPhotoUrl.startsWith('blob:') || userPhotoUrl.startsWith('data:') || userPhotoUrl.startsWith('/media/') ? userPhotoUrl.trim() : `/media/${userPhotoUrl.trim()}`}
+              className="w-full h-full object-cover rounded-md shadow-2xl z-10 relative"
+              onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+            />
+            <div className="hidden absolute inset-0 w-full h-full bg-gray-800/80 backdrop-blur flex flex-col items-center justify-center text-gray-400 rounded-md border-2 border-dashed border-gray-600 z-0">
+              <ImageIcon className="w-8 h-8 md:w-12 md:h-12 mb-2" />
+              <span className="text-[10px] md:text-xs font-medium text-center">Cover Photo</span>
+            </div>
+          </>
         ) : (
           <div className="w-full h-full bg-gray-800/80 backdrop-blur flex flex-col items-center justify-center text-gray-400 rounded-md border-2 border-dashed border-gray-600">
             <ImageIcon className="w-8 h-8 md:w-12 md:h-12 mb-2" />

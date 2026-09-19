@@ -590,7 +590,12 @@ export default function Landing() {
                     </div>
                   ) : (
                     <div className="relative inline-block group">
-                      <img src={userPhotoUrl} alt="Portada" className="h-32 w-32 object-cover rounded-xl shadow-lg border border-neutral-200" />
+                      <img
+                        src={userPhotoUrl.startsWith('http') || userPhotoUrl.startsWith('blob:') || userPhotoUrl.startsWith('data:') || userPhotoUrl.startsWith('/media/') ? userPhotoUrl : `/media/${userPhotoUrl}`}
+                        alt="Portada"
+                        className="h-32 w-32 object-cover rounded-xl shadow-lg border border-neutral-200"
+                        onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+                      />
                       <button
                         type="button"
                         onClick={() => setUserPhotoUrl('')}
