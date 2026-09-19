@@ -45,7 +45,7 @@ export default function TemplateManager() {
     
     // Set background handling both top-level and config-level bgUrl/backgroundUrl
     const rawBgUrl = t.bgUrl || config?.backgroundUrl || config?.bgUrl || '';
-    if (rawBgUrl && rawBgUrl.startsWith('http') && !['image_f840ac.jpg', 'image_81efaf.jpg', 'image_210d19.jpg', 'image_6c0245.jpg', 'image_82a3ee.jpg'].includes(rawBgUrl)) {
+    if (rawBgUrl && !['image_f840ac.jpg', 'image_81efaf.jpg', 'image_210d19.jpg', 'image_6c0245.jpg', 'image_82a3ee.jpg'].includes(rawBgUrl)) {
       setBackgroundUrl('custom');
       setCustomBackground(rawBgUrl);
     } else {
