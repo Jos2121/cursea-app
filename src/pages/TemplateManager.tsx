@@ -42,7 +42,16 @@ export default function TemplateManager() {
     });
     setTemplateName(t.name || '');
     setTemplateType(config?.type === 'coordenadas' ? 'coordenadas' : 'completa');
-    setBackgroundUrl(t.bgUrl || config?.backgroundUrl || '');
+    
+    // Set background handling both top-level and config-level bgUrl/backgroundUrl
+    const rawBgUrl = t.bgUrl || config?.backgroundUrl || config?.bgUrl || '';
+    if (rawBgUrl && rawBgUrl.startsWith('http') && !['image_f840ac.jpg', 'image_81efaf.jpg', 'image_210d19.jpg', 'image_6c0245.jpg', 'image_82a3ee.jpg'].includes(rawBgUrl)) {
+      setBackgroundUrl('custom');
+      setCustomBackground(rawBgUrl);
+    } else {
+      setBackgroundUrl(rawBgUrl);
+      setCustomBackground('');
+    }
   };
 
   const handleNewTemplate = () => {

@@ -128,11 +128,27 @@ export const VideoEditorPreview: React.FC<VideoEditorPreviewProps> = ({
     <div className="relative w-full h-full bg-black rounded-xl overflow-hidden border border-gray-800 shadow-2xl shrink-0 aspect-[9/16]">
       {/* Background */}
       {backgroundUrl === 'custom' && customBackground ? (
-        <img src={customBackground.trim()} className="absolute inset-0 w-full h-full object-cover object-center" />
+        <>
+          <img src={customBackground.trim()} className="absolute inset-0 w-full h-full object-cover object-center z-0" onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+          <div className="hidden absolute inset-0 w-full h-full bg-neutral-900 flex items-center justify-center z-0">
+            <ImageIcon className="w-16 h-16 text-neutral-800" />
+          </div>
+        </>
       ) : backgroundUrl ? (
-        <img src={backgroundUrl.startsWith('http') || backgroundUrl.startsWith('blob:') || backgroundUrl.startsWith('data:') ? backgroundUrl.trim() : `/media/${backgroundUrl.trim()}`} className="absolute inset-0 w-full h-full object-cover object-center" />
+        <>
+          <img
+            src={backgroundUrl.startsWith('http') || backgroundUrl.startsWith('blob:') || backgroundUrl.startsWith('data:') ? backgroundUrl.trim() : `/media/${backgroundUrl.trim()}`}
+            className="absolute inset-0 w-full h-full object-cover object-center z-0"
+            onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+          />
+          <div className="hidden absolute inset-0 w-full h-full bg-neutral-900 flex items-center justify-center z-0">
+            <ImageIcon className="w-16 h-16 text-neutral-800" />
+          </div>
+        </>
       ) : (
-        <div className="absolute inset-0 w-full h-full bg-gray-900" />
+        <div className="absolute inset-0 w-full h-full bg-neutral-900 flex items-center justify-center z-0">
+          <ImageIcon className="w-16 h-16 text-neutral-800" />
+        </div>
       )}
 
       {/* Cover Photo */}
