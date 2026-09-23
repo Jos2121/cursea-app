@@ -106,7 +106,12 @@ export default defineHandler(async (event) => {
     pool.query(`UPDATE "MediaJob" SET status = 'error', "updatedAt" = NOW() WHERE id = $1`, [updatedJob.id]).catch(console.error);
   });
 
-  return { ok: true, id: updatedJob.id, message: "Segundo intento en proceso" };
+  return {
+    ok: true,
+    id: updatedJob.id,
+    message: "Segundo intento en proceso",
+    paymentWhatsappNumber: process.env.VITE_WHATSAPP_PAYMENT_NUMBER || process.env.WHATSAPP_PAYMENT_NUMBER || ''
+  };
 });
 
 async function processJob(job: any) {

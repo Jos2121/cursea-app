@@ -278,8 +278,15 @@ export default function Landing() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.statusMessage || 'Error al registrar petición');
 
-      const envNumber = import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || '';
+      const envNumber = (data.paymentWhatsappNumber || import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || '').trim();
       const cleanNumber = envNumber.replace(/\D/g, '');
+
+      if (!cleanNumber) {
+        toast.error('No se ha configurado el número de WhatsApp de pagos (VITE_WHATSAPP_PAYMENT_NUMBER). Por favor revisa las variables de entorno.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const text = encodeURIComponent(`Listo! he llenado el formulario para crear mi cancion personalizada, brindame los metodos de pago\n\nMi numero de peticion es: ${whatsappNumber}`);
       window.location.href = `https://wa.me/${cleanNumber}?text=${text}`;
       

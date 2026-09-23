@@ -10,6 +10,9 @@ export default defineConfig(() => ({
     host: "::",
     port: 8080,
   },
+  define: {
+    'import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER': JSON.stringify(process.env.VITE_WHATSAPP_PAYMENT_NUMBER || ''),
+  },
   plugins: [dyadComponentTagger(), react(), nitro()],
   resolve: {
     alias: {

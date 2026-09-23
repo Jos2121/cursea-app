@@ -100,7 +100,11 @@ export default defineHandler(async (event) => {
         ]
       );
 
-      return { ok: true, id: existingId };
+      return {
+        ok: true,
+        id: existingId,
+        paymentWhatsappNumber: process.env.VITE_WHATSAPP_PAYMENT_NUMBER || process.env.WHATSAPP_PAYMENT_NUMBER || ''
+      };
     } else {
       // 3. LÓGICA CONDICIONAL: SI NO EXISTE (INSERT)
       const id = randomUUID();
@@ -128,7 +132,11 @@ export default defineHandler(async (event) => {
         ]
       );
 
-      return { ok: true, id };
+      return {
+        ok: true,
+        id,
+        paymentWhatsappNumber: process.env.VITE_WHATSAPP_PAYMENT_NUMBER || process.env.WHATSAPP_PAYMENT_NUMBER || ''
+      };
     }
   } catch (error: any) {
     console.error("Error procesando MediaJob:", error);

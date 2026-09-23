@@ -278,8 +278,15 @@ export default function LandingRetry() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.statusMessage || 'Error al registrar petición');
 
-      const envNumber = import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || '';
+      const envNumber = (data.paymentWhatsappNumber || import.meta.env.VITE_WHATSAPP_PAYMENT_NUMBER || '').trim();
       const cleanNumber = envNumber.replace(/\D/g, '');
+
+      if (!cleanNumber) {
+        toast.error('No se ha configurado el número de WhatsApp de pagos (VITE_WHATSAPP_PAYMENT_NUMBER). Por favor revisa las variables de entorno.');
+        setIsSubmitting(false);
+        return;
+      }
+
       window.location.href = `https://wa.me/${cleanNumber}?text=He+llenado+el+formulario+para+el+segundo+intento`;
       
     } catch (error: any) {
